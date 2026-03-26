@@ -1,0 +1,1834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JamBoo – AI Quiz Show</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@400;600;700;800;900&family=Playfair+Display:wght@700;900&family=Space+Mono:wght@400;700&family=Righteous&display=swap" rel="stylesheet">
+<style>
+  /* ===== CSS VARIABLES & THEMES ===== */
+  :root {
+    --col: 6;
+    --row: 5;
+  }
+
+  /* THEME 1: Cosmic Neon */
+  [data-theme="cosmic"] {
+    --bg: #0a0a1a;
+    --bg2: #0f0f2e;
+    --card: #12122b;
+    --card-hover: #1a1a40;
+    --border: #2a2a6e;
+    --accent: #7c3aed;
+    --accent2: #06b6d4;
+    --accent3: #f59e0b;
+    --text: #e2e8f0;
+    --text-dim: #94a3b8;
+    --header-bg: linear-gradient(135deg, #1e1b4b, #312e81);
+    --board-bg: linear-gradient(135deg, #0f0f2e, #1a0a3e);
+    --cat-bg: linear-gradient(135deg, #312e81, #4c1d95);
+    --cat-text: #c4b5fd;
+    --cell-bg: linear-gradient(135deg, #1e1b4b, #1a1050);
+    --cell-num: #7c3aed;
+    --cell-num-glow: 0 0 20px #7c3aed88;
+    --btn-primary: linear-gradient(135deg, #7c3aed, #4f46e5);
+    --btn-secondary: linear-gradient(135deg, #0891b2, #06b6d4);
+    --score-border: #7c3aed;
+    --modal-bg: #0f0f2e;
+    --team-colors: #ef4444, #f59e0b, #10b981, #06b6d4, #8b5cf6, #f43f5e, #84cc16, #fb923c;
+    --font-display: 'Bebas Neue', sans-serif;
+    --font-body: 'Nunito', sans-serif;
+    --font-mono: 'Space Mono', monospace;
+    --particle: #7c3aed;
+    --shadow: 0 4px 24px #7c3aed33;
+  }
+
+  /* THEME 2: Retro Arcade */
+  [data-theme="retro"] {
+    --bg: #1a0a00;
+    --bg2: #2d1500;
+    --card: #231000;
+    --card-hover: #3d1f00;
+    --border: #8b4513;
+    --accent: #ff6b00;
+    --accent2: #ffcc00;
+    --accent3: #00ff88;
+    --text: #fff8e1;
+    --text-dim: #d4a96a;
+    --header-bg: linear-gradient(135deg, #3d1500, #5c2200);
+    --board-bg: linear-gradient(135deg, #1a0a00, #2d0f00);
+    --cat-bg: linear-gradient(135deg, #7c2d00, #b83500);
+    --cat-text: #ffd280;
+    --cell-bg: linear-gradient(135deg, #2d1000, #1a0800);
+    --cell-num: #ff6b00;
+    --cell-num-glow: 0 0 20px #ff6b0088;
+    --btn-primary: linear-gradient(135deg, #ff6b00, #cc4400);
+    --btn-secondary: linear-gradient(135deg, #cc9900, #ffcc00);
+    --score-border: #ff6b00;
+    --modal-bg: #1a0a00;
+    --font-display: 'Righteous', cursive;
+    --font-body: 'Nunito', sans-serif;
+    --font-mono: 'Space Mono', monospace;
+    --particle: #ff6b00;
+    --shadow: 0 4px 24px #ff6b0044;
+  }
+
+  /* THEME 3: Soft Pastel */
+  [data-theme="pastel"] {
+    --bg: #fdf4ff;
+    --bg2: #fce7f3;
+    --card: #ffffff;
+    --card-hover: #fce7f3;
+    --border: #e879f9;
+    --accent: #d946ef;
+    --accent2: #8b5cf6;
+    --accent3: #06b6d4;
+    --text: #1e1b4b;
+    --text-dim: #6b7280;
+    --header-bg: linear-gradient(135deg, #fce7f3, #ede9fe);
+    --board-bg: linear-gradient(135deg, #fdf4ff, #ede9fe);
+    --cat-bg: linear-gradient(135deg, #f0abfc, #c084fc);
+    --cat-text: #1e1b4b;
+    --cell-bg: linear-gradient(135deg, #fdf4ff, #fce7f3);
+    --cell-num: #d946ef;
+    --cell-num-glow: 0 0 15px #d946ef44;
+    --btn-primary: linear-gradient(135deg, #d946ef, #9333ea);
+    --btn-secondary: linear-gradient(135deg, #7c3aed, #8b5cf6);
+    --score-border: #d946ef;
+    --modal-bg: #ffffff;
+    --font-display: 'Playfair Display', serif;
+    --font-body: 'Nunito', sans-serif;
+    --font-mono: 'Space Mono', monospace;
+    --particle: #d946ef;
+    --shadow: 0 4px 24px #d946ef33;
+  }
+
+  /* ===== BASE RESET ===== */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  body {
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    transition: all 0.4s ease;
+    overflow-x: hidden;
+  }
+
+  /* ===== PARTICLES BG ===== */
+  #particles {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; z-index: 0; overflow: hidden;
+  }
+  .particle {
+    position: absolute;
+    width: 4px; height: 4px;
+    background: var(--particle);
+    border-radius: 50%;
+    opacity: 0;
+    animation: float-up linear infinite;
+  }
+  @keyframes float-up {
+    0% { opacity: 0; transform: translateY(100vh) scale(0); }
+    10% { opacity: 0.6; }
+    90% { opacity: 0.3; }
+    100% { opacity: 0; transform: translateY(-20px) scale(1.5); }
+  }
+
+  /* ===== SCREEN MANAGEMENT ===== */
+  .screen { display: none; position: relative; z-index: 1; }
+  .screen.active { display: block; }
+
+  /* ===== SETUP SCREEN ===== */
+  #setup-screen {
+    min-height: 100vh;
+    padding: 0 0 60px;
+  }
+
+  .setup-header {
+    background: var(--header-bg);
+    padding: 40px 24px 32px;
+    text-align: center;
+    border-bottom: 2px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .setup-header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at center, var(--accent)15 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .logo {
+    font-family: var(--font-display);
+    font-size: clamp(52px, 10vw, 96px);
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: 2px;
+    line-height: 1;
+    text-shadow: none;
+    filter: drop-shadow(0 0 30px var(--accent));
+    animation: logo-pulse 3s ease-in-out infinite;
+  }
+  @keyframes logo-pulse {
+    0%, 100% { filter: drop-shadow(0 0 20px var(--accent)); }
+    50% { filter: drop-shadow(0 0 50px var(--accent2)); }
+  }
+
+  .logo-tagline {
+    font-size: 14px;
+    color: var(--text-dim);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-top: 4px;
+    font-weight: 700;
+  }
+
+  /* ===== LANGUAGE & THEME PICKERS ===== */
+  .top-controls {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+  }
+
+  .pill-group {
+    display: flex;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    overflow: hidden;
+    padding: 3px;
+    gap: 2px;
+  }
+  .pill-btn {
+    padding: 8px 16px;
+    border: none;
+    background: transparent;
+    color: var(--text-dim);
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 13px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.25s;
+    letter-spacing: 0.5px;
+  }
+  .pill-btn.active {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff;
+    transform: none;
+  }
+  .pill-btn:hover:not(.active) {
+    background: var(--card-hover);
+    color: var(--text);
+  }
+
+  /* ===== SETUP PANELS ===== */
+  .setup-body {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 32px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px;
+    box-shadow: var(--shadow);
+    transition: all 0.3s;
+  }
+  .panel:hover { border-color: var(--accent); }
+
+  .panel-title {
+    font-family: var(--font-display);
+    font-size: 22px;
+    color: var(--accent);
+    letter-spacing: 1px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .panel-title .icon { font-size: 24px; }
+
+  /* ===== GRID CONTROLS ===== */
+  .grid-controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .control-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+  .slider-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  input[type=range] {
+    flex: 1;
+    -webkit-appearance: none;
+    height: 6px;
+    background: var(--border);
+    border-radius: 99px;
+    outline: none;
+    cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 22px; height: 22px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 0 10px var(--accent);
+    transition: transform 0.2s;
+  }
+  input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+  .slider-val {
+    font-family: var(--font-display);
+    font-size: 28px;
+    color: var(--accent);
+    min-width: 36px;
+    text-align: center;
+  }
+
+  /* ===== TEAMS SECTION ===== */
+  .teams-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+  }
+  .team-input-wrap {
+    position: relative;
+  }
+  .team-color-dot {
+    position: absolute;
+    left: 12px; top: 50%;
+    transform: translateY(-50%);
+    width: 12px; height: 12px;
+    border-radius: 50%;
+  }
+  .team-input {
+    width: 100%;
+    padding: 10px 12px 10px 34px;
+    background: var(--bg2);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .team-input:focus { border-color: var(--accent); }
+  .team-input.hidden-team { opacity: 0.3; }
+
+  .team-count-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .count-btn {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border);
+    background: var(--card);
+    color: var(--text);
+    font-size: 20px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+    font-weight: 700;
+  }
+  .count-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .count-label {
+    font-weight: 800;
+    font-size: 15px;
+    color: var(--text-dim);
+  }
+
+  /* ===== AI PROMPT ===== */
+  .ai-prompt-area {
+    width: 100%;
+    min-height: 120px;
+    padding: 16px;
+    background: var(--bg2);
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 15px;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s;
+    line-height: 1.6;
+  }
+  .ai-prompt-area:focus { border-color: var(--accent); }
+  .ai-prompt-area::placeholder { color: var(--text-dim); }
+
+  .ai-options {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .select-styled {
+    padding: 10px 16px;
+    background: var(--bg2);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 14px;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    flex: 1;
+    min-width: 140px;
+  }
+  .select-styled:focus { border-color: var(--accent); }
+
+  .q-type-grid {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+  }
+  .q-type-chip {
+    padding: 7px 14px;
+    border-radius: 999px;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .q-type-chip.active {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 0 14px var(--accent)66;
+  }
+
+  /* ===== BUTTONS ===== */
+  .btn-generate {
+    width: 100%;
+    padding: 20px;
+    border: none;
+    border-radius: 16px;
+    background: var(--btn-primary);
+    color: #fff;
+    font-family: var(--font-display);
+    font-size: 26px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 30px var(--accent)55;
+  }
+  .btn-generate::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, transparent, rgba(255,255,255,0.15), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.5s;
+  }
+  .btn-generate:hover::before { transform: translateX(100%); }
+  .btn-generate:hover { transform: translateY(-2px); box-shadow: 0 8px 40px var(--accent)77; }
+  .btn-generate:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  /* ===== LOADING ===== */
+  .loading-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: var(--bg)ee;
+    z-index: 1000;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+  }
+  .loading-overlay.active { display: flex; }
+  .loading-logo {
+    font-family: var(--font-display);
+    font-size: 72px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: logo-pulse 1s ease-in-out infinite;
+  }
+  .loading-bar-wrap {
+    width: 280px;
+    height: 6px;
+    background: var(--border);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .loading-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 99px;
+    animation: loading-sweep 2s ease-in-out infinite;
+  }
+  @keyframes loading-sweep {
+    0% { width: 0; margin-left: 0; }
+    50% { width: 80%; margin-left: 10%; }
+    100% { width: 0; margin-left: 100%; }
+  }
+  .loading-text {
+    color: var(--text-dim);
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    animation: fade-in-out 1.5s ease-in-out infinite;
+  }
+  @keyframes fade-in-out {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+  }
+
+  /* ===== GAME SCREEN ===== */
+  #game-screen {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: var(--board-bg);
+  }
+
+  .game-header {
+    background: var(--header-bg);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 2px solid var(--border);
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .game-logo {
+    font-family: var(--font-display);
+    font-size: 36px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .header-actions { display: flex; gap: 10px; }
+  .btn-small {
+    padding: 8px 18px;
+    border-radius: 999px;
+    border: 1.5px solid var(--border);
+    background: var(--card);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-small:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ===== SCOREBOARD ===== */
+  .scoreboard {
+    display: flex;
+    gap: 10px;
+    padding: 12px 20px;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .score-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 18px;
+    background: var(--card);
+    border: 2px solid;
+    border-radius: 14px;
+    min-width: 100px;
+    transition: all 0.3s;
+    position: relative;
+  }
+  .score-card.active-team {
+    transform: scale(1.08);
+    box-shadow: 0 0 24px currentColor;
+  }
+  .score-name {
+    font-weight: 800;
+    font-size: 13px;
+    white-space: nowrap;
+    color: var(--text);
+  }
+  .score-val {
+    font-family: var(--font-display);
+    font-size: 28px;
+    line-height: 1;
+    margin-top: 2px;
+  }
+  .score-change {
+    position: absolute;
+    top: -18px;
+    font-family: var(--font-display);
+    font-size: 20px;
+    animation: score-pop 1.5s ease-out forwards;
+    pointer-events: none;
+  }
+  @keyframes score-pop {
+    0% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(-40px); }
+  }
+
+  /* ===== BOARD ===== */
+  .board-wrap {
+    flex: 1;
+    padding: 16px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+  }
+
+  .board {
+    display: grid;
+    gap: 8px;
+    width: 100%;
+    max-width: 1400px;
+  }
+
+  .board-cell {
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 12px 8px;
+    cursor: pointer;
+    transition: all 0.25s;
+    position: relative;
+    overflow: hidden;
+    user-select: none;
+  }
+  .board-cell::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.06), transparent);
+    pointer-events: none;
+  }
+
+  .cat-cell {
+    background: var(--cat-bg);
+    color: var(--cat-text);
+    font-family: var(--font-display);
+    font-size: clamp(12px, 1.8vw, 20px);
+    letter-spacing: 0.5px;
+    min-height: 60px;
+    cursor: default;
+    border: 1px solid rgba(255,255,255,0.12);
+  }
+
+  .q-cell {
+    background: var(--cell-bg);
+    border: 1.5px solid var(--border);
+    min-height: clamp(60px, 9vw, 100px);
+  }
+  .q-cell:hover:not(.used) {
+    transform: translateY(-3px) scale(1.02);
+    border-color: var(--accent);
+    box-shadow: var(--cell-num-glow);
+  }
+  .q-cell.used {
+    background: var(--bg);
+    border-color: transparent;
+    cursor: default;
+    opacity: 0.25;
+  }
+  .q-cell.used .cell-num { visibility: hidden; }
+
+  .cell-num {
+    font-family: var(--font-display);
+    font-size: clamp(20px, 3.5vw, 42px);
+    color: var(--cell-num);
+    text-shadow: var(--cell-num-glow);
+    transition: all 0.2s;
+  }
+  .q-cell:hover:not(.used) .cell-num { transform: scale(1.1); }
+
+  /* bonus star */
+  .bonus-badge {
+    position: absolute;
+    top: 6px; right: 8px;
+    font-size: 14px;
+    animation: spin 3s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ===== MODAL ===== */
+  .modal-backdrop {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    backdrop-filter: blur(8px);
+  }
+  .modal-backdrop.active { display: flex; }
+
+  .modal {
+    background: var(--modal-bg);
+    border: 2px solid var(--accent);
+    border-radius: 24px;
+    padding: 36px;
+    max-width: 680px;
+    width: 100%;
+    position: relative;
+    box-shadow: 0 0 80px var(--accent)44;
+    animation: modal-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes modal-in {
+    from { opacity: 0; transform: scale(0.8) translateY(20px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  .modal-close {
+    position: absolute;
+    top: 16px; right: 16px;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border);
+    background: var(--card);
+    color: var(--text);
+    font-size: 20px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .modal-close:hover { border-color: var(--accent); color: var(--accent); }
+
+  .modal-category {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    color: var(--accent2);
+    font-weight: 800;
+    margin-bottom: 8px;
+  }
+  .modal-points {
+    font-family: var(--font-display);
+    font-size: 52px;
+    color: var(--accent);
+    text-shadow: var(--cell-num-glow);
+    line-height: 1;
+    margin-bottom: 20px;
+  }
+  .modal-question {
+    font-size: clamp(16px, 2.5vw, 22px);
+    font-weight: 700;
+    line-height: 1.5;
+    color: var(--text);
+    margin-bottom: 24px;
+    padding: 20px;
+    background: var(--card);
+    border-radius: 14px;
+    border-left: 4px solid var(--accent);
+  }
+  .modal-image {
+    width: 100%;
+    max-height: 200px;
+    object-fit: contain;
+    border-radius: 10px;
+    margin-bottom: 16px;
+    display: none;
+  }
+
+  /* Multiple choice options */
+  .mc-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .mc-option {
+    padding: 14px 16px;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    background: var(--card);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.25s;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .mc-option:hover { border-color: var(--accent); background: var(--card-hover); }
+  .mc-option.correct { border-color: #10b981; background: #10b98122; color: #10b981; }
+  .mc-option.wrong { border-color: #ef4444; background: #ef444422; color: #ef4444; }
+  .mc-letter {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+
+  /* Drawing canvas */
+  .drawing-canvas-wrap {
+    position: relative;
+    margin-bottom: 16px;
+  }
+  #drawing-canvas {
+    width: 100%;
+    height: 180px;
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    background: var(--card);
+    cursor: crosshair;
+    display: block;
+    touch-action: none;
+  }
+  .drawing-tools {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+  .draw-tool-btn {
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    background: var(--card);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .draw-tool-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .draw-tool-btn.active-tool { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  /* Answer reveal */
+  .answer-reveal {
+    display: none;
+    padding: 16px 20px;
+    border-radius: 12px;
+    background: #10b98122;
+    border: 1.5px solid #10b981;
+    color: #10b981;
+    font-weight: 700;
+    font-size: 15px;
+    margin-bottom: 20px;
+    animation: modal-in 0.3s ease;
+  }
+  .answer-reveal.shown { display: block; }
+  .answer-label { font-size: 11px; text-transform: uppercase; letter-spacing: 2px; opacity: 0.7; margin-bottom: 4px; }
+
+  /* Team award buttons */
+  .award-section {
+    display: none;
+  }
+  .award-section.shown { display: block; }
+  .award-title {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    font-weight: 800;
+    margin-bottom: 10px;
+  }
+  .award-teams {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+  .award-btn {
+    padding: 10px 16px;
+    border-radius: 10px;
+    border: 2px solid;
+    background: transparent;
+    font-family: var(--font-body);
+    font-weight: 800;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .award-btn:hover { opacity: 0.8; transform: scale(1.05); }
+
+  .modal-action-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .btn-reveal {
+    flex: 1;
+    padding: 14px;
+    border-radius: 12px;
+    border: none;
+    background: var(--btn-secondary);
+    color: #fff;
+    font-family: var(--font-body);
+    font-weight: 800;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-reveal:hover { transform: translateY(-2px); opacity: 0.9; }
+  .btn-reveal:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  /* ===== BONUS MODAL ===== */
+  .bonus-bet-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .bonus-bet-label {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .bonus-bet-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .bonus-bet-input {
+    width: 100px;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: var(--card);
+    color: var(--text);
+    font-family: var(--font-display);
+    font-size: 22px;
+    text-align: center;
+    outline: none;
+  }
+  .bonus-bet-input:focus { border-color: var(--accent); }
+
+  /* ===== WINNER SCREEN ===== */
+  #winner-screen {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 40px 20px;
+    background: var(--board-bg);
+  }
+  .winner-emoji {
+    font-size: 80px;
+    animation: bounce 1s ease-in-out infinite;
+  }
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+  }
+  .winner-title {
+    font-family: var(--font-display);
+    font-size: clamp(40px, 10vw, 80px);
+    background: linear-gradient(135deg, var(--accent), var(--accent2), var(--accent3));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 16px 0;
+  }
+  .winner-name {
+    font-family: var(--font-display);
+    font-size: clamp(28px, 6vw, 56px);
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+  .winner-score {
+    font-size: 20px;
+    color: var(--text-dim);
+    margin-bottom: 32px;
+  }
+  .final-scores {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 40px;
+  }
+  .final-score-card {
+    padding: 16px 24px;
+    border-radius: 16px;
+    border: 2px solid;
+    background: var(--card);
+    min-width: 120px;
+  }
+  .final-rank {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    opacity: 0.6;
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+  .final-name { font-weight: 800; font-size: 16px; }
+  .final-pts { font-family: var(--font-display); font-size: 32px; }
+
+  .confetti-piece {
+    position: fixed;
+    width: 10px; height: 10px;
+    border-radius: 2px;
+    animation: confetti-fall linear forwards;
+    pointer-events: none;
+    z-index: 999;
+  }
+  @keyframes confetti-fall {
+    0% { transform: translateY(-20px) rotate(0); opacity: 1; }
+    100% { transform: translateY(105vh) rotate(720deg); opacity: 0; }
+  }
+
+  /* ===== UTILITY ===== */
+  .gap-hint {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .gap-hint span { background: var(--accent); color: #fff; border-radius: 4px; padding: 1px 6px; font-size: 11px; font-weight: 800; }
+
+  @media (max-width: 600px) {
+    .grid-controls { grid-template-columns: 1fr; }
+    .mc-options { grid-template-columns: 1fr; }
+    .modal { padding: 24px 18px; }
+  }
+</style>
+</head>
+<body data-theme="cosmic">
+
+<!-- PARTICLES -->
+<div id="particles"></div>
+
+<!-- LOADING OVERLAY -->
+<div class="loading-overlay" id="loading-overlay">
+  <div class="loading-logo">JamBoo</div>
+  <div class="loading-bar-wrap"><div class="loading-bar"></div></div>
+  <div class="loading-text" id="loading-text">Generating your game...</div>
+</div>
+
+<!-- ===================== SETUP SCREEN ===================== -->
+<div class="screen active" id="setup-screen">
+  <div class="setup-header">
+    <div class="logo">JamBoo</div>
+    <div class="logo-tagline" id="tagline">AI-Powered Quiz Show</div>
+
+    <div class="top-controls">
+      <!-- Language -->
+      <div class="pill-group" id="lang-group">
+        <button class="pill-btn active" onclick="setLang('en')">🇬🇧 English</button>
+        <button class="pill-btn" onclick="setLang('pt')">🇧🇷 Português</button>
+      </div>
+      <!-- Theme -->
+      <div class="pill-group">
+        <button class="pill-btn active" onclick="setTheme('cosmic')">🌌 Cosmic</button>
+        <button class="pill-btn" onclick="setTheme('retro')">🕹️ Retro</button>
+        <button class="pill-btn" onclick="setTheme('pastel')">🌸 Pastel</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="setup-body">
+    <!-- BOARD SIZE -->
+    <div class="panel">
+      <div class="panel-title"><span class="icon">🎯</span> <span data-i18n="boardConfig">Board Configuration</span></div>
+      <div class="grid-controls">
+        <div class="control-group">
+          <label data-i18n="categories">Categories (Columns)</label>
+          <div class="slider-wrap">
+            <input type="range" min="2" max="8" value="6" id="col-slider" oninput="updateSlider('col')">
+            <div class="slider-val" id="col-val">6</div>
+          </div>
+        </div>
+        <div class="control-group">
+          <label data-i18n="rows">Point Rows</label>
+          <div class="slider-wrap">
+            <input type="range" min="3" max="6" value="5" id="row-slider" oninput="updateSlider('row')">
+            <div class="slider-val" id="row-val">5</div>
+          </div>
+        </div>
+      </div>
+      <div class="gap-hint">
+        <span data-i18n="preview-hint-label">PREVIEW</span>
+        <span id="board-preview-text">6 categories × 5 rows = 30 questions</span>
+      </div>
+    </div>
+
+    <!-- TEAMS -->
+    <div class="panel">
+      <div class="panel-title"><span class="icon">👥</span> <span data-i18n="teams">Teams</span></div>
+      <div class="team-count-controls">
+        <button class="count-btn" onclick="changeTeams(-1)">−</button>
+        <span class="count-label" id="team-count-label">4 <span data-i18n="teams-label">Teams</span></span>
+        <button class="count-btn" onclick="changeTeams(1)">+</button>
+      </div>
+      <div class="teams-grid" id="teams-grid"></div>
+    </div>
+
+    <!-- AI PROMPT -->
+    <div class="panel">
+      <div class="panel-title"><span class="icon">🤖</span> <span data-i18n="aiSetup">AI Game Setup</span></div>
+      <textarea class="ai-prompt-area" id="ai-prompt" 
+        placeholder="Describe your quiz topic... e.g. 'A review quiz about the French Revolution for 9th grade students, including key events, people, and dates'"></textarea>
+
+      <div class="ai-options">
+        <select class="select-styled" id="difficulty-select">
+          <option value="easy" data-i18n-opt="easy">🟢 Easy</option>
+          <option value="medium" selected data-i18n-opt="medium">🟡 Medium</option>
+          <option value="hard" data-i18n-opt="hard">🔴 Hard</option>
+          <option value="mixed" data-i18n-opt="mixed">🎲 Mixed</option>
+        </select>
+        <select class="select-styled" id="lang-select">
+          <option value="English">🇬🇧 Questions in English</option>
+          <option value="Portuguese">🇧🇷 Perguntas em Português</option>
+        </select>
+      </div>
+
+      <div style="margin-top:14px;">
+        <label style="font-size:13px;font-weight:800;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:8px;" data-i18n="questionType">Question Type</label>
+        <div class="q-type-grid" id="qtype-chips"></div>
+      </div>
+      <div class="gap-hint" style="margin-top:12px;">
+        <span>TIP</span>
+        <span id="prompt-hint">Add ⭐ Bonus rounds by including "include 1 bonus question per category" in your prompt</span>
+      </div>
+    </div>
+
+    <!-- GENERATE BUTTON -->
+    <button class="btn-generate" id="gen-btn" onclick="generateGame()">
+      ✨ <span data-i18n="generateBtn">Generate My Game</span>
+    </button>
+  </div>
+</div>
+
+<!-- ===================== GAME SCREEN ===================== -->
+<div class="screen" id="game-screen">
+  <div class="game-header">
+    <div class="game-logo">JamBoo</div>
+    <div class="header-actions">
+      <button class="btn-small" onclick="showScreen('setup-screen')" data-i18n="newGame">🏠 New Game</button>
+      <button class="btn-small" onclick="checkWinner()" data-i18n="endGame">🏆 End Game</button>
+    </div>
+  </div>
+
+  <div class="scoreboard" id="scoreboard"></div>
+
+  <div class="board-wrap">
+    <div class="board" id="board"></div>
+  </div>
+</div>
+
+<!-- ===================== WINNER SCREEN ===================== -->
+<div class="screen" id="winner-screen">
+  <div class="winner-emoji">🏆</div>
+  <div class="winner-title" data-i18n="winner">WINNER!</div>
+  <div class="winner-name" id="winner-name"></div>
+  <div class="winner-score" id="winner-score"></div>
+  <div class="final-scores" id="final-scores"></div>
+  <button class="btn-generate" style="max-width:320px;" onclick="showScreen('setup-screen')">
+    🎮 <span data-i18n="playAgain">Play Again</span>
+  </button>
+</div>
+
+<!-- ===================== QUESTION MODAL ===================== -->
+<div class="modal-backdrop" id="q-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-category" id="modal-cat"></div>
+    <div class="modal-points" id="modal-pts"></div>
+    <img class="modal-image" id="modal-img" src="" alt="">
+    <div class="modal-question" id="modal-question"></div>
+
+    <!-- Multiple choice -->
+    <div id="mc-options" class="mc-options" style="display:none;"></div>
+
+    <!-- Drawing -->
+    <div id="drawing-section" style="display:none;">
+      <div class="drawing-canvas-wrap">
+        <canvas id="drawing-canvas" width="600" height="180"></canvas>
+      </div>
+      <div class="drawing-tools">
+        <button class="draw-tool-btn active-tool" onclick="setDrawColor('#7c3aed')" id="draw-pen">✏️ Pen</button>
+        <button class="draw-tool-btn" onclick="setDrawColor('#ef4444')">🔴</button>
+        <button class="draw-tool-btn" onclick="setDrawColor('#10b981')">🟢</button>
+        <button class="draw-tool-btn" onclick="setDrawColor('#f59e0b')">🟡</button>
+        <button class="draw-tool-btn" onclick="clearCanvas()">🗑️ Clear</button>
+      </div>
+    </div>
+
+    <!-- Bonus bet -->
+    <div id="bonus-section" style="display:none;" class="bonus-bet-section">
+      <div class="bonus-bet-label">⭐ <span data-i18n="bonusRound">BONUS ROUND</span> — <span data-i18n="placeYourBets">Place your bets!</span></div>
+      <div id="bonus-bets"></div>
+    </div>
+
+    <!-- Answer reveal -->
+    <div class="answer-reveal" id="answer-reveal">
+      <div class="answer-label" data-i18n="answer">ANSWER</div>
+      <div id="answer-text"></div>
+    </div>
+
+    <!-- Award points -->
+    <div class="award-section" id="award-section">
+      <div class="award-title" data-i18n="awardPoints">Award Points To:</div>
+      <div class="award-teams" id="award-teams"></div>
+      <div class="award-teams" id="deduct-teams"></div>
+    </div>
+
+    <div class="modal-action-row">
+      <button class="btn-reveal" id="reveal-btn" onclick="revealAnswer()" data-i18n="revealAnswer">👁 Reveal Answer</button>
+      <button class="btn-reveal" id="close-q-btn" onclick="closeModal()" style="display:none;" data-i18n="done">✅ Done</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== STATE =====
+let lang = 'en';
+let theme = 'cosmic';
+let numTeams = 4;
+let numCols = 6;
+let numRows = 5;
+let teams = [];
+let gameData = null;
+let currentCell = null;
+let drawColor = '#7c3aed';
+let isDrawing = false;
+let drawCtx = null;
+
+const TEAM_COLORS = ['#ef4444','#f59e0b','#10b981','#06b6d4','#8b5cf6','#f43f5e','#84cc16','#fb923c'];
+const DEFAULT_TEAM_NAMES_EN = ['Team 1','Team 2','Team 3','Team 4','Team 5','Team 6','Team 7','Team 8'];
+const DEFAULT_TEAM_NAMES_PT = ['Time 1','Time 2','Time 3','Time 4','Time 5','Time 6','Time 7','Time 8'];
+
+const QUESTION_TYPES = [
+  {id:'multiple', en:'Multiple Choice', pt:'Múltipla Escolha', icon:'🅰️'},
+  {id:'open', en:'Open Ended', pt:'Aberta', icon:'💬'},
+  {id:'drawing', en:'Draw It!', pt:'Desenhe!', icon:'✏️'},
+  {id:'mixed', en:'Mixed', pt:'Mista', icon:'🎲'},
+];
+let selectedQType = 'multiple';
+
+const I18N = {
+  en: {
+    tagline: 'AI-Powered Quiz Show',
+    boardConfig: 'Board Configuration',
+    categories: 'Categories (Columns)',
+    rows: 'Point Rows',
+    teams: 'Teams',
+    'teams-label': 'Teams',
+    aiSetup: 'AI Game Setup',
+    difficulty: 'Difficulty',
+    questionType: 'Question Type',
+    generateBtn: 'Generate My Game',
+    newGame: '🏠 New Game',
+    endGame: '🏆 End Game',
+    winner: 'WINNER!',
+    playAgain: '🎮 Play Again',
+    revealAnswer: '👁 Reveal Answer',
+    answer: 'ANSWER',
+    awardPoints: 'Award Points To:',
+    deductPoints: 'Deduct Points:',
+    done: '✅ Done',
+    bonusRound: 'BONUS ROUND',
+    placeYourBets: 'Place your bets!',
+    generating: 'Generating your game...',
+    aiThinking: 'AI is thinking...',
+    'preview-hint-label': 'PREVIEW',
+    'prompt-hint': 'Add ⭐ Bonus rounds by including "include 1 bonus question per category" in your prompt',
+    promptPlaceholder: "Describe your quiz topic... e.g. 'A review quiz about the French Revolution for 9th grade students, including key events, people, and dates'",
+    correct: '✅ Correct! +',
+    wrong: '❌ Wrong! −',
+    finalScore: 'points',
+    teamCount: 'Teams',
+  },
+  pt: {
+    tagline: 'Quiz Show com IA',
+    boardConfig: 'Configuração do Tabuleiro',
+    categories: 'Categorias (Colunas)',
+    rows: 'Linhas de Pontos',
+    teams: 'Times',
+    'teams-label': 'Times',
+    aiSetup: 'Configuração do Jogo com IA',
+    difficulty: 'Dificuldade',
+    questionType: 'Tipo de Pergunta',
+    generateBtn: 'Gerar Meu Jogo',
+    newGame: '🏠 Novo Jogo',
+    endGame: '🏆 Encerrar',
+    winner: 'VENCEDOR!',
+    playAgain: '🎮 Jogar Novamente',
+    revealAnswer: '👁 Revelar Resposta',
+    answer: 'RESPOSTA',
+    awardPoints: 'Dar Pontos Para:',
+    deductPoints: 'Retirar Pontos:',
+    done: '✅ Feito',
+    bonusRound: 'RODADA BÔNUS',
+    placeYourBets: 'Façam suas apostas!',
+    generating: 'Gerando seu jogo...',
+    aiThinking: 'IA pensando...',
+    'preview-hint-label': 'PRÉVIA',
+    'prompt-hint': 'Adicione rodadas ⭐ Bônus incluindo "incluir 1 pergunta bônus por categoria" no seu texto',
+    promptPlaceholder: "Descreva o tema do quiz... ex: 'Um quiz de revisão sobre a Revolução Francesa para alunos do 9º ano'",
+    correct: '✅ Correto! +',
+    wrong: '❌ Errado! −',
+    finalScore: 'pontos',
+    teamCount: 'Times',
+  }
+};
+
+// ===== INIT =====
+function init() {
+  renderParticles();
+  renderTeamsGrid();
+  renderQTypeChips();
+  applyI18n();
+  updateBoardPreview();
+}
+
+function renderParticles() {
+  const container = document.getElementById('particles');
+  container.innerHTML = '';
+  for (let i = 0; i < 20; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.left = Math.random() * 100 + '%';
+    p.style.animationDuration = (Math.random() * 15 + 10) + 's';
+    p.style.animationDelay = (Math.random() * 15) + 's';
+    p.style.width = p.style.height = (Math.random() * 4 + 2) + 'px';
+    container.appendChild(p);
+  }
+}
+
+function setLang(l) {
+  lang = l;
+  document.querySelectorAll('#lang-group .pill-btn').forEach((b,i) => {
+    b.classList.toggle('active', (i===0 && l==='en') || (i===1 && l==='pt'));
+  });
+  if (l === 'pt') {
+    document.getElementById('lang-select').value = 'Portuguese';
+  } else {
+    document.getElementById('lang-select').value = 'English';
+  }
+  applyI18n();
+  renderTeamsGrid();
+  renderQTypeChips();
+  updateBoardPreview();
+}
+
+function setTheme(t) {
+  theme = t;
+  document.body.setAttribute('data-theme', t);
+  document.querySelectorAll('.pill-group:last-child .pill-btn').forEach((b,i) => {
+    b.classList.toggle('active', ['cosmic','retro','pastel'][i] === t);
+  });
+  renderParticles();
+}
+
+function applyI18n() {
+  const d = I18N[lang];
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (d[key]) el.textContent = d[key];
+  });
+  const ta = document.getElementById('ai-prompt');
+  if (ta) ta.placeholder = d.promptPlaceholder;
+  const hint = document.getElementById('prompt-hint');
+  if (hint) hint.textContent = d['prompt-hint'];
+  document.getElementById('tagline').textContent = d.tagline;
+  updateBoardPreview();
+}
+
+function updateSlider(type) {
+  const val = document.getElementById(type + '-slider').value;
+  document.getElementById(type + '-val').textContent = val;
+  if (type === 'col') numCols = +val;
+  if (type === 'row') numRows = +val;
+  updateBoardPreview();
+}
+
+function updateBoardPreview() {
+  const el = document.getElementById('board-preview-text');
+  if (!el) return;
+  const total = numCols * numRows;
+  if (lang === 'pt') el.textContent = `${numCols} categorias × ${numRows} linhas = ${total} perguntas`;
+  else el.textContent = `${numCols} categories × ${numRows} rows = ${total} questions`;
+}
+
+// ===== TEAMS =====
+function renderTeamsGrid() {
+  const grid = document.getElementById('teams-grid');
+  const defaults = lang === 'pt' ? DEFAULT_TEAM_NAMES_PT : DEFAULT_TEAM_NAMES_EN;
+  // preserve names if teams exist
+  const oldNames = teams.map(t => t.name);
+  teams = Array.from({length: 8}, (_, i) => ({
+    name: oldNames[i] || defaults[i],
+    score: teams[i] ? teams[i].score : 0,
+    color: TEAM_COLORS[i]
+  }));
+  grid.innerHTML = '';
+  for (let i = 0; i < 8; i++) {
+    const wrap = document.createElement('div');
+    wrap.className = 'team-input-wrap';
+    if (i >= numTeams) wrap.style.display = 'none';
+    wrap.id = `team-wrap-${i}`;
+    wrap.innerHTML = `
+      <div class="team-color-dot" style="background:${TEAM_COLORS[i]}"></div>
+      <input class="team-input" type="text" value="${teams[i].name}" 
+        oninput="teams[${i}].name=this.value"
+        style="border-color:${TEAM_COLORS[i]}44">
+    `;
+    grid.appendChild(wrap);
+  }
+  updateTeamCountLabel();
+}
+
+function changeTeams(delta) {
+  numTeams = Math.max(2, Math.min(8, numTeams + delta));
+  for (let i = 0; i < 8; i++) {
+    const wrap = document.getElementById(`team-wrap-${i}`);
+    if (wrap) wrap.style.display = i < numTeams ? '' : 'none';
+  }
+  updateTeamCountLabel();
+}
+
+function updateTeamCountLabel() {
+  document.getElementById('team-count-label').innerHTML = 
+    `${numTeams} <span data-i18n="teams-label">${lang === 'pt' ? 'Times' : 'Teams'}</span>`;
+}
+
+// ===== Q TYPE CHIPS =====
+function renderQTypeChips() {
+  const wrap = document.getElementById('qtype-chips');
+  wrap.innerHTML = '';
+  QUESTION_TYPES.forEach(qt => {
+    const btn = document.createElement('button');
+    btn.className = 'q-type-chip' + (selectedQType === qt.id ? ' active' : '');
+    btn.textContent = `${qt.icon} ${lang === 'pt' ? qt.pt : qt.en}`;
+    btn.onclick = () => {
+      selectedQType = qt.id;
+      renderQTypeChips();
+    };
+    wrap.appendChild(btn);
+  });
+}
+
+// ===== AI GAME GENERATION =====
+async function generateGame() {
+  const prompt = document.getElementById('ai-prompt').value.trim();
+  if (!prompt) {
+    alert(lang === 'pt' ? 'Por favor, descreva o tema do seu quiz!' : 'Please describe your quiz topic!');
+    return;
+  }
+
+  const difficulty = document.getElementById('difficulty-select').value;
+  const qLang = document.getElementById('lang-select').value;
+  const qType = selectedQType;
+
+  showLoading(true);
+  document.getElementById('gen-btn').disabled = true;
+
+  const pointSteps = Array.from({length: numRows}, (_, i) => (i + 1) * 100);
+  const systemPrompt = buildSystemPrompt(numCols, numRows, pointSteps, difficulty, qLang, qType);
+  const userMsg = `Topic: ${prompt}\n\nGenerate the quiz board JSON now. Return ONLY valid JSON, no explanation, no markdown.`;
+
+  try {
+    const result = await callDeepSeek(systemPrompt, userMsg);
+    const clean = result.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
+    gameData = parsed;
+    teams.forEach(t => t.score = 0);
+    buildGameBoard();
+    showScreen('game-screen');
+  } catch (e) {
+    console.error(e);
+    alert(lang === 'pt' ? 'Erro ao gerar o jogo. Tente novamente!' : 'Error generating game. Please try again!');
+  }
+
+  showLoading(false);
+  document.getElementById('gen-btn').disabled = false;
+}
+
+function buildSystemPrompt(cols, rows, pts, difficulty, qLang, qType) {
+  const bonusNote = `One question per category should be a "bonus" (isBonus: true) where all teams bet points before seeing it.`;
+  const mcNote = qType === 'multiple' || qType === 'mixed' 
+    ? 'Multiple choice questions MUST have exactly 4 options array and a correctIndex (0-3).'
+    : '';
+  const drawNote = qType === 'drawing' || qType === 'mixed'
+    ? 'Drawing questions ask students to draw something (isDrawing: true). They have no answer options, just a description of what to draw.'
+    : '';
+
+  return `You are a quiz game generator for educators. Generate a Jeopardy-style quiz board.
+
+EXACT JSON FORMAT (no markdown, no extra text):
+{
+  "categories": ["Cat1", "Cat2", ...],
+  "questions": [
+    [
+      { "question": "...", "answer": "...", "type": "${qType}", "options": ["A","B","C","D"], "correctIndex": 0, "isBonus": false, "isDrawing": false },
+      ... (${rows} questions per category ordered by points ${pts.join(', ')})
+    ],
+    ... (${cols} arrays total)
+  ]
+}
+
+RULES:
+- ${cols} categories, ${rows} questions each, totaling ${cols * rows} questions
+- Language: ALL questions and answers in ${qLang}
+- Difficulty: ${difficulty}
+- Question type: ${qType}
+- ${mcNote}
+- ${drawNote}
+- ${bonusNote}
+- Points go ${pts.join(', ')} (first question easiest, last hardest)
+- Category names should be creative and thematic
+- For open/drawing type: omit "options" and "correctIndex"
+- For mixed: vary types across cells
+- Make questions educational and engaging`;
+}
+
+async function callDeepSeek(systemPrompt, userMsg) {
+  const res = await fetch('https://api.deepseek.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer sk-3866cbd27cd0431da743a89a8cc7adc6'
+    },
+    body: JSON.stringify({
+      model: 'deepseek-chat',
+      max_tokens: 4000,
+      temperature: 0.7,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userMsg }
+      ]
+    })
+  });
+  const data = await res.json();
+  if (!data.choices || !data.choices[0]) throw new Error('No response');
+  return data.choices[0].message.content;
+}
+
+// ===== GAME BOARD =====
+function buildGameBoard() {
+  const board = document.getElementById('board');
+  const cols = gameData.categories.length;
+  const rows = gameData.questions[0].length;
+  const pts = Array.from({length: rows}, (_, i) => (i + 1) * 100);
+
+  board.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+  board.innerHTML = '';
+
+  // Category row
+  gameData.categories.forEach(cat => {
+    const cell = document.createElement('div');
+    cell.className = 'board-cell cat-cell';
+    cell.textContent = cat;
+    board.appendChild(cell);
+  });
+
+  // Question rows
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const q = gameData.questions[c][r];
+      const cell = document.createElement('div');
+      cell.className = 'board-cell q-cell';
+      cell.dataset.col = c;
+      cell.dataset.row = r;
+      cell.dataset.pts = pts[r];
+      cell.innerHTML = `<div class="cell-num">${pts[r]}</div>`;
+      if (q.isBonus) cell.innerHTML += `<div class="bonus-badge">⭐</div>`;
+      cell.onclick = () => openQuestion(c, r, pts[r], cell);
+      board.appendChild(cell);
+    }
+  }
+
+  renderScoreboard();
+}
+
+function renderScoreboard() {
+  const sb = document.getElementById('scoreboard');
+  sb.innerHTML = '';
+  teams.slice(0, numTeams).forEach((t, i) => {
+    const card = document.createElement('div');
+    card.className = 'score-card';
+    card.id = `score-${i}`;
+    card.style.borderColor = t.color;
+    card.style.color = t.color;
+    card.innerHTML = `<div class="score-name">${t.name}</div><div class="score-val">${t.score}</div>`;
+    sb.appendChild(card);
+  });
+}
+
+// ===== QUESTION MODAL =====
+function openQuestion(col, row, pts, cell) {
+  if (cell.classList.contains('used')) return;
+  currentCell = { col, row, pts, cell };
+  const q = gameData.questions[col][row];
+  const cat = gameData.categories[col];
+
+  document.getElementById('modal-cat').textContent = cat.toUpperCase();
+  document.getElementById('modal-pts').textContent = pts;
+  document.getElementById('modal-question').textContent = q.question;
+  document.getElementById('modal-img').style.display = 'none';
+  document.getElementById('mc-options').style.display = 'none';
+  document.getElementById('drawing-section').style.display = 'none';
+  document.getElementById('bonus-section').style.display = 'none';
+  document.getElementById('answer-reveal').classList.remove('shown');
+  document.getElementById('award-section').classList.remove('shown');
+  document.getElementById('reveal-btn').style.display = '';
+  document.getElementById('reveal-btn').disabled = false;
+  document.getElementById('close-q-btn').style.display = 'none';
+
+  // Bonus
+  if (q.isBonus) {
+    document.getElementById('bonus-section').style.display = 'block';
+    renderBonusBets();
+  }
+
+  // Multiple choice
+  if (q.options && q.options.length) {
+    const mc = document.getElementById('mc-options');
+    mc.style.display = 'grid';
+    mc.innerHTML = '';
+    q.options.forEach((opt, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'mc-option';
+      btn.innerHTML = `<div class="mc-letter">${'ABCD'[i]}</div>${opt}`;
+      btn.onclick = () => {
+        if (document.getElementById('answer-reveal').classList.contains('shown')) return;
+        const isCorrect = i === q.correctIndex;
+        btn.classList.add(isCorrect ? 'correct' : 'wrong');
+        mc.querySelectorAll('.mc-option')[q.correctIndex].classList.add('correct');
+      };
+      mc.appendChild(btn);
+    });
+  }
+
+  // Drawing
+  if (q.isDrawing) {
+    document.getElementById('drawing-section').style.display = 'block';
+    initCanvas();
+  }
+
+  document.getElementById('answer-text').textContent = q.answer;
+  document.getElementById('q-modal').classList.add('active');
+}
+
+function closeModal() {
+  document.getElementById('q-modal').classList.remove('active');
+  if (currentCell) {
+    currentCell.cell.classList.add('used');
+    currentCell = null;
+  }
+}
+
+function revealAnswer() {
+  document.getElementById('answer-reveal').classList.add('shown');
+  document.getElementById('reveal-btn').style.display = 'none';
+  document.getElementById('close-q-btn').style.display = '';
+  renderAwardSection();
+  document.getElementById('award-section').classList.add('shown');
+}
+
+function renderAwardSection() {
+  const pts = currentCell ? currentCell.pts : 0;
+  const awardsDiv = document.getElementById('award-teams');
+  const deductDiv = document.getElementById('deduct-teams');
+  awardsDiv.innerHTML = `<div class="award-title">${I18N[lang].awardPoints}</div>`;
+  deductDiv.innerHTML = `<div class="award-title" style="margin-top:8px">${I18N[lang].deductPoints}</div>`;
+
+  teams.slice(0, numTeams).forEach((t, i) => {
+    // Award
+    const ab = document.createElement('button');
+    ab.className = 'award-btn';
+    ab.style.borderColor = t.color;
+    ab.style.color = t.color;
+    ab.textContent = `+${pts} ${t.name}`;
+    ab.onclick = () => changeScore(i, pts, ab, `+${pts}`);
+    awardsDiv.appendChild(ab);
+
+    // Deduct
+    const db = document.createElement('button');
+    db.className = 'award-btn';
+    db.style.borderColor = '#ef4444';
+    db.style.color = '#ef4444';
+    db.textContent = `−${pts} ${t.name}`;
+    db.onclick = () => changeScore(i, -pts, db, `−${pts}`);
+    deductDiv.appendChild(db);
+  });
+}
+
+function changeScore(teamIdx, delta, btn, label) {
+  teams[teamIdx].score += delta;
+  const card = document.getElementById(`score-${teamIdx}`);
+  if (card) {
+    card.querySelector('.score-val').textContent = teams[teamIdx].score;
+    // Animate
+    const popup = document.createElement('div');
+    popup.className = 'score-change';
+    popup.textContent = label;
+    popup.style.color = delta > 0 ? '#10b981' : '#ef4444';
+    card.appendChild(popup);
+    setTimeout(() => popup.remove(), 1600);
+    card.classList.add('active-team');
+    setTimeout(() => card.classList.remove('active-team'), 1000);
+  }
+}
+
+// Bonus bets
+function renderBonusBets() {
+  const div = document.getElementById('bonus-bets');
+  div.innerHTML = '';
+  teams.slice(0, numTeams).forEach((t, i) => {
+    const row = document.createElement('div');
+    row.className = 'bonus-bet-row';
+    row.innerHTML = `
+      <span style="color:${t.color};font-weight:800;min-width:80px;font-size:13px">${t.name}</span>
+      <input class="bonus-bet-input" type="number" min="0" max="${Math.max(teams[i].score, 100)}" value="0" id="bet-${i}" style="border-color:${t.color}">
+    `;
+    div.appendChild(row);
+  });
+}
+
+// ===== DRAWING CANVAS =====
+function initCanvas() {
+  const canvas = document.getElementById('drawing-canvas');
+  canvas.width = canvas.offsetWidth;
+  drawCtx = canvas.getContext('2d');
+  drawCtx.clearRect(0, 0, canvas.width, canvas.height);
+  drawCtx.strokeStyle = drawColor;
+  drawCtx.lineWidth = 3;
+  drawCtx.lineCap = 'round';
+
+  canvas.onpointerdown = (e) => {
+    isDrawing = true;
+    drawCtx.beginPath();
+    const r = canvas.getBoundingClientRect();
+    drawCtx.moveTo(e.clientX - r.left, e.clientY - r.top);
+    canvas.setPointerCapture(e.pointerId);
+  };
+  canvas.onpointermove = (e) => {
+    if (!isDrawing) return;
+    const r = canvas.getBoundingClientRect();
+    drawCtx.lineTo(e.clientX - r.left, e.clientY - r.top);
+    drawCtx.stroke();
+  };
+  canvas.onpointerup = () => isDrawing = false;
+}
+
+function setDrawColor(c) {
+  drawColor = c;
+  if (drawCtx) {
+    drawCtx.strokeStyle = c;
+  }
+}
+
+function clearCanvas() {
+  if (drawCtx) {
+    const canvas = document.getElementById('drawing-canvas');
+    drawCtx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+}
+
+// ===== WINNER =====
+function checkWinner() {
+  const active = teams.slice(0, numTeams);
+  const sorted = [...active].sort((a, b) => b.score - a.score);
+  const winner = sorted[0];
+
+  document.getElementById('winner-name').textContent = winner.name;
+  document.getElementById('winner-score').textContent = `${winner.score} ${I18N[lang].finalScore}`;
+
+  const fs = document.getElementById('final-scores');
+  fs.innerHTML = '';
+  sorted.forEach((t, i) => {
+    const card = document.createElement('div');
+    card.className = 'final-score-card';
+    card.style.borderColor = t.color;
+    card.style.color = t.color;
+    const medals = ['🥇','🥈','🥉'];
+    card.innerHTML = `<div class="final-rank">${medals[i] || `#${i+1}`}</div><div class="final-name">${t.name}</div><div class="final-pts">${t.score}</div>`;
+    fs.appendChild(card);
+  });
+
+  showScreen('winner-screen');
+  launchConfetti();
+}
+
+function launchConfetti() {
+  const colors = ['#ef4444','#f59e0b','#10b981','#06b6d4','#8b5cf6','#f43f5e','#84cc16'];
+  for (let i = 0; i < 80; i++) {
+    setTimeout(() => {
+      const c = document.createElement('div');
+      c.className = 'confetti-piece';
+      c.style.left = Math.random() * 100 + 'vw';
+      c.style.background = colors[Math.floor(Math.random() * colors.length)];
+      c.style.animationDuration = (Math.random() * 2 + 1.5) + 's';
+      c.style.animationDelay = (Math.random() * 1) + 's';
+      c.style.width = c.style.height = (Math.random() * 10 + 6) + 'px';
+      document.body.appendChild(c);
+      setTimeout(() => c.remove(), 4000);
+    }, i * 50);
+  }
+}
+
+// ===== SCREENS =====
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function showLoading(show) {
+  const el = document.getElementById('loading-overlay');
+  el.classList.toggle('active', show);
+}
+
+// ===== BOOT =====
+init();
+</script>
+</body>
+</html>
