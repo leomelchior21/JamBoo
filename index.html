@@ -156,17 +156,30 @@ body::before{
 /* ─── pixel selection button ─── */
 .cfg-btn{
   flex:1;
-  padding:14px 8px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:8px;
+  padding:20px 8px;
   background:rgba(8,8,28,.9);
   border:2px solid rgba(102,0,255,.3);
   color:rgba(255,255,255,.5);
-  font-family:var(--fp);font-size:7px;letter-spacing:1px;
+  font-family:var(--fp);
   text-transform:uppercase;text-align:center;
   cursor:pointer;
   transition:border-color .12s, color .12s, background .12s,
              transform .12s, box-shadow .12s;
   position:relative;overflow:hidden;
 }
+.btn-main{
+  font-size:21px;letter-spacing:1px;
+  color:inherit;line-height:1.2;
+}
+.btn-sub{
+  font-size:7px;letter-spacing:1px;
+  color:rgba(255,255,255,.35);
+  text-transform:lowercase;line-height:1.4;
+}
+.cfg-btn.active .btn-sub{color:rgba(0,255,255,.6);}
+.cfg-btn:hover:not(.active) .btn-sub{color:rgba(255,255,255,.5);}
 /* subtle scanline texture on buttons */
 .cfg-btn::before{
   content:'';position:absolute;inset:0;pointer-events:none;
@@ -472,27 +485,6 @@ body::before{
       <div class="config-btn-group" id="qtype-btns"></div>
     </div>
 
-    <!-- ROW 5: MODES -->
-    <div class="config-row">
-      <div class="config-row-lbl" data-i18n="modTitle">MODES</div>
-      <div class="config-btn-group">
-        <button class="cfg-btn mode-btn on" id="fx-timer" onclick="toggleFX('timer')">
-          <span class="mode-ico">⚡</span>
-          <span class="mode-lbl" data-i18n="timerLabel">TIMER</span>
-          <span class="mode-desc" data-i18n="timerDesc">30s</span>
-        </button>
-        <button class="cfg-btn mode-btn on" id="fx-bonus" onclick="toggleFX('bonus')">
-          <span class="mode-ico">⭐</span>
-          <span class="mode-lbl" data-i18n="bonusLabel">BONUS</span>
-          <span class="mode-desc" data-i18n="bonusDesc">BET</span>
-        </button>
-        <button class="cfg-btn mode-btn" id="fx-speed" onclick="toggleFX('speed')">
-          <span class="mode-ico">🏎</span>
-          <span class="mode-lbl" data-i18n="speedLabel">SPEED</span>
-          <span class="mode-desc" data-i18n="speedDesc">15s</span>
-        </button>
-      </div>
-    </div>
 
   </div><!-- /config-grid -->
 
@@ -539,75 +531,69 @@ body::before{
 const T={
   en:{
     pageTitle:'CREATE YOUR CHALLENGE!',
-    teamsTitle:'PLAYERS',
-    gridTitle:'BOARD SIZE',
-    diffTitle:'DIFFICULTY',
-    qtypeTitle:'QUESTION',
-    modTitle:'MODES',
-    diff0:'EASY',diff1:'MED',diff2:'HARD',diff3:'MIX',
-    qt0:'M.C.',qt1:'OPEN',qt2:'DRAW',qt3:'MIX',
-    timerLabel:'TIMER', timerDesc:'30s',
-    bonusLabel:'BONUS', bonusDesc:'BET',
-    speedLabel:'SPEED', speedDesc:'15s',
+    teamsTitle:'PLAYERS', gridTitle:'BOARD SIZE',
+    diffTitle:'DIFFICULTY', qtypeTitle:'QUESTION TYPE',
+    diff0:'EASY',    diff0desc:'beginner level',
+    diff1:'MED',     diff1desc:'grade standard',
+    diff2:'HARD',    diff2desc:'advanced',
+    diff3:'MIX',     diff3desc:'all levels',
+    qt0:'M.C.',      qt0desc:'multiple choice',
+    qt1:'OPEN',      qt1desc:'open answer',
+    qt2:'DRAW',      qt2desc:'draw the answer',
+    qt3:'MIX',       qt3desc:'all types mixed',
     teamNamesLabel:'TEAM NAMES',
     promptTitle:'ENTER YOUR QUEST',
-    launchLabel:'◄ PRESS START ►',
-    startBtn:'START GAME',
+    launchLabel:'◄ PRESS START ►', startBtn:'START GAME',
     promptPH:'> Describe your quiz... e.g. French Revolution for 9th grade students',
     noPrompt:'Please describe your quiz topic!',
     generating:'Generating your game...',
     teamDefaults:['Team 1','Team 2','Team 3','Team 4','Team 5','Team 6','Team 7','Team 8'],
-    soloDefault:'Player 1',
-    questions:'questions',
-    solo:'1 PLAYER',
+    soloDefault:'Player 1', soloDesc:'solo mode', teamsWord:'teams',
+    questions:'questions', solo:'1P',
   },
   pt:{
     pageTitle:'CRIE SEU DESAFIO!',
-    teamsTitle:'JOGADORES',
-    gridTitle:'TAMANHO',
-    diffTitle:'DIFICULDADE',
-    qtypeTitle:'QUESTÃO',
-    modTitle:'MODOS',
-    diff0:'FÁCIL',diff1:'MÉDIO',diff2:'DIFÍCIL',diff3:'MISTO',
-    qt0:'M.E.',qt1:'ABERTA',qt2:'DRAW',qt3:'MIX',
-    timerLabel:'TIMER', timerDesc:'30s',
-    bonusLabel:'BÔNUS', bonusDesc:'APOSTAR',
-    speedLabel:'SPEED', speedDesc:'15s',
+    teamsTitle:'JOGADORES', gridTitle:'TAMANHO DO BOARD',
+    diffTitle:'DIFICULDADE', qtypeTitle:'TIPO DE QUESTÃO',
+    diff0:'FÁCIL',   diff0desc:'nível básico',
+    diff1:'MÉDIO',   diff1desc:'padrão escolar',
+    diff2:'DIFÍCIL', diff2desc:'avançado',
+    diff3:'MISTO',   diff3desc:'todos os níveis',
+    qt0:'M.E.',      qt0desc:'múltipla escolha',
+    qt1:'ABERTA',    qt1desc:'resposta aberta',
+    qt2:'DRAW',      qt2desc:'desenhar a resposta',
+    qt3:'MIX',       qt3desc:'todos os tipos',
     teamNamesLabel:'NOMES DOS TIMES',
     promptTitle:'SUA MISSÃO',
-    launchLabel:'◄ PRESSIONE START ►',
-    startBtn:'INICIAR JOGO',
+    launchLabel:'◄ PRESSIONE START ►', startBtn:'INICIAR JOGO',
     promptPH:'> Descreva seu quiz... ex: Revolução Francesa para o 9º ano',
     noPrompt:'Por favor, descreva o tema do quiz!',
     generating:'Gerando seu jogo...',
     teamDefaults:['Time 1','Time 2','Time 3','Time 4','Time 5','Time 6','Time 7','Time 8'],
-    soloDefault:'Jogador 1',
-    questions:'perguntas',
-    solo:'1 JOGADOR',
+    soloDefault:'Jogador 1', soloDesc:'modo solo', teamsWord:'times',
+    questions:'perguntas', solo:'1J',
   },
   es:{
     pageTitle:'¡CREA TU DESAFÍO!',
-    teamsTitle:'JUGADORES',
-    gridTitle:'TAMAÑO',
-    diffTitle:'DIFICULTAD',
-    qtypeTitle:'PREGUNTA',
-    modTitle:'MODOS',
-    diff0:'FÁCIL',diff1:'MEDIO',diff2:'DIFÍCIL',diff3:'MIXTO',
-    qt0:'M.O.',qt1:'ABIERTA',qt2:'DIBUJO',qt3:'MIX',
-    timerLabel:'TIMER', timerDesc:'30s',
-    bonusLabel:'BONUS', bonusDesc:'APOSTAR',
-    speedLabel:'SPEED', speedDesc:'15s',
+    teamsTitle:'JUGADORES', gridTitle:'TAMAÑO DEL BOARD',
+    diffTitle:'DIFICULTAD', qtypeTitle:'TIPO DE PREGUNTA',
+    diff0:'FÁCIL',   diff0desc:'nivel básico',
+    diff1:'MEDIO',   diff1desc:'estándar',
+    diff2:'DIFÍCIL', diff2desc:'avanzado',
+    diff3:'MIXTO',   diff3desc:'todos los niveles',
+    qt0:'M.O.',      qt0desc:'opción múltiple',
+    qt1:'ABIERTA',   qt1desc:'respuesta abierta',
+    qt2:'DIBUJO',    qt2desc:'dibuja la respuesta',
+    qt3:'MIX',       qt3desc:'todos los tipos',
     teamNamesLabel:'NOMBRES DE EQUIPOS',
     promptTitle:'TU MISIÓN',
-    launchLabel:'◄ PRESIONA START ►',
-    startBtn:'INICIAR JUEGO',
+    launchLabel:'◄ PRESIONA START ►', startBtn:'INICIAR JUEGO',
     promptPH:'> Describe tu quiz... ej: Revolución Francesa para 9° grado',
     noPrompt:'¡Por favor describe el tema de tu quiz!',
     generating:'Generando tu juego...',
     teamDefaults:['Equipo 1','Equipo 2','Equipo 3','Equipo 4','Equipo 5','Equipo 6','Equipo 7','Equipo 8'],
-    soloDefault:'Jugador 1',
-    questions:'preguntas',
-    solo:'1 JUGADOR',
+    soloDefault:'Jugador 1', soloDesc:'modo solo', teamsWord:'equipos',
+    questions:'preguntas', solo:'1J',
   }
 };
 
@@ -624,7 +610,6 @@ let numTeams=4, numCols=4, numRows=3;
 let difficulty='easy', qType='multiple';
 let teams=[];
 let soloMode=false;
-const fxState={timer:true,bonus:true,speed:false};
 
 /* ══════════ INIT ══════════ */
 function init(){
@@ -671,6 +656,14 @@ function applyI18n(){
 }
 
 /* ══════════ CONFIG BUTTONS ══════════ */
+function makeBtn(main, sub, active, onclick){
+  const b=document.createElement('button');
+  b.className='cfg-btn'+(active?' active':'');
+  b.innerHTML=`<span class="btn-main">${main}</span><span class="btn-sub">${sub}</span>`;
+  b.onclick=onclick;
+  return b;
+}
+
 function renderConfigBtns(){
   const d=T[lang];
 
@@ -679,49 +672,32 @@ function renderConfigBtns(){
   tg.innerHTML='';
   TEAMS_OPTS.forEach(opt=>{
     const active=(opt.val==='solo'&&soloMode)||(opt.val===numTeams&&!soloMode);
-    const b=document.createElement('button');
-    b.className='cfg-btn'+(active?' active':'');
-    b.textContent=opt.labelKey?d[opt.labelKey]:opt.label;
-    b.onclick=()=>{
+    const label=opt.labelKey?d[opt.labelKey]:opt.label;
+    const sub=opt.val==='solo'?d.soloDesc:(opt.val+' '+d.teamsWord);
+    tg.appendChild(makeBtn(label,sub,active,()=>{
       if(opt.val==='solo'){soloMode=true;numTeams=1;}
       else{soloMode=false;numTeams=opt.val;}
       renderConfigBtns();renderTeamInputs();
-    };
-    tg.appendChild(b);
+    }));
   });
 
   // Difficulty
   const dg=document.getElementById('diff-btns');
   dg.innerHTML='';
   ['easy','medium','hard','mixed'].forEach((val,i)=>{
-    const b=document.createElement('button');
-    b.className='cfg-btn'+(difficulty===val?' active':'');
-    b.textContent=d['diff'+i];
-    b.onclick=()=>{difficulty=val;renderConfigBtns();};
-    dg.appendChild(b);
+    dg.appendChild(makeBtn(d['diff'+i],d['diff'+i+'desc'],difficulty===val,()=>{
+      difficulty=val;renderConfigBtns();
+    }));
   });
 
   // Question type
   const qg=document.getElementById('qtype-btns');
   qg.innerHTML='';
   ['multiple','open','drawing','mixed'].forEach((val,i)=>{
-    const b=document.createElement('button');
-    b.className='cfg-btn'+(qType===val?' active':'');
-    b.textContent=d['qt'+i];
-    b.onclick=()=>{qType=val;renderConfigBtns();};
-    qg.appendChild(b);
+    qg.appendChild(makeBtn(d['qt'+i],d['qt'+i+'desc'],qType===val,()=>{
+      qType=val;renderConfigBtns();
+    }));
   });
-
-  // Mode buttons: sync on/off class
-  ['timer','bonus','speed'].forEach(n=>{
-    document.getElementById('fx-'+n).classList.toggle('on',fxState[n]);
-  });
-}
-
-/* ══════════ FX TOGGLES ══════════ */
-function toggleFX(name){
-  fxState[name]=!fxState[name];
-  document.getElementById('fx-'+name).classList.toggle('on',fxState[name]);
 }
 
 /* ══════════ GRID PICKER ══════════ */
@@ -792,7 +768,7 @@ function startGame(){
     numTeams:count,numRows,numCols,difficulty,qType,
     teams:teams.slice(0,count),
     lang,qLang,
-    timerOn:fxState.timer,bonusOn:fxState.bonus,speedOn:fxState.speed,
+    timerOn:true,bonusOn:true,speedOn:false,
     soloMode,prompt
   };
   document.getElementById('load-text').textContent=T[lang].generating;

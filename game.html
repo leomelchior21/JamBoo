@@ -224,14 +224,18 @@ body{
 .ghdr-btn-end:hover{border-color:var(--danger);color:var(--danger);box-shadow:3px 3px 0 #000,0 0 8px rgba(255,68,68,.25);}
 
 /* ═══════════════════════════════════════════
-   SCOREBOARD  (retro pixel cards)
+   SCOREBOARD  (retro pixel cards — split either side of logo)
 ═══════════════════════════════════════════ */
-.scorebar{
+.scorebar-left,.scorebar-right{
   display:flex;align-items:center;gap:6px;flex:1;
-  overflow-x:auto;padding:2px 0;scrollbar-width:none;
-  justify-content:center;
+  overflow:hidden;padding:2px 0;
 }
-.scorebar::-webkit-scrollbar{display:none;}
+.scorebar-left{justify-content:flex-end;}
+.scorebar-right{justify-content:flex-start;}
+/* spacer reserves room for the centered logo */
+.logo-spacer{
+  width:150px;flex-shrink:0;
+}
 
 .score-card{
   display:flex;flex-direction:column;align-items:center;
@@ -617,9 +621,11 @@ body{
 
   <header class="ghdr">
     <a class="ghdr-btn" href="index.html">← <span id="lbl-back">Setup</span></a>
-    <img class="ghdr-logo" src="Jamboo-logo-png.png" alt="JamBoo" onclick="window.location.href='index.html'">
-    <div class="scorebar" id="scorebar"></div>
+    <div class="scorebar-left" id="scorebar-left"></div>
+    <div class="logo-spacer"></div>
+    <div class="scorebar-right" id="scorebar-right"></div>
     <button class="ghdr-btn ghdr-btn-end" onclick="endGame()" id="lbl-end">🏆 End</button>
+    <img class="ghdr-logo" src="Jamboo-logo-png.png" alt="JamBoo" onclick="window.location.href='index.html'">
   </header>
 
   <div class="board-toolbar">
@@ -861,14 +867,16 @@ function buildBoard() {
 }
 
 function renderScorebar() {
-  const sb=document.getElementById('scorebar');
-  sb.innerHTML='';
+  const left=document.getElementById('scorebar-left');
+  const right=document.getElementById('scorebar-right');
+  left.innerHTML='';right.innerHTML='';
+  const half=Math.ceil(teams.length/2);
   teams.forEach((t,i)=>{
     const c=document.createElement('div');
     c.className='score-card';c.id=`sc-${i}`;
     c.style.setProperty('--tc',t.color);
     c.innerHTML=`<div class="score-name">${t.name}</div><div class="score-val" id="sv-${i}">0</div>`;
-    sb.appendChild(c);
+    (i<half?left:right).appendChild(c);
   });
 }
 
