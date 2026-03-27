@@ -70,26 +70,26 @@ body::before{
   padding:0 24px 8px;
 }
 .hdr-logo{
-  height:210px;width:auto;position:relative;
-  margin-bottom:-45px;z-index:20;
+  height:210px;width:auto;
+  position:fixed;left:50%;top:0;z-index:200;
   filter:drop-shadow(0 10px 28px rgba(0,0,0,.9)) drop-shadow(0 0 18px rgba(102,0,255,.4));
   cursor:pointer;image-rendering:pixelated;
   animation:moonBalance 6s ease-in-out infinite;
   transform-origin:center bottom;
 }
 @keyframes moonBalance{
-  0%   { transform:translateY(0)    rotate(0deg);    }
-  15%  { transform:translateY(-7px) rotate(1.4deg);  }
-  30%  { transform:translateY(-3px) rotate(-0.6deg); }
-  45%  { transform:translateY(-9px) rotate(1.8deg);  }
-  60%  { transform:translateY(-4px) rotate(-0.4deg); }
-  75%  { transform:translateY(-7px) rotate(1.2deg);  }
-  90%  { transform:translateY(-2px) rotate(-0.3deg); }
-  100% { transform:translateY(0)    rotate(0deg);    }
+  0%   { transform:translateX(-50%) translateY(0)    rotate(0deg);    }
+  15%  { transform:translateX(-50%) translateY(-7px) rotate(1.4deg);  }
+  30%  { transform:translateX(-50%) translateY(-3px) rotate(-0.6deg); }
+  45%  { transform:translateX(-50%) translateY(-9px) rotate(1.8deg);  }
+  60%  { transform:translateX(-50%) translateY(-4px) rotate(-0.4deg); }
+  75%  { transform:translateX(-50%) translateY(-7px) rotate(1.2deg);  }
+  90%  { transform:translateX(-50%) translateY(-2px) rotate(-0.3deg); }
+  100% { transform:translateX(-50%) translateY(0)    rotate(0deg);    }
 }
 .hdr-logo:hover{
   animation:none;
-  transform:scale(1.05) translateY(-8px);
+  transform:translateX(-50%) scale(1.05) translateY(-8px);
   filter:drop-shadow(0 14px 32px rgba(0,0,0,.9)) drop-shadow(0 0 28px var(--cyan));
   transition:transform .3s ease, filter .3s ease;
 }
@@ -281,21 +281,21 @@ body::before{
 .lcd-strip{
   display:flex;align-items:center;gap:6px;
   padding:16px 24px;min-width:240px;
-  background:#020C02;
-  border:2px solid rgba(0,255,65,.22);
-  border-left:4px solid var(--tc,var(--green));
+  background:#08082A;
+  border:2px solid rgba(102,0,255,.3);
+  border-left:4px solid var(--tc,var(--cyan));
   animation:inputPulse 2.4s ease-in-out infinite;
 }
 @keyframes inputPulse{
   0%,100%{box-shadow:none;}
-  50%{box-shadow:0 0 12px rgba(0,255,65,.12);}
+  50%{box-shadow:0 0 16px rgba(0,255,255,.12);}
 }
 .lcd-strip input{
   flex:1;background:transparent;border:none;outline:none;
-  color:var(--green);font-family:var(--fp);font-size:16px;
-  caret-color:var(--green);min-width:0;
+  color:var(--cyan);font-family:var(--fp);font-size:16px;
+  caret-color:var(--cyan);min-width:0;
 }
-.lcd-strip input::placeholder{color:rgba(0,255,65,.22);}
+.lcd-strip input::placeholder{color:rgba(0,255,255,.25);}
 
 /* AI prompt */
 .prompt-wrap{margin-bottom:20px;}
@@ -307,18 +307,18 @@ body::before{
 }
 .lcd-cursor{
   display:inline-block;width:8px;height:10px;
-  background:var(--green);margin-left:4px;vertical-align:middle;
+  background:var(--cyan);margin-left:4px;vertical-align:middle;
   animation:blink .9s step-end infinite;
 }
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
 .lcd-screen{
-  position:relative;background:#020C02;
-  border:2px solid rgba(0,255,65,.25);overflow:hidden;
+  position:relative;background:#08082A;
+  border:2px solid rgba(102,0,255,.3);overflow:hidden;
   animation:promptPulse 3s ease-in-out infinite;
 }
 @keyframes promptPulse{
-  0%,100%{border-color:rgba(0,255,65,.22);}
-  50%{border-color:rgba(0,255,65,.55);box-shadow:0 0 16px rgba(0,255,65,.08);}
+  0%,100%{border-color:rgba(102,0,255,.25);}
+  50%{border-color:rgba(0,255,255,.55);box-shadow:0 0 20px rgba(0,255,255,.1);}
 }
 .lcd-screen::after{
   content:'';position:absolute;inset:0;pointer-events:none;z-index:2;
@@ -331,10 +331,10 @@ body::before{
   display:block;width:100%;min-height:160px;
   padding:28px 32px;
   background:transparent;border:none;outline:none;
-  color:var(--green);font-family:var(--fp);font-size:18px;line-height:2;
-  resize:vertical;caret-color:var(--green);position:relative;z-index:1;
+  color:var(--cyan);font-family:var(--fp);font-size:18px;line-height:2;
+  resize:vertical;caret-color:var(--cyan);position:relative;z-index:1;
 }
-.lcd-ta::placeholder{color:rgba(0,255,65,.25);}
+.lcd-ta::placeholder{color:rgba(0,255,255,.25);}
 
 /* ═══════════════════════════════
    LAUNCH BUTTON
@@ -418,10 +418,19 @@ body::before{
 }
 
 /* ═══════════════════════════════
+   COMETS
+═══════════════════════════════ */
+#comet-canvas{
+  position:fixed;inset:0;
+  pointer-events:none;z-index:1;
+  width:100%;height:100%;
+}
+
+/* ═══════════════════════════════
    RESPONSIVE
 ═══════════════════════════════ */
 @media(max-width:700px){
-  .hdr-logo{height:150px;margin-bottom:-30px;}
+  .hdr-logo{height:150px;}
   .synth-body{padding-top:44px;}
   .config-row{padding:20px 24px;gap:12px;}
   .content-area{padding:0 24px;}
@@ -437,6 +446,8 @@ body::before{
 <body>
 
 <!-- SPLASH -->
+<canvas id="comet-canvas"></canvas>
+
 <div id="splash">
   <img class="splash-logo" src="Jamboo-logo-png.png" alt="JamBoo">
 </div>
@@ -788,6 +799,51 @@ function startGame(){
 }
 
 init();
+
+// Comet particles
+(function(){
+  const cvs=document.getElementById('comet-canvas');
+  const ctx=cvs.getContext('2d');
+  const COLS=['#00FFFF','#FF00FF','#AA00FF','#6600FF','#FFD700'];
+  const NUM=20;
+  let W,H;
+  function resize(){W=cvs.width=window.innerWidth;H=cvs.height=window.innerHeight;}
+  resize();
+  window.addEventListener('resize',resize,{passive:true});
+  function rnd(a,b){return a+Math.random()*(b-a);}
+  function spawn(){
+    const angle=rnd(0,Math.PI*2);
+    const spd=rnd(1.2,3.5);
+    let x,y;
+    if(Math.random()<0.5){x=Math.random()<0.5?-10:W+10;y=rnd(0,H);}
+    else{x=rnd(0,W);y=Math.random()<0.5?-10:H+10;}
+    return{x,y,vx:Math.cos(angle)*spd,vy:Math.sin(angle)*spd,
+      size:rnd(1.2,2.8),col:COLS[0|rnd(0,COLS.length)],
+      trail:[],tLen:0|rnd(24,55),alpha:rnd(0.45,0.85)};
+  }
+  const comets=Array.from({length:NUM},spawn);
+  comets.forEach(c=>{c.x=rnd(0,W);c.y=rnd(0,H);});
+  function tick(){
+    ctx.clearRect(0,0,W,H);
+    comets.forEach(c=>{
+      c.trail.push({x:c.x,y:c.y});
+      if(c.trail.length>c.tLen)c.trail.shift();
+      const tl=c.trail.length;
+      for(let i=0;i<tl;i++){
+        const p=c.trail[i];const f=i/tl;
+        ctx.beginPath();ctx.arc(p.x,p.y,c.size*f*0.8,0,Math.PI*2);
+        ctx.fillStyle=c.col;ctx.globalAlpha=f*c.alpha*0.45;ctx.fill();
+      }
+      ctx.beginPath();ctx.arc(c.x,c.y,c.size,0,Math.PI*2);
+      ctx.fillStyle=c.col;ctx.globalAlpha=c.alpha;ctx.fill();
+      ctx.globalAlpha=1;
+      c.x+=c.vx;c.y+=c.vy;
+      if(c.x<-70||c.x>W+70||c.y<-70||c.y>H+70)Object.assign(c,spawn());
+    });
+    requestAnimationFrame(tick);
+  }
+  tick();
+})();
 
 // Sticky header scroll-shrink
 (function(){
