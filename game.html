@@ -11,6 +11,7 @@
    RETRO / SYNTHWAVE THEME
 ═══════════════════════════════════════════ */
 :root {
+  --bz:       1;
   --bg:       #0A0A1F;
   --panel:    #12122A;
   --panel2:   #0D0D22;
@@ -74,8 +75,16 @@ body{
   padding:10px 16px;
   display:flex;align-items:center;justify-content:space-between;gap:12px;
   position:sticky;top:0;z-index:100;
+  overflow:visible;
 }
-.ghdr-logo{height:72px;width:auto;cursor:pointer;}
+.ghdr-logo{
+  height:140px;width:auto;cursor:pointer;
+  margin-top:-52px;
+  position:relative;z-index:101;
+  filter:drop-shadow(0 8px 20px rgba(0,0,0,.85));
+  transition:filter .2s;
+}
+.ghdr-logo:hover{filter:drop-shadow(0 8px 20px rgba(0,0,0,.85)) drop-shadow(0 0 18px rgba(0,255,204,.6));}
 .ghdr-back{
   display:flex;align-items:center;gap:6px;
   padding:6px 12px;background:var(--gray);
@@ -96,7 +105,7 @@ body{
 .scorebar::-webkit-scrollbar{display:none;}
 .score-card{
   display:flex;flex-direction:column;align-items:center;
-  padding:5px 10px;min-width:80px;
+  padding:6px 14px;min-width:90px;
   background:var(--gray);
   border:2px solid rgba(255,255,255,.12);border-radius:var(--radius);
   position:relative;overflow:hidden;flex-shrink:0;
@@ -105,11 +114,11 @@ body{
 .score-card.active-team{animation:scoreFlash .5s ease;}
 @keyframes scoreFlash{0%,100%{transform:scale(1)}50%{transform:scale(1.06);}}
 .score-name{
-  font-size:10px;font-weight:900;
+  font-size:13px;font-weight:900;
   text-transform:uppercase;letter-spacing:.5px;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:70px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:90px;
 }
-.score-val{font-family:var(--fh);font-size:18px;line-height:1.1;}
+.score-val{font-family:var(--fh);font-size:26px;line-height:1.1;}
 .score-popup{
   position:absolute;top:0;left:50%;transform:translateX(-50%);
   font-family:var(--fh);font-size:14px;font-weight:900;
@@ -120,6 +129,28 @@ body{
 /* ═══════════════════════════════════════════
    BOARD
 ═══════════════════════════════════════════ */
+/* Zoom toolbar */
+.board-toolbar{
+  display:flex;align-items:center;justify-content:flex-end;gap:8px;
+  padding:6px 16px;
+  background:var(--panel2);
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+.zoom-btn{
+  width:30px;height:30px;
+  background:var(--gray);border:2px solid rgba(255,255,255,.15);
+  border-radius:var(--radius);
+  color:var(--text);font-size:18px;font-weight:bold;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:border-color .12s;
+  line-height:1;
+}
+.zoom-btn:hover{border-color:var(--primary);}
+.zoom-lbl{
+  font-family:var(--fh);font-size:13px;color:var(--text2);
+  min-width:48px;text-align:center;
+}
+
 .board-wrap{padding:16px;overflow-x:auto;}
 .board{display:grid;gap:8px;min-width:400px;}
 .board-cell{
@@ -133,12 +164,13 @@ body{
 .cat-cell{
   background:var(--cat-bg);border:2px solid var(--border);
   color:var(--cat-color);
-  font-size:clamp(12px,1.8vw,16px);min-height:60px;
+  font-size:calc(clamp(12px,1.8vw,16px) * var(--bz));
+  min-height:calc(60px * var(--bz));
   letter-spacing:.3px;line-height:1.2;text-transform:uppercase;
 }
 .q-cell{
   background:var(--cell-bg);border:2px solid var(--border);
-  cursor:pointer;min-height:72px;flex-direction:column;gap:4px;
+  cursor:pointer;min-height:calc(72px * var(--bz));flex-direction:column;gap:4px;
 }
 .q-cell:hover:not(.used){
   background:var(--cell-hover);border-color:var(--primary);
@@ -149,9 +181,9 @@ body{
   background:var(--cell-used);border-color:rgba(255,255,255,.06);
   cursor:default;transform:none;box-shadow:none;
 }
-.cell-pts{font-size:clamp(18px,3vw,28px);color:var(--accent);line-height:1;}
+.cell-pts{font-size:calc(clamp(18px,3vw,28px) * var(--bz));color:var(--accent);line-height:1;}
 .q-cell.used .cell-pts{color:var(--cell-used-text);}
-.cell-check{font-size:18px;opacity:.4;}
+.cell-check{font-size:calc(18px * var(--bz));opacity:.4;}
 .bonus-star{font-size:13px;position:absolute;top:4px;right:6px;}
 
 /* ═══════════════════════════════════════════
@@ -323,8 +355,10 @@ body{
 @media(max-width:480px){
   .mc-grid{grid-template-columns:1fr;}
   .award-grid{grid-template-columns:1fr 1fr;}
-  .score-card{min-width:65px;}
-  .ghdr-logo{height:54px;}
+  .score-card{min-width:72px;padding:5px 8px;}
+  .score-name{font-size:11px;}
+  .score-val{font-size:20px;}
+  .ghdr-logo{height:96px;margin-top:-36px;}
 }
 </style>
 </head>
@@ -347,6 +381,11 @@ body{
     <button class="ghdr-back" onclick="endGame()" style="border-color:rgba(255,68,68,.3);" id="lbl-end">🏆 End</button>
   </header>
 
+  <div class="board-toolbar">
+    <button class="zoom-btn" onclick="zoomBoard(-1)" title="Zoom out">−</button>
+    <span class="zoom-lbl" id="zoom-lbl">100%</span>
+    <button class="zoom-btn" onclick="zoomBoard(1)" title="Zoom in">+</button>
+  </div>
   <div class="board-wrap">
     <div class="board" id="board"></div>
   </div>
@@ -795,6 +834,14 @@ document.getElementById('q-modal').addEventListener('click',e=>{
 });
 
 boot();
+
+/* ══════════ BOARD ZOOM ══════════ */
+let bz=1;
+function zoomBoard(dir){
+  bz=Math.max(0.5,Math.min(2,+(bz+dir*0.15).toFixed(2)));
+  document.documentElement.style.setProperty('--bz',bz);
+  document.getElementById('zoom-lbl').textContent=Math.round(bz*100)+'%';
+}
 </script>
 </body>
 </html>

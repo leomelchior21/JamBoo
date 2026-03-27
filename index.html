@@ -13,7 +13,7 @@
 :root{
   --bg:#07071A;
   --panel:#0D0D22;
-  --module:#101026;
+  --module:#0A0A1E;
   --b1:#6600FF;
   --b2:#AA00FF;
   --cyan:#00FFFF;
@@ -24,11 +24,8 @@
   --text:#FFFFFF;
   --dim:rgba(255,255,255,.38);
   --fp:'Press Start 2P',monospace;
-  --fmono:'Press Start 2P',monospace;
 }
-
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-
 body{
   font-family:var(--fp);
   background:var(--bg);
@@ -36,11 +33,9 @@ body{
   min-height:100vh;
   padding:0 0 80px;
 }
-
-/* Dot grid background */
 body::before{
   content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
-  background-image:radial-gradient(rgba(102,0,255,.12) 1px,transparent 1px);
+  background-image:radial-gradient(rgba(102,0,255,.1) 1px,transparent 1px);
   background-size:24px 24px;
 }
 
@@ -50,77 +45,69 @@ body::before{
 .hdr{
   background:var(--panel);
   border-bottom:4px solid var(--b1);
-  box-shadow:0 4px 0 rgba(102,0,255,.35);
-  min-height:130px;display:flex;align-items:center;
-  position:relative;overflow:hidden;z-index:1;
+  box-shadow:0 4px 0 rgba(102,0,255,.3);
+  min-height:110px;
+  display:flex;align-items:center;
+  position:relative;
+  overflow:visible;
+  z-index:10;
 }
-/* star field */
 .hdr::before{
-  content:'';position:absolute;inset:0;pointer-events:none;
+  content:'';position:absolute;inset:0;pointer-events:none;overflow:hidden;
   background-image:
-    radial-gradient(rgba(255,255,255,.8) 1px,transparent 1px),
-    radial-gradient(rgba(0,255,255,.6) 1px,transparent 1px),
-    radial-gradient(rgba(255,0,255,.5) 1px,transparent 1px);
+    radial-gradient(rgba(255,255,255,.75) 1px,transparent 1px),
+    radial-gradient(rgba(0,255,255,.55) 1px,transparent 1px),
+    radial-gradient(rgba(255,0,255,.45) 1px,transparent 1px);
   background-size:55px 45px,100px 80px,140px 95px;
   background-position:12px 10px,44px 26px,72px 9px;
 }
 .hdr-inner{
-  position:relative;z-index:1;width:100%;
-  display:flex;align-items:center;justify-content:center;
+  position:relative;z-index:2;width:100%;
+  display:flex;align-items:flex-end;justify-content:center;
   padding:0 24px;
+  padding-bottom:8px;
 }
 .hdr-logo{
-  height:108px;width:auto;
-  transition:transform .1s steps(3),filter .1s;
+  height:210px;width:auto;
+  position:relative;
+  margin-bottom:-45px; /* pop above and below header */
+  z-index:20;
+  filter:drop-shadow(0 10px 28px rgba(0,0,0,.9)) drop-shadow(0 0 18px rgba(102,0,255,.4));
+  transition:transform .15s,filter .15s;
   cursor:pointer;
   image-rendering:pixelated;
 }
 .hdr-logo:hover{
-  transform:scale(1.07) translateY(-5px);
-  filter:drop-shadow(0 0 14px var(--cyan)) drop-shadow(4px 4px 0 var(--b1));
+  transform:scale(1.05) translateY(-6px);
+  filter:drop-shadow(0 14px 32px rgba(0,0,0,.9)) drop-shadow(0 0 28px var(--cyan));
 }
 .hdr-right{
-  position:absolute;right:20px;
-  display:flex;gap:4px;
+  position:absolute;right:20px;bottom:14px;
+  display:flex;gap:4px;z-index:3;
 }
-
-/* ═══════════════════════════════
-   LANGUAGE BUTTONS
-═══════════════════════════════ */
 .pill-group{display:inline-flex;gap:4px;}
 .pill-btn{
   padding:7px 10px;
-  background:#14143A;
-  border:3px solid #2A2A55;
+  background:#14143A;border:3px solid #2A2A55;
   box-shadow:3px 3px 0 #000;
-  color:var(--dim);
-  font-family:var(--fp);font-size:6px;
-  cursor:pointer;text-transform:uppercase;
-  transition:all .08s;
+  color:var(--dim);font-family:var(--fp);font-size:6px;
+  cursor:pointer;text-transform:uppercase;transition:all .08s;
 }
 .pill-btn:hover{border-color:var(--cyan);color:var(--cyan);}
-.pill-btn.active{
-  background:var(--b1);border-color:var(--b2);
-  color:#fff;box-shadow:3px 3px 0 #000;
-}
+.pill-btn.active{background:var(--b1);border-color:var(--b2);color:#fff;box-shadow:3px 3px 0 #000;}
 
 /* ═══════════════════════════════
    PAGE BODY
 ═══════════════════════════════ */
 .synth-body{
   position:relative;z-index:1;
-  max-width:960px;margin:0 auto;
-  padding:22px 16px 0;
+  max-width:980px;margin:0 auto;
+  padding:60px 16px 0; /* extra top padding for logo overhang */
 }
-
-.synth-title{
-  text-align:center;padding:10px 0 16px;
-}
+.synth-title{text-align:center;padding:10px 0 20px;}
 .synth-title span{
-  display:block;
-  font-size:clamp(10px,2.4vw,17px);
-  color:var(--cyan);
-  text-shadow:0 0 20px var(--cyan),3px 3px 0 var(--b1);
+  display:block;font-size:clamp(9px,2vw,14px);
+  color:var(--cyan);text-shadow:0 0 18px var(--cyan),3px 3px 0 var(--b1);
   letter-spacing:2px;
 }
 .synth-title small{
@@ -134,89 +121,187 @@ body::before{
 .synth-panel{
   background:var(--panel);
   border:4px solid var(--b1);
-  box-shadow:
-    8px 8px 0 #000,
-    0 0 0 8px #000,
-    0 0 0 10px var(--b1);
-  padding:20px;
-  position:relative;
-  margin-bottom:20px;
+  box-shadow:8px 8px 0 #000,0 0 0 8px #000,0 0 0 10px var(--b1);
+  padding:20px;position:relative;margin-bottom:20px;
 }
-
-/* Pixel corner screws */
-.screw{
-  position:absolute;width:10px;height:10px;
-  background:var(--b2);border:2px solid #000;z-index:2;
-}
+.screw{position:absolute;width:10px;height:10px;background:var(--b2);border:2px solid #000;z-index:2;}
 .screw::after{display:none;}
 .screw-tl{top:-2px;left:-2px;}
 .screw-tr{top:-2px;right:-2px;}
 .screw-bl{bottom:-2px;left:-2px;}
 .screw-br{bottom:-2px;right:-2px;}
 
-/* Layout rows */
-.rack-row{display:grid;gap:12px;margin-bottom:12px;}
-.rack-row-teams-board{grid-template-columns:1.2fr 1fr;}
-.rack-row-controls{grid-template-columns:1fr 1fr;}
-
 /* ═══════════════════════════════
-   MODULE (section box)
+   MIXER / FADER BANK
 ═══════════════════════════════ */
-.module{
+.fader-bank{
+  display:flex;align-items:stretch;gap:0;
   background:var(--module);
   border:3px solid #2A1166;
-  padding:14px;
+  margin-bottom:14px;
+  overflow-x:auto;
+  scrollbar-width:thin;
+  scrollbar-color:#2A1166 #080818;
+}
+.fader-bank::-webkit-scrollbar{height:4px;}
+.fader-bank::-webkit-scrollbar-track{background:#080818;}
+.fader-bank::-webkit-scrollbar-thumb{background:#2A1166;}
+
+/* vertical pixel divider between sections */
+.fader-divider{
+  width:3px;background:#2A1166;
+  flex-shrink:0;
   position:relative;
 }
-/* top accent bar */
-.module::before{
-  content:'';position:absolute;top:0;left:0;right:0;height:3px;
-  background:var(--b1);
+.fader-divider::before,.fader-divider::after{
+  content:'';position:absolute;left:0;right:0;height:3px;background:#441188;
+}
+.fader-divider::before{top:24px;}
+.fader-divider::after{bottom:24px;}
+
+/* each labelled section */
+.fader-section{
+  display:flex;flex-direction:column;align-items:center;
+  padding:14px 12px 12px;gap:10px;
+  flex-shrink:0;
+}
+.section-lbl{
+  font-size:6px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--b2);padding-bottom:8px;
+  border-bottom:2px solid #2A1166;
+  text-align:center;width:100%;
+}
+.fader-group{display:flex;gap:10px;align-items:flex-end;}
+
+/* single fader column */
+.fader-col{
+  display:flex;flex-direction:column;align-items:center;gap:7px;
+  min-width:46px;
+}
+.fader-val{
+  font-size:7px;color:var(--cyan);
+  text-shadow:0 0 8px var(--cyan);
+  background:#03080F;
+  border:2px solid rgba(0,255,255,.22);
+  padding:3px 4px;text-align:center;
+  min-width:44px;white-space:nowrap;
+  letter-spacing:1px;
+}
+/* slider wrapper — fixed size so rotate works */
+.fader-slider-wrap{
+  width:36px;height:160px;
+  position:relative;
+  display:flex;align-items:center;justify-content:center;
+}
+/* visual rail behind slider */
+.fader-rail{
+  position:absolute;width:8px;height:148px;
+  background:#050518;border:2px solid #2A1166;
+  left:50%;transform:translateX(-50%);pointer-events:none;
+}
+.fader-rail::before,.fader-rail::after{
+  content:'';position:absolute;right:-7px;width:5px;height:2px;
+  background:rgba(255,255,255,.16);
+}
+.fader-rail::before{top:22%;}
+.fader-rail::after{top:66%;}
+
+/* THE ACTUAL SLIDER — rotated horizontal → vertical */
+input[type=range].fader{
+  -webkit-appearance:none;appearance:none;
+  width:152px;height:36px;
+  transform:rotate(-90deg);
+  background:transparent;outline:none;
+  cursor:grab;position:relative;z-index:1;
+  margin:0;padding:0;
+}
+input[type=range].fader:active{cursor:grabbing;}
+
+/* Chrome / Safari */
+input[type=range].fader::-webkit-slider-runnable-track{
+  height:8px;
+  background:#080820;border:2px solid #2A1166;
+}
+input[type=range].fader::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  width:30px;height:20px;
+  background:linear-gradient(0deg,#222248,#32325A);
+  border:3px solid #7777BB;
+  box-shadow:2px 0 0 #000;
+  margin-top:-8px;
+  cursor:grab;
+  transition:border-color .1s,background .1s;
+}
+input[type=range].fader:hover::-webkit-slider-thumb{border-color:var(--cyan);background:linear-gradient(0deg,#282860,#383870);}
+input[type=range].fader:active::-webkit-slider-thumb{cursor:grabbing;}
+
+/* Firefox */
+input[type=range].fader::-moz-range-track{
+  height:8px;background:#080820;border:2px solid #2A1166;
+}
+input[type=range].fader::-moz-range-thumb{
+  width:26px;height:16px;
+  background:#222248;border:3px solid #7777BB;
+  border-radius:0;cursor:grab;
 }
 
-.mod-tag{
+.fader-label{
+  font-size:6px;color:var(--dim);
+  letter-spacing:2px;text-transform:uppercase;text-align:center;
+}
+
+/* ═══════════════════════════════
+   FX TOGGLES (in fader bank)
+═══════════════════════════════ */
+.toggle-group{display:flex;gap:10px;}
+.toggle-col{
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  cursor:pointer;min-width:46px;
+  padding:6px 4px;
+  border:2px solid #1A1144;
+  transition:border-color .1s;
+}
+.toggle-col.on{border-color:var(--cyan);}
+.toggle-col:hover{border-color:rgba(255,255,255,.2);}
+
+.fx-led{width:10px;height:10px;background:#0A0A0A;border:2px solid #222;}
+.fx-led.on{
+  background:var(--cyan);border-color:var(--cyan);
+  box-shadow:0 0 8px var(--cyan),0 0 16px rgba(0,255,255,.35);
+}
+/* pixel toggle switch */
+.lever-track{
+  width:46px;height:24px;
+  background:#080818;border:3px solid #1E1E44;
+  position:relative;cursor:pointer;transition:border-color .1s;
+}
+.lever-track.on{border-color:var(--cyan);}
+.lever-knob{
+  position:absolute;width:16px;height:16px;top:1px;left:1px;
+  background:#252550;border:2px solid #444488;
+  transition:left .1s steps(4),background .1s,border-color .1s;
+}
+.lever-track.on .lever-knob{left:24px;background:var(--cyan);border-color:var(--cyan);}
+.fx-desc{font-size:6px;color:var(--dim);letter-spacing:.5px;line-height:1.8;text-align:center;}
+
+/* ═══════════════════════════════
+   TEAM NAME INPUTS
+═══════════════════════════════ */
+.team-row-wrap{margin-bottom:14px;}
+.team-row-label{
   font-size:7px;letter-spacing:2px;text-transform:uppercase;
-  color:var(--b2);
-  padding-bottom:10px;margin-bottom:12px;
+  color:var(--b2);padding-bottom:8px;margin-bottom:10px;
   border-bottom:2px solid #1A0844;
   display:flex;align-items:center;gap:7px;
 }
-.mod-tag-dot{
-  width:6px;height:6px;
-  background:var(--cyan);
-  box-shadow:0 0 6px var(--cyan);
-  flex-shrink:0;
+.team-row-dot{
+  width:6px;height:6px;background:var(--cyan);
+  box-shadow:0 0 6px var(--cyan);flex-shrink:0;
   animation:blink .8s step-end infinite;
 }
-
-/* ═══════════════════════════════
-   STEP BUTTONS (team count)
-═══════════════════════════════ */
-.sequencer{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;}
-.step-btn{
-  flex:1;min-width:44px;height:42px;
-  background:#121230;
-  border:3px solid #2A2A55;
-  box-shadow:3px 3px 0 #000;
-  color:var(--dim);
-  font-family:var(--fp);font-size:11px;
-  cursor:pointer;
-  display:flex;align-items:center;justify-content:center;gap:4px;
-  transition:all .08s;
-}
-.step-btn:hover{border-color:var(--cyan);color:var(--cyan);}
-.step-btn.active{
-  background:#003333;border-color:var(--cyan);color:var(--cyan);
-  box-shadow:3px 3px 0 #004444;
-  text-shadow:0 0 8px var(--cyan);
-}
-
-/* ═══════════════════════════════
-   LCD TEAM INPUTS
-═══════════════════════════════ */
 .lcd-strips{
   display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(110px,1fr));
+  grid-template-columns:repeat(auto-fill,minmax(115px,1fr));
   gap:5px;
 }
 .lcd-strip{
@@ -228,143 +313,30 @@ body::before{
 }
 .lcd-strip input{
   flex:1;background:transparent;border:none;outline:none;
-  color:var(--green);font-family:var(--fp);font-size:7px;
+  color:var(--green);font-family:var(--fp);font-size:8px;
   width:100%;caret-color:var(--green);min-width:0;
 }
 .lcd-strip input::placeholder{color:rgba(0,255,65,.22);}
 
 /* ═══════════════════════════════
-   PIXEL GRID PICKER
+   LCD AI PROMPT
 ═══════════════════════════════ */
-.led-matrix-wrap{display:flex;flex-direction:column;align-items:flex-start;gap:10px;}
-.led-matrix{
-  display:grid;gap:3px;
-  cursor:crosshair;user-select:none;
-}
-.led-cell{
-  width:28px;height:28px;
-  background:#090920;
-  border:2px solid #1A1144;
-  transition:background .05s,border-color .05s;
-}
-.led-cell.hover{
-  background:rgba(0,255,255,.2);
-  border-color:var(--cyan);
-}
-.led-cell.sel{
-  background:rgba(0,255,255,.28);
-  border-color:var(--cyan);
-  box-shadow:inset 0 0 4px rgba(0,255,255,.35);
-}
-.matrix-readout{margin-top:4px;}
-.matrix-main{
-  font-size:13px;color:var(--cyan);
-  text-shadow:3px 3px 0 var(--b1);
-  margin-bottom:6px;
-}
-.matrix-sub{font-size:7px;color:var(--dim);letter-spacing:1px;}
-
-/* ═══════════════════════════════
-   PAD BUTTONS (difficulty / qtype)
-═══════════════════════════════ */
-.pad-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-.pad-btn{
-  aspect-ratio:1;
-  background:#0E0E28;
-  border:3px solid #252550;
-  box-shadow:4px 4px 0 #000;
-  cursor:pointer;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:6px;
-  color:var(--dim);
-  font-family:var(--fp);font-size:6px;letter-spacing:1px;text-transform:uppercase;
-  position:relative;padding:8px 4px;
-  transition:all .08s;
-}
-.pad-btn::before{
-  content:'';position:absolute;top:5px;right:5px;
-  width:5px;height:5px;background:rgba(255,255,255,.1);
-}
-.pad-btn .pad-icon{font-size:20px;}
-.pad-btn:hover{
-  border-color:rgba(255,255,255,.3);
-  transform:translate(-1px,-1px);
-  box-shadow:5px 5px 0 #000;
-}
-.pad-btn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 #000;}
-
-/* cyan active — difficulty */
-.pad-btn.active{
-  background:#001A1A;border-color:var(--cyan);color:var(--cyan);
-  box-shadow:4px 4px 0 #003333;
-  text-shadow:0 0 8px var(--cyan);
-}
-.pad-btn.active::before{background:var(--cyan);box-shadow:0 0 6px var(--cyan);}
-
-/* magenta active — q-type */
-.pad-btn.active-accent{
-  background:#1A001A;border-color:var(--pink);color:var(--pink);
-  box-shadow:4px 4px 0 #330033;
-  text-shadow:0 0 8px var(--pink);
-}
-.pad-btn.active-accent::before{background:var(--pink);box-shadow:0 0 6px var(--pink);}
-.pad-btn.active-accent::after{content:'';position:absolute;inset:0;background:transparent;}
-
-/* ═══════════════════════════════
-   FX CHAIN — PIXEL TOGGLES
-═══════════════════════════════ */
-.fx-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
-.fx-unit{
-  display:flex;flex-direction:column;align-items:center;gap:8px;
-  padding:14px 10px 12px;
-  background:#0C0C22;border:3px solid #1A1144;
-  transition:border-color .1s;
-}
-.fx-unit.on{border-color:var(--cyan);}
-
-.fx-led{
-  width:10px;height:10px;
-  background:#0A0A0A;border:2px solid #222;
-}
-.fx-led.on{
-  background:var(--cyan);border-color:var(--cyan);
-  box-shadow:0 0 8px var(--cyan),0 0 16px rgba(0,255,255,.35);
-}
-
-/* Pixel toggle switch */
-.lever-track{
-  width:54px;height:28px;
-  background:#080818;border:3px solid #1E1E44;
-  position:relative;cursor:pointer;
-  transition:border-color .1s;
-}
-.lever-track.on{border-color:var(--cyan);}
-.lever-knob{
-  position:absolute;
-  width:20px;height:20px;top:1px;left:1px;
-  background:#252550;border:2px solid #444488;
-  transition:left .1s steps(4),background .1s,border-color .1s;
-}
-.lever-track.on .lever-knob{
-  left:27px;
-  background:var(--cyan);border-color:var(--cyan);
-}
-
-.fx-labels{text-align:center;}
-.fx-name{
+.prompt-wrap{margin-bottom:14px;}
+.prompt-label{
   font-size:7px;letter-spacing:2px;text-transform:uppercase;
-  color:rgba(255,255,255,.65);margin-bottom:4px;
+  color:var(--b2);padding-bottom:8px;margin-bottom:10px;
+  border-bottom:2px solid #1A0844;
+  display:flex;align-items:center;gap:7px;
 }
-.fx-desc{font-size:6px;color:var(--dim);letter-spacing:.5px;line-height:1.8;}
-
-/* ═══════════════════════════════
-   LCD SCREEN (AI prompt)
-═══════════════════════════════ */
+.lcd-cursor{
+  display:inline-block;width:8px;height:10px;
+  background:var(--green);margin-left:4px;vertical-align:middle;
+  animation:blink .9s step-end infinite;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
 .lcd-screen{
-  position:relative;
-  background:#020C02;
-  border:3px solid rgba(0,255,65,.22);
-  margin-bottom:14px;overflow:hidden;
+  position:relative;background:#020C02;
+  border:3px solid rgba(0,255,65,.22);overflow:hidden;
 }
 .lcd-screen::after{
   content:'';position:absolute;inset:0;pointer-events:none;z-index:2;
@@ -378,49 +350,32 @@ body::before{
   padding:12px 14px;
   background:transparent;border:none;outline:none;
   color:var(--green);font-family:var(--fp);font-size:9px;line-height:2;
-  resize:vertical;caret-color:var(--green);
-  position:relative;z-index:1;
+  resize:vertical;caret-color:var(--green);position:relative;z-index:1;
 }
 .lcd-ta::placeholder{color:rgba(0,255,65,.25);}
-.lcd-cursor{
-  display:inline-block;width:8px;height:10px;
-  background:var(--green);margin-left:4px;vertical-align:middle;
-  animation:blink .9s step-end infinite;
-}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
 
 /* ═══════════════════════════════
    LAUNCH BUTTON
 ═══════════════════════════════ */
-.launch-wrap{
-  display:flex;flex-direction:column;align-items:center;gap:10px;
-  padding:4px 0;
-}
+.launch-wrap{display:flex;flex-direction:column;align-items:center;gap:10px;padding:4px 0;}
 .launch-label{
   font-size:7px;letter-spacing:4px;text-transform:uppercase;
-  color:var(--dim);
-  animation:blink 1.2s step-end infinite;
+  color:var(--dim);animation:blink 1.2s step-end infinite;
 }
 .btn-launch{
   width:100%;padding:18px 24px;
   background:var(--red);
-  border:4px solid #FF6677;
-  border-bottom:4px solid #880011;
-  box-shadow:6px 6px 0 #000, 0 0 20px rgba(255,34,68,.35);
-  color:#fff;
-  font-family:var(--fp);font-size:12px;letter-spacing:4px;
-  text-transform:uppercase;cursor:pointer;
-  transition:all .08s;
+  border:4px solid #FF6677;border-bottom:4px solid #880011;
+  box-shadow:6px 6px 0 #000,0 0 20px rgba(255,34,68,.35);
+  color:#fff;font-family:var(--fp);font-size:12px;letter-spacing:4px;
+  text-transform:uppercase;cursor:pointer;transition:all .08s;
 }
 .btn-launch:hover{
   transform:translate(-2px,-2px);
-  box-shadow:8px 8px 0 #000, 0 0 30px rgba(255,34,68,.55);
+  box-shadow:8px 8px 0 #000,0 0 30px rgba(255,34,68,.55);
   text-shadow:0 0 12px #fff;
 }
-.btn-launch:active{
-  transform:translate(5px,5px);
-  box-shadow:1px 1px 0 #000;
-}
+.btn-launch:active{transform:translate(5px,5px);box-shadow:1px 1px 0 #000;}
 .btn-launch:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:6px 6px 0 #000;}
 
 /* ═══════════════════════════════
@@ -435,7 +390,7 @@ body::before{
 #splash.hide{animation:splashOut .4s steps(6) forwards;}
 @keyframes splashOut{0%{opacity:1;}100%{opacity:0;}}
 .splash-logo{
-  height:130px;width:auto;
+  height:160px;width:auto;
   animation:splashFloat 1.8s ease-in-out forwards;
   image-rendering:pixelated;
   filter:drop-shadow(0 0 18px var(--cyan)) drop-shadow(4px 4px 0 var(--b1));
@@ -450,7 +405,7 @@ body::before{
 }
 
 /* ═══════════════════════════════
-   LOADING
+   LOADING OVERLAY (AI generation)
 ═══════════════════════════════ */
 .loading-overlay{
   display:none;position:fixed;inset:0;
@@ -463,16 +418,13 @@ body::before{
   0%,100%{filter:drop-shadow(0 0 8px var(--cyan));}
   50%{filter:drop-shadow(0 0 20px var(--cyan)) drop-shadow(4px 4px 0 var(--b1));}
 }
-.load-bar-wrap{
-  width:200px;height:6px;background:#111;
-  border:2px solid var(--cyan);
-}
+.load-bar-wrap{width:200px;height:6px;background:#111;border:2px solid var(--cyan);}
 .load-bar{height:100%;background:var(--cyan);animation:sweep 1s linear infinite;}
 @keyframes sweep{0%{transform:translateX(-100%)}100%{transform:translateX(300%)}}
 .load-text{font-size:7px;color:var(--dim);letter-spacing:3px;text-transform:uppercase;}
 
 /* ═══════════════════════════════
-   PIXEL FLOOR GRID
+   FLOOR GRID
 ═══════════════════════════════ */
 .grid-floor{
   position:fixed;bottom:0;left:0;right:0;height:64px;
@@ -481,22 +433,19 @@ body::before{
     linear-gradient(rgba(102,0,255,.1) 1px,transparent 1px),
     linear-gradient(90deg,rgba(102,0,255,.1) 1px,transparent 1px);
   background-size:20px 20px;
-  transform:perspective(200px) rotateX(62deg);transform-origin:bottom;
-  opacity:.5;
+  transform:perspective(200px) rotateX(62deg);transform-origin:bottom;opacity:.5;
 }
 
 /* ═══════════════════════════════
    RESPONSIVE
 ═══════════════════════════════ */
 @media(max-width:680px){
-  .rack-row-teams-board,.rack-row-controls{grid-template-columns:1fr;}
-  .fx-row{grid-template-columns:1fr;}
-  .hdr-logo{height:80px;}
-  .hdr-right{position:absolute;right:12px;}
-  .led-cell{width:22px;height:22px;}
+  .hdr-logo{height:150px;margin-bottom:-30px;}
+  .synth-body{padding-top:44px;}
+  .hdr-right{right:10px;bottom:10px;}
 }
 @media(max-width:400px){
-  .led-cell{width:18px;height:18px;}
+  .hdr-logo{height:120px;margin-bottom:-22px;}
 }
 </style>
 </head>
@@ -517,7 +466,7 @@ body::before{
 <!-- HEADER -->
 <header class="hdr">
   <div class="hdr-inner">
-    <img class="hdr-logo" src="Jamboo-logo-png.png" alt="JamBoo">
+    <img class="hdr-logo" src="Jamboo-logo-png.png" alt="JamBoo" onclick="window.scrollTo(0,0)">
     <div class="hdr-right">
       <div class="pill-group" id="lang-group">
         <button class="pill-btn active" onclick="setLang('en')">🇬🇧 EN</button>
@@ -535,130 +484,141 @@ body::before{
     <small>★ JAMBOO QUIZ GENERATOR 9000 ★</small>
   </div>
 
-  <!-- ══════ PIXEL PANEL ══════ -->
   <div class="synth-panel">
     <div class="screw screw-tl"></div>
     <div class="screw screw-tr"></div>
     <div class="screw screw-bl"></div>
     <div class="screw screw-br"></div>
 
-    <!-- ROW 1: Players + Board -->
-    <div class="rack-row rack-row-teams-board" style="margin-bottom:12px;">
+    <!-- ══ MIXER / FADER BANK ══ -->
+    <div class="fader-bank" id="fader-bank">
 
-      <!-- PLAYER SELECT -->
-      <div class="module">
-        <div class="mod-tag"><span class="mod-tag-dot"></span><span data-i18n="teamsTitle">SELECT PLAYERS</span></div>
-        <div class="sequencer" id="team-count-row"></div>
-        <div class="lcd-strips" id="team-inputs"></div>
-      </div>
-
-      <!-- BOARD SIZE -->
-      <div class="module">
-        <div class="mod-tag"><span class="mod-tag-dot"></span><span data-i18n="gridTitle">BOARD SIZE</span></div>
-        <div class="led-matrix-wrap">
-          <div class="led-matrix" id="gp-grid"></div>
-          <div class="matrix-readout">
-            <div class="matrix-main" id="gp-label">4 × 3</div>
-            <div class="matrix-sub" id="gp-sublabel">12 questions</div>
+      <!-- SECTION 1: PLAYERS -->
+      <div class="fader-section">
+        <div class="section-lbl" data-i18n="teamsTitle">PLAYERS</div>
+        <div class="fader-group">
+          <div class="fader-col">
+            <div class="fader-val" id="teams-val">4</div>
+            <div class="fader-slider-wrap">
+              <div class="fader-rail"></div>
+              <input type="range" class="fader" id="teams-fader" min="0" max="5" step="1" value="2" oninput="onTeamsFader(this)">
+            </div>
+            <div class="fader-label" data-i18n="teamsLabel">TEAMS</div>
           </div>
         </div>
       </div>
 
+      <div class="fader-divider"></div>
+
+      <!-- SECTION 2: BOARD SIZE -->
+      <div class="fader-section">
+        <div class="section-lbl" data-i18n="gridTitle">BOARD SIZE</div>
+        <div class="fader-group">
+          <div class="fader-col">
+            <div class="fader-val" id="cols-val">4</div>
+            <div class="fader-slider-wrap">
+              <div class="fader-rail"></div>
+              <input type="range" class="fader" id="cols-fader" min="1" max="8" step="1" value="4" oninput="onColsFader(this)">
+            </div>
+            <div class="fader-label" data-i18n="colsLabel">CATEG</div>
+          </div>
+          <div class="fader-col">
+            <div class="fader-val" id="rows-val">3</div>
+            <div class="fader-slider-wrap">
+              <div class="fader-rail"></div>
+              <input type="range" class="fader" id="rows-fader" min="1" max="6" step="1" value="3" oninput="onRowsFader(this)">
+            </div>
+            <div class="fader-label" data-i18n="rowsLabel">ROWS</div>
+          </div>
+        </div>
+        <div class="fader-val" id="board-summary" style="font-size:6px;background:transparent;border:none;color:var(--dim);letter-spacing:1px;">12 questions</div>
+      </div>
+
+      <div class="fader-divider"></div>
+
+      <!-- SECTION 3: DIFFICULTY -->
+      <div class="fader-section">
+        <div class="section-lbl" data-i18n="diffTitle">DIFFICULTY</div>
+        <div class="fader-group">
+          <div class="fader-col">
+            <div class="fader-val" id="diff-val">EASY</div>
+            <div class="fader-slider-wrap">
+              <div class="fader-rail"></div>
+              <input type="range" class="fader" id="diff-fader" min="0" max="3" step="1" value="0" oninput="onDiffFader(this)">
+            </div>
+            <div class="fader-label" data-i18n="diffLabel">LEVEL</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="fader-divider"></div>
+
+      <!-- SECTION 4: QUEST TYPE -->
+      <div class="fader-section">
+        <div class="section-lbl" data-i18n="qtypeTitle">QUESTION</div>
+        <div class="fader-group">
+          <div class="fader-col">
+            <div class="fader-val" id="qtype-val">M.C.</div>
+            <div class="fader-slider-wrap">
+              <div class="fader-rail"></div>
+              <input type="range" class="fader" id="qtype-fader" min="0" max="3" step="1" value="0" oninput="onQtypeFader(this)">
+            </div>
+            <div class="fader-label" data-i18n="qtypeLabel">TYPE</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="fader-divider"></div>
+
+      <!-- SECTION 5: FX OPTIONS (toggles) -->
+      <div class="fader-section">
+        <div class="section-lbl" data-i18n="modTitle">OPTIONS</div>
+        <div class="toggle-group">
+
+          <div class="toggle-col on" id="fx-timer" onclick="toggleFX('timer')">
+            <div class="fx-led on" id="led-timer"></div>
+            <div class="lever-track on" id="tog-timer"><div class="lever-knob"></div></div>
+            <div class="fader-label" data-i18n="timerLabel">TIMER</div>
+            <div class="fx-desc" data-i18n="timerDesc">30s</div>
+          </div>
+
+          <div class="toggle-col on" id="fx-bonus" onclick="toggleFX('bonus')">
+            <div class="fx-led on" id="led-bonus"></div>
+            <div class="lever-track on" id="tog-bonus"><div class="lever-knob"></div></div>
+            <div class="fader-label" data-i18n="bonusLabel">BONUS</div>
+            <div class="fx-desc" data-i18n="bonusDesc">BET</div>
+          </div>
+
+          <div class="toggle-col" id="fx-speed" onclick="toggleFX('speed')">
+            <div class="fx-led" id="led-speed"></div>
+            <div class="lever-track" id="tog-speed"><div class="lever-knob"></div></div>
+            <div class="fader-label" data-i18n="speedLabel">SPEED</div>
+            <div class="fx-desc" data-i18n="speedDesc">15s</div>
+          </div>
+
+        </div>
+      </div>
+
+    </div><!-- /fader-bank -->
+
+    <!-- TEAM NAMES -->
+    <div class="team-row-wrap">
+      <div class="team-row-label">
+        <span class="team-row-dot"></span>
+        <span data-i18n="teamNamesLabel">TEAM NAMES</span>
+      </div>
+      <div class="lcd-strips" id="team-inputs"></div>
     </div>
 
-    <!-- ROW 2: Difficulty + Q-Type -->
-    <div class="rack-row rack-row-controls" style="margin-bottom:12px;">
-
-      <!-- DIFFICULTY -->
-      <div class="module">
-        <div class="mod-tag"><span class="mod-tag-dot"></span><span data-i18n="diffTitle">DIFFICULTY</span></div>
-        <div class="pad-grid" id="diff-pads">
-          <button class="pad-btn active" data-val="easy" onclick="pickDiff(this)">
-            <span class="pad-icon">🟢</span><span data-i18n="easy">EASY</span>
-          </button>
-          <button class="pad-btn" data-val="medium" onclick="pickDiff(this)">
-            <span class="pad-icon">🟡</span><span data-i18n="medium">MED</span>
-          </button>
-          <button class="pad-btn" data-val="hard" onclick="pickDiff(this)">
-            <span class="pad-icon">🔴</span><span data-i18n="hard">HARD</span>
-          </button>
-          <button class="pad-btn" data-val="mixed" onclick="pickDiff(this)">
-            <span class="pad-icon">🎲</span><span data-i18n="mixed">MIX</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Q-TYPE -->
-      <div class="module">
-        <div class="mod-tag"><span class="mod-tag-dot"></span><span data-i18n="qtypeTitle">QUESTION TYPE</span></div>
-        <div class="pad-grid" id="qtype-pads">
-          <button class="pad-btn active-accent" data-val="multiple" onclick="pickQtype('multiple',this)">
-            <span class="pad-icon">🅰️</span><span data-i18n="mcLabel">M.CHOICE</span>
-          </button>
-          <button class="pad-btn" data-val="open" onclick="pickQtype('open',this)">
-            <span class="pad-icon">💬</span><span data-i18n="openLabel">OPEN</span>
-          </button>
-          <button class="pad-btn" data-val="drawing" onclick="pickQtype('drawing',this)">
-            <span class="pad-icon">✏️</span><span data-i18n="drawLabel">DRAW</span>
-          </button>
-          <button class="pad-btn" data-val="mixed" onclick="pickQtype('mixed',this)">
-            <span class="pad-icon">🎲</span><span data-i18n="mixedLabel">MIXED</span>
-          </button>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- ROW 3: Game Options (toggles) -->
-    <div class="module" style="margin-bottom:12px;">
-      <div class="mod-tag"><span class="mod-tag-dot"></span><span data-i18n="modTitle">GAME OPTIONS</span></div>
-      <div class="fx-row">
-
-        <div class="fx-unit on" id="fx-timer">
-          <div class="fx-led on" id="led-timer"></div>
-          <div class="lever-track on" id="tog-timer" onclick="toggleFX('timer')">
-            <div class="lever-knob"></div>
-          </div>
-          <div class="fx-labels">
-            <div class="fx-name" data-i18n="timerLabel">TIMER</div>
-            <div class="fx-desc" data-i18n="timerDesc">30s per question</div>
-          </div>
-        </div>
-
-        <div class="fx-unit on" id="fx-bonus">
-          <div class="fx-led on" id="led-bonus"></div>
-          <div class="lever-track on" id="tog-bonus" onclick="toggleFX('bonus')">
-            <div class="lever-knob"></div>
-          </div>
-          <div class="fx-labels">
-            <div class="fx-name" data-i18n="bonusLabel">BONUS</div>
-            <div class="fx-desc" data-i18n="bonusDesc">Teams bet points</div>
-          </div>
-        </div>
-
-        <div class="fx-unit" id="fx-speed">
-          <div class="fx-led" id="led-speed"></div>
-          <div class="lever-track" id="tog-speed" onclick="toggleFX('speed')">
-            <div class="lever-knob"></div>
-          </div>
-          <div class="fx-labels">
-            <div class="fx-name" data-i18n="speedLabel">SPEED</div>
-            <div class="fx-desc" data-i18n="speedDesc">15s, first buzzer wins</div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- ROW 4: AI Prompt -->
-    <div class="module" style="margin-bottom:14px;">
-      <div class="mod-tag">
-        <span class="mod-tag-dot"></span>
+    <!-- AI PROMPT -->
+    <div class="prompt-wrap">
+      <div class="prompt-label">
+        <span class="team-row-dot"></span>
         <span data-i18n="promptTitle">ENTER YOUR QUEST</span>
         <span class="lcd-cursor"></span>
       </div>
       <div class="lcd-screen">
-        <textarea class="lcd-ta" id="ai-prompt" placeholder="> Describe your quiz... e.g. French Revolution for 9th grade students"></textarea>
+        <textarea class="lcd-ta" id="ai-prompt" placeholder="> Describe your quiz..."></textarea>
       </div>
     </div>
 
@@ -677,18 +637,20 @@ body::before{
 
 <script>
 /* ══════════ I18N ══════════ */
-const T = {
+const T={
   en:{
     pageTitle:'CREATE YOUR CHALLENGE!',
-    teamsTitle:'SELECT PLAYERS', gridTitle:'BOARD SIZE',
-    diffTitle:'DIFFICULTY',
-    easy:'EASY', medium:'MED', hard:'HARD', mixed:'MIX',
-    qtypeTitle:'QUESTION TYPE',
-    mcLabel:'M.CHOICE', openLabel:'OPEN', drawLabel:'DRAW', mixedLabel:'MIXED',
-    modTitle:'GAME OPTIONS',
-    timerLabel:'TIMER', timerDesc:'30s per question',
-    bonusLabel:'BONUS', bonusDesc:'Teams bet points',
-    speedLabel:'SPEED', speedDesc:'15s, first buzzer wins',
+    teamsTitle:'PLAYERS', teamsLabel:'TEAMS',
+    gridTitle:'BOARD SIZE', colsLabel:'CATEG', rowsLabel:'ROWS',
+    diffTitle:'DIFFICULTY', diffLabel:'LEVEL',
+    diff0:'EASY',diff1:'MED',diff2:'HARD',diff3:'MIX',
+    qtypeTitle:'QUESTION', qtypeLabel:'TYPE',
+    qt0:'M.C.',qt1:'OPEN',qt2:'DRAW',qt3:'MIX',
+    modTitle:'OPTIONS',
+    timerLabel:'TIMER', timerDesc:'30s',
+    bonusLabel:'BONUS', bonusDesc:'BET',
+    speedLabel:'SPEED', speedDesc:'15s',
+    teamNamesLabel:'TEAM NAMES',
     promptTitle:'ENTER YOUR QUEST',
     launchLabel:'◄ PRESS START ►',
     startBtn:'START GAME',
@@ -696,19 +658,21 @@ const T = {
     noPrompt:'Please describe your quiz topic!',
     generating:'Generating your game...',
     teamDefaults:['Team 1','Team 2','Team 3','Team 4','Team 5','Team 6','Team 7','Team 8'],
-    categories:'CAT', rows:'ROW', questions:'questions',
+    questions:'questions',
   },
   pt:{
     pageTitle:'CRIE SEU DESAFIO!',
-    teamsTitle:'JOGADORES', gridTitle:'TAMANHO DO JOGO',
-    diffTitle:'DIFICULDADE',
-    easy:'FÁCIL', medium:'MÉDIO', hard:'DIFÍCIL', mixed:'MISTO',
-    qtypeTitle:'TIPO DE QUESTÃO',
-    mcLabel:'M.ESCOLHA', openLabel:'ABERTA', drawLabel:'DRAW', mixedLabel:'MISTA',
-    modTitle:'OPÇÕES DO JOGO',
-    timerLabel:'TIMER', timerDesc:'30s por pergunta',
-    bonusLabel:'BÔNUS', bonusDesc:'Times apostam pontos',
-    speedLabel:'SPEED', speedDesc:'15s, primeiro a tocar',
+    teamsTitle:'JOGADORES', teamsLabel:'TIMES',
+    gridTitle:'TAMANHO', colsLabel:'CATEG', rowsLabel:'LINHAS',
+    diffTitle:'DIFICULDADE', diffLabel:'NÍVEL',
+    diff0:'FÁCIL',diff1:'MÉDIO',diff2:'DIFÍCIL',diff3:'MISTO',
+    qtypeTitle:'QUESTÃO', qtypeLabel:'TIPO',
+    qt0:'M.E.',qt1:'ABERTA',qt2:'DRAW',qt3:'MIX',
+    modTitle:'OPÇÕES',
+    timerLabel:'TIMER', timerDesc:'30s',
+    bonusLabel:'BÔNUS', bonusDesc:'APOSTAR',
+    speedLabel:'SPEED', speedDesc:'15s',
+    teamNamesLabel:'NOMES DOS TIMES',
     promptTitle:'SUA MISSÃO',
     launchLabel:'◄ PRESSIONE START ►',
     startBtn:'INICIAR JOGO',
@@ -716,19 +680,21 @@ const T = {
     noPrompt:'Por favor, descreva o tema do quiz!',
     generating:'Gerando seu jogo...',
     teamDefaults:['Time 1','Time 2','Time 3','Time 4','Time 5','Time 6','Time 7','Time 8'],
-    categories:'CAT', rows:'LIN', questions:'perguntas',
+    questions:'perguntas',
   },
   es:{
     pageTitle:'¡CREA TU DESAFÍO!',
-    teamsTitle:'JUGADORES', gridTitle:'TAMAÑO DEL TABLERO',
-    diffTitle:'DIFICULTAD',
-    easy:'FÁCIL', medium:'MEDIO', hard:'DIFÍCIL', mixed:'MIXTO',
-    qtypeTitle:'TIPO DE PREGUNTA',
-    mcLabel:'M.OPCIÓN', openLabel:'ABIERTA', drawLabel:'DIBUJO', mixedLabel:'MIXTA',
-    modTitle:'OPCIONES DEL JUEGO',
-    timerLabel:'TIMER', timerDesc:'30s por pregunta',
-    bonusLabel:'BONUS', bonusDesc:'Equipos apuestan puntos',
-    speedLabel:'SPEED', speedDesc:'15s, primero en pulsar',
+    teamsTitle:'JUGADORES', teamsLabel:'EQUIPOS',
+    gridTitle:'TAMAÑO', colsLabel:'CATEG', rowsLabel:'FILAS',
+    diffTitle:'DIFICULTAD', diffLabel:'NIVEL',
+    diff0:'FÁCIL',diff1:'MEDIO',diff2:'DIFÍCIL',diff3:'MIXTO',
+    qtypeTitle:'PREGUNTA', qtypeLabel:'TIPO',
+    qt0:'M.O.',qt1:'ABIERTA',qt2:'DIBUJO',qt3:'MIX',
+    modTitle:'OPCIONES',
+    timerLabel:'TIMER', timerDesc:'30s',
+    bonusLabel:'BONUS', bonusDesc:'APOSTAR',
+    speedLabel:'SPEED', speedDesc:'15s',
+    teamNamesLabel:'NOMBRES DE EQUIPOS',
     promptTitle:'TU MISIÓN',
     launchLabel:'◄ PRESIONA START ►',
     startBtn:'INICIAR JUEGO',
@@ -736,14 +702,18 @@ const T = {
     noPrompt:'¡Por favor describe el tema de tu quiz!',
     generating:'Generando tu juego...',
     teamDefaults:['Equipo 1','Equipo 2','Equipo 3','Equipo 4','Equipo 5','Equipo 6','Equipo 7','Equipo 8'],
-    categories:'CAT', rows:'FIL', questions:'preguntas',
+    questions:'preguntas',
   }
 };
 
+const TEAMS_MAP=[2,3,4,5,6,8];
+const DIFF_MAP=['easy','medium','hard','mixed'];
+const QTYPE_MAP=['multiple','open','drawing','mixed'];
 const TEAM_COLORS=['#00FFCC','#FF00BB','#BF00FF','#F5C518','#00D1FF','#FB923C','#34D399','#F472B6'];
 
 /* ══════════ STATE ══════════ */
-let lang='en', numTeams=4, numRows=3, numCols=4;
+let lang='en';
+let numTeams=4, numCols=4, numRows=3;
 let difficulty='easy', qType='multiple';
 let teams=[];
 const fxState={timer:true,bonus:true,speed:false};
@@ -751,9 +721,9 @@ const fxState={timer:true,bonus:true,speed:false};
 /* ══════════ INIT ══════════ */
 function init(){
   teams=T[lang].teamDefaults.map((n,i)=>({name:n,color:TEAM_COLORS[i]}));
-  renderTeamButtons();
-  initGridPicker();
+  renderTeamInputs();
   applyI18n();
+  updateBoardSummary();
 }
 
 /* ══════════ LANG ══════════ */
@@ -773,24 +743,49 @@ function applyI18n(){
     const k=el.getAttribute('data-i18n');
     if(d[k]!==undefined) el.textContent=d[k];
   });
-  updateGridLabel();
+  // re-apply dynamic readouts after lang switch
+  const ti=document.getElementById('teams-fader');
+  if(ti) onTeamsFader(ti,true);
+  const di=document.getElementById('diff-fader');
+  if(di) onDiffFader(di,true);
+  const qi=document.getElementById('qtype-fader');
+  if(qi) onQtypeFader(qi,true);
+  updateBoardSummary();
   renderTeamInputs();
 }
 
-/* ══════════ TEAMS ══════════ */
-function renderTeamButtons(){
-  const row=document.getElementById('team-count-row');
-  row.innerHTML='';
-  [2,3,4,5,6,8].forEach(n=>{
-    const b=document.createElement('button');
-    b.className='step-btn'+(n===numTeams?' active':'');
-    b.innerHTML=`<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="7" r="4"/><path d="M2 21v-2a7 7 0 0 1 14 0v2"/><circle cx="19" cy="8" r="3"/><path d="M19 14c2.8.3 5 1.9 5 4v1"/></svg>${n}`;
-    b.onclick=()=>{numTeams=n;renderTeamButtons();};
-    row.appendChild(b);
-  });
-  renderTeamInputs();
+/* ══════════ FADER HANDLERS ══════════ */
+function onTeamsFader(el, silent){
+  numTeams=TEAMS_MAP[+el.value];
+  document.getElementById('teams-val').textContent=numTeams;
+  if(!silent) renderTeamInputs();
+}
+function onColsFader(el){
+  numCols=+el.value;
+  document.getElementById('cols-val').textContent=numCols;
+  updateBoardSummary();
+}
+function onRowsFader(el){
+  numRows=+el.value;
+  document.getElementById('rows-val').textContent=numRows;
+  updateBoardSummary();
+}
+function onDiffFader(el, silent){
+  const idx=+el.value;
+  difficulty=DIFF_MAP[idx];
+  document.getElementById('diff-val').textContent=T[lang]['diff'+idx];
+}
+function onQtypeFader(el, silent){
+  const idx=+el.value;
+  qType=QTYPE_MAP[idx];
+  document.getElementById('qtype-val').textContent=T[lang]['qt'+idx];
+}
+function updateBoardSummary(){
+  const el=document.getElementById('board-summary');
+  if(el) el.textContent=`${numCols*numRows} ${T[lang].questions}`;
 }
 
+/* ══════════ TEAM INPUTS ══════════ */
 function renderTeamInputs(){
   const g=document.getElementById('team-inputs');
   g.innerHTML='';
@@ -801,69 +796,11 @@ function renderTeamInputs(){
     wrap.className='lcd-strip';
     wrap.style.setProperty('--tc',TEAM_COLORS[i]);
     const inp=document.createElement('input');
-    inp.type='text';inp.value=teams[i].name;
-    inp.placeholder=defs[i];
+    inp.type='text';inp.value=teams[i].name;inp.placeholder=defs[i];
     inp.oninput=e=>teams[i].name=e.target.value;
     wrap.appendChild(inp);
     g.appendChild(wrap);
   }
-}
-
-/* ══════════ GRID PICKER ══════════ */
-const GP_COLS=8, GP_ROWS=6;
-
-function initGridPicker(){
-  const grid=document.getElementById('gp-grid');
-  grid.style.gridTemplateColumns=`repeat(${GP_COLS},1fr)`;
-  grid.innerHTML='';
-  for(let r=0;r<GP_ROWS;r++){
-    for(let c=0;c<GP_COLS;c++){
-      const cell=document.createElement('div');
-      cell.className='led-cell';
-      cell.dataset.c=c;cell.dataset.r=r;
-      cell.addEventListener('mouseenter',()=>highlightGrid(c,r,false));
-      cell.addEventListener('click',()=>{numCols=c+1;numRows=r+1;highlightGrid(c,r,true);updateGridLabel();});
-      grid.appendChild(cell);
-    }
-  }
-  grid.addEventListener('mouseleave',()=>highlightGrid(numCols-1,numRows-1,true));
-  highlightGrid(numCols-1,numRows-1,true);
-  updateGridLabel();
-}
-
-function highlightGrid(maxC,maxR,perm){
-  document.querySelectorAll('.led-cell').forEach(cell=>{
-    const c=+cell.dataset.c,r=+cell.dataset.r;
-    const inside=c<=maxC&&r<=maxR;
-    cell.classList.toggle('hover',inside&&!perm);
-    cell.classList.toggle('sel',inside&&perm);
-  });
-  const d=T[lang];
-  if(!perm){
-    document.getElementById('gp-label').textContent=`${maxC+1} ${d.categories} × ${maxR+1} ${d.rows}`;
-    document.getElementById('gp-sublabel').textContent=`${(maxC+1)*(maxR+1)} ${d.questions}`;
-  }
-}
-
-function updateGridLabel(){
-  const d=T[lang];
-  document.getElementById('gp-label').textContent=`${numCols} ${d.categories} × ${numRows} ${d.rows}`;
-  document.getElementById('gp-sublabel').textContent=`${numCols*numRows} ${d.questions}`;
-  highlightGrid(numCols-1,numRows-1,true);
-}
-
-/* ══════════ DIFFICULTY ══════════ */
-function pickDiff(btn){
-  difficulty=btn.dataset.val;
-  document.querySelectorAll('#diff-pads .pad-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-}
-
-/* ══════════ Q-TYPE ══════════ */
-function pickQtype(val,btn){
-  qType=val;
-  document.querySelectorAll('#qtype-pads .pad-btn').forEach(b=>b.classList.remove('active-accent'));
-  btn.classList.add('active-accent');
 }
 
 /* ══════════ FX TOGGLES ══════════ */
@@ -896,14 +833,12 @@ function startGame(){
 
 init();
 
-// Splash: wobble then fade
+// Splash
 (function(){
   const splash=document.getElementById('splash');
   setTimeout(function(){
     splash.classList.add('hide');
-    splash.addEventListener('animationend',function(){
-      splash.style.display='none';
-    },{once:true});
+    splash.addEventListener('animationend',function(){splash.style.display='none';},{once:true});
   },1900);
 })();
 </script>
