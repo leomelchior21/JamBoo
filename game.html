@@ -106,19 +106,20 @@ body{
 .score-card{
   display:flex;flex-direction:column;align-items:center;
   padding:6px 14px;min-width:90px;
-  background:var(--gray);
-  border:2px solid rgba(255,255,255,.12);border-radius:var(--radius);
+  background:rgba(0,0,0,.45);
+  border:2px solid rgba(255,255,255,.2);border-radius:var(--radius);
   position:relative;overflow:hidden;flex-shrink:0;
-  transition:border-color .2s;
+  transition:border-color .2s,background .2s;
 }
 .score-card.active-team{animation:scoreFlash .5s ease;}
-@keyframes scoreFlash{0%,100%{transform:scale(1)}50%{transform:scale(1.06);}}
+@keyframes scoreFlash{0%,100%{transform:scale(1)}50%{transform:scale(1.08);}}
 .score-name{
   font-size:13px;font-weight:900;
   text-transform:uppercase;letter-spacing:.5px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:90px;
+  color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.9);
 }
-.score-val{font-family:var(--fh);font-size:26px;line-height:1.1;}
+.score-val{font-family:var(--fh);font-size:26px;line-height:1.1;color:#fff;text-shadow:0 0 10px currentColor;}
 .score-popup{
   position:absolute;top:0;left:50%;transform:translateX(-50%);
   font-family:var(--fh);font-size:14px;font-weight:900;
@@ -352,6 +353,65 @@ body{
   100%{transform:translateY(100vh) rotate(720deg);opacity:0;}
 }
 
+/* Verdict flash */
+#verdict-flash{
+  position:fixed;inset:0;z-index:8000;pointer-events:none;
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;
+}
+#verdict-flash.show-correct{animation:vFlashC .9s ease forwards;}
+#verdict-flash.show-wrong{animation:vFlashW .9s ease forwards;}
+@keyframes vFlashC{0%{opacity:0;background:rgba(0,255,100,.0)}20%{opacity:1;background:rgba(0,255,100,.3)}100%{opacity:0;background:rgba(0,255,100,.0)}}
+@keyframes vFlashW{0%{opacity:0;background:rgba(255,40,40,.0)}20%{opacity:1;background:rgba(255,40,40,.3)}100%{opacity:0;background:rgba(255,40,40,.0)}}
+.verdict-icon{
+  font-size:clamp(80px,18vw,160px);
+  animation:vIconPop .9s cubic-bezier(.34,1.56,.64,1) forwards;
+  filter:drop-shadow(0 0 30px currentColor);
+}
+.verdict-icon.v-correct{color:#00FF88;}
+.verdict-icon.v-wrong{color:#FF3333;}
+@keyframes vIconPop{0%{transform:scale(0) rotate(-20deg);opacity:0}50%{transform:scale(1.3) rotate(5deg);opacity:1}100%{transform:scale(1) rotate(0deg);opacity:1}}
+
+/* Countdown overlay (inside modal) */
+.countdown-overlay{
+  position:absolute;inset:0;background:rgba(0,0,0,.88);
+  z-index:50;display:flex;align-items:center;justify-content:center;
+  border-radius:var(--radius);
+}
+.countdown-num{
+  font-family:var(--fh);font-size:100px;color:var(--primary);
+  text-shadow:0 0 40px var(--primary);
+  animation:countPop .82s ease forwards;
+}
+@keyframes countPop{0%{transform:scale(1.8);opacity:0}25%{transform:scale(1);opacity:1}75%{transform:scale(1);opacity:1}100%{transform:scale(.5);opacity:0}}
+
+/* MC option shake on wrong */
+@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+.mc-opt.shake{animation:shake .4s ease;}
+
+/* Award / team picker */
+.outcome-toggle{display:flex;gap:8px;justify-content:center;margin-bottom:12px;}
+.outcome-btn{
+  flex:1;max-width:160px;padding:10px 0;
+  border-radius:var(--radius);border:2px solid;background:transparent;
+  font-family:var(--fb);font-weight:900;font-size:14px;cursor:pointer;
+  transition:all .12s;
+}
+.outcome-btn.oc-correct{border-color:var(--primary);color:var(--primary);}
+.outcome-btn.oc-correct:hover,.outcome-btn.oc-correct.sel{background:var(--primary);color:#000;}
+.outcome-btn.oc-wrong{border-color:var(--danger);color:var(--danger);}
+.outcome-btn.oc-wrong:hover,.outcome-btn.oc-wrong.sel{background:var(--danger);color:#fff;}
+.team-picker{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:4px;}
+.team-pick-btn{
+  padding:10px 18px;border-radius:var(--radius);
+  border:3px solid;background:rgba(0,0,0,.3);
+  font-family:var(--fb);font-weight:900;font-size:14px;
+  cursor:pointer;transition:all .15s;color:#fff;
+}
+.team-pick-btn:hover:not(:disabled){transform:scale(1.07);filter:brightness(1.25);}
+.team-pick-btn:disabled{opacity:.35;cursor:default;}
+.team-pick-btn.applied{transform:scale(1.1);}
+
 @media(max-width:480px){
   .mc-grid{grid-template-columns:1fr;}
   .award-grid{grid-template-columns:1fr 1fr;}
@@ -442,10 +502,12 @@ body{
         <div class="answer-text" id="answer-text"></div>
       </div>
       <div class="award-section" id="award-section">
-        <div class="award-title" id="lbl-award">+ Award Points</div>
-        <div class="award-grid" id="award-grid"></div>
-        <div class="award-title" id="lbl-deduct">− Deduct Points</div>
-        <div class="award-grid" id="deduct-grid"></div>
+        <div class="outcome-toggle" id="outcome-toggle">
+          <button class="outcome-btn oc-correct" onclick="setOutcome(true)" id="btn-oc-correct">✓ Correct</button>
+          <button class="outcome-btn oc-wrong" onclick="setOutcome(false)" id="btn-oc-wrong">✗ Wrong</button>
+        </div>
+        <div class="award-title" id="lbl-award">Who answered?</div>
+        <div class="team-picker" id="team-picker"></div>
       </div>
       <div class="action-row">
         <button class="btn-reveal" id="reveal-btn" onclick="revealAnswer()"><span id="lbl-reveal">Reveal Answer</span></button>
@@ -459,7 +521,7 @@ body{
 const GT = {
   en:{
     back:'Setup', end:'🏆 End', reveal:'Reveal Answer', done:'Done ✓',
-    answer:'Answer', award:'+ Award Points', deduct:'− Deduct Points',
+    answer:'Answer', award:'Who answered?', correct:'✓ Correct', wrong:'✗ Wrong',
     bonusTitle:'Bonus Round — Place your bets!', revealBonus:'Reveal Question →',
     clear:'🗑 Clear', winner:'🏆 Winner!', playAgain:'Play Again →',
     pts:'pts', generating:'Generating your game...',
@@ -468,7 +530,7 @@ const GT = {
   },
   pt:{
     back:'Início', end:'🏆 Fim', reveal:'Revelar Resposta', done:'Feito ✓',
-    answer:'Resposta', award:'+ Dar Pontos', deduct:'− Retirar Pontos',
+    answer:'Resposta', award:'Quem respondeu?', correct:'✓ Correto', wrong:'✗ Errado',
     bonusTitle:'Rodada Bônus — Façam suas apostas!', revealBonus:'Revelar Pergunta →',
     clear:'🗑 Limpar', winner:'🏆 Vencedor!', playAgain:'Jogar Novamente →',
     pts:'pontos', generating:'Gerando seu jogo...',
@@ -477,7 +539,7 @@ const GT = {
   },
   es:{
     back:'Inicio', end:'🏆 Fin', reveal:'Revelar Respuesta', done:'Listo ✓',
-    answer:'Respuesta', award:'+ Dar Puntos', deduct:'− Quitar Puntos',
+    answer:'Respuesta', award:'¿Quién respondió?', correct:'✓ Correcto', wrong:'✗ Incorrecto',
     bonusTitle:'Ronda Bonus — ¡Hagan sus apuestas!', revealBonus:'Revelar Pregunta →',
     clear:'🗑 Limpiar', winner:'🏆 ¡Ganador!', playAgain:'Jugar de Nuevo →',
     pts:'puntos', generating:'Generando tu juego...',
@@ -490,6 +552,8 @@ let cfg={}, gameData=null, teams=[], lang='en';
 let currentCell=null, timerInterval=null;
 let drawCtx=null, isDrawing=false, drawColor='#000000';
 let bonusPhase=false;
+let mcAnswered=null; // {selected,correct} set when MC option clicked
+let openOutcome=null; // true=correct false=wrong for open/drawing
 
 async function boot() {
   const raw=localStorage.getItem('jamboo_config');
@@ -535,15 +599,23 @@ function buildPayload() {
     ?'Exactly ONE question per category must have "isBonus":true.'
     :'"isBonus" should always be false.';
 
+  const diffMap={easy:'very easy',medium:'medium',hard:'hard',mixed:'varies by row'};
+  const rowDiff=Array.from({length:numRows},(_,i)=>{
+    const labels=['trivial','easy','medium','hard','very hard'];
+    return `row ${i+1} (${pts[i]}pts): ${labels[Math.min(i,labels.length-1)]}`;
+  }).join(', ');
+
   const sys=`You are a quiz game generator for educators. Create a Jeopardy-style quiz as JSON.
 
 SCHEMA:
 {"categories":["Cat1",...],"questions":[[{"question":"...","answer":"...","type":"${qType}","options":[],"correctIndex":0,"isBonus":false,"isDrawing":false},...(${numRows} items)],...(${numCols} arrays)]}
 
 RULES:
-- Exactly ${numCols} categories, ${numRows} questions each (${pts.join(', ')} points, ascending difficulty)
-- All content in ${qLang}. Difficulty: ${difficulty}. Type: ${qType}
+- Exactly ${numCols} categories, ${numRows} questions each
+- Point values and difficulty: ${rowDiff}
+- All content in ${qLang}. Overall difficulty: ${diffMap[difficulty]||difficulty}. Type: ${qType}
 - ${mcNote}
+- IMPORTANT for MC: distribute correctIndex values across 0,1,2,3 — do NOT always use 0. Each value should appear roughly equally across the whole game.
 - ${drawNote}
 - ${bonusNote}
 - Return ONLY raw JSON — no explanation, no markdown.`;
@@ -562,7 +634,6 @@ function applyLabels() {
   document.getElementById('lbl-done').textContent=G.done;
   document.getElementById('lbl-answer').textContent=G.answer;
   document.getElementById('lbl-award').textContent=G.award;
-  document.getElementById('lbl-deduct').textContent=G.deduct;
   document.getElementById('lbl-bonus-title').textContent=G.bonusTitle;
   document.getElementById('lbl-reveal-bonus').textContent=G.revealBonus;
   document.getElementById('lbl-clear').textContent=G.clear;
@@ -601,8 +672,8 @@ function renderScorebar() {
   teams.forEach((t,i)=>{
     const c=document.createElement('div');
     c.className='score-card';c.id=`sc-${i}`;
-    c.style.borderColor=t.color+'66';c.style.color=t.color;
-    c.innerHTML=`<div class="score-name">${t.name}</div><div class="score-val" id="sv-${i}">0</div>`;
+    c.style.borderColor=t.color+'99';
+    c.innerHTML=`<div class="score-name">${t.name}</div><div class="score-val" id="sv-${i}" style="color:${t.color};text-shadow:0 0 10px ${t.color}88">0</div>`;
     sb.appendChild(c);
   });
 }
@@ -624,6 +695,8 @@ function openQuestion(col,row,pts,cell) {
   document.getElementById('done-btn').style.display='none';
   document.getElementById('answer-text').textContent=q.answer;
   bonusPhase=false;
+  mcAnswered=null;
+  openOutcome=null;
 
   if(q.isBonus&&cfg.bonusOn){
     document.getElementById('bonus-section').style.display='block';
@@ -641,19 +714,61 @@ function openQuestion(col,row,pts,cell) {
 function buildMC(q) {
   const mc=document.getElementById('mc-grid');
   mc.style.display='grid';mc.innerHTML='';
+  mcAnswered=null;
   q.options.forEach((opt,i)=>{
     const b=document.createElement('button');
     b.className='mc-opt';
     b.innerHTML=`<div class="mc-letter">${'ABCD'[i]}</div><span>${opt}</span>`;
     b.onclick=()=>{
-      if(document.getElementById('answer-box').classList.contains('shown')) return;
-      const ok=i===q.correctIndex;
-      b.classList.add(ok?'correct':'wrong');
-      if(!ok) mc.querySelectorAll('.mc-opt')[q.correctIndex].classList.add('correct');
+      if(mcAnswered) return; // already answered
+      clearTimerBar();
       mc.querySelectorAll('.mc-opt').forEach(btn=>btn.disabled=true);
+      const correct=i===q.correctIndex;
+      mcAnswered={selected:i,correct};
+      startCountdown(()=>{
+        b.classList.add(correct?'correct':'wrong');
+        if(!correct){
+          b.classList.add('shake');
+          mc.querySelectorAll('.mc-opt')[q.correctIndex].classList.add('correct');
+        }
+        showVerdictFlash(correct);
+        revealAnswer();
+      });
     };
     mc.appendChild(b);
   });
+}
+
+function startCountdown(cb){
+  const modal=document.querySelector('.modal');
+  const overlay=document.createElement('div');
+  overlay.className='countdown-overlay';
+  const num=document.createElement('div');
+  num.className='countdown-num';
+  overlay.appendChild(num);
+  modal.appendChild(overlay);
+  let count=3;
+  function tick(){
+    num.textContent=count;
+    num.style.animation='none';
+    void num.offsetWidth;
+    num.style.animation='countPop .82s ease forwards';
+    count--;
+    if(count>0){setTimeout(tick,820);}
+    else{setTimeout(()=>{overlay.remove();cb();},820);}
+  }
+  tick();
+}
+
+function showVerdictFlash(correct){
+  const el=document.getElementById('verdict-flash');
+  const ico=document.getElementById('verdict-icon');
+  el.className='';
+  ico.className='verdict-icon '+(correct?'v-correct':'v-wrong');
+  ico.textContent=correct?'✓':'✗';
+  void el.offsetWidth;
+  el.className=correct?'show-correct':'show-wrong';
+  setTimeout(()=>{el.className='';},950);
 }
 
 function renderBonusBets() {
@@ -686,25 +801,53 @@ function revealAnswer() {
   document.getElementById('award-section').classList.add('shown');
 }
 
-function buildAwardButtons() {
+function buildAwardButtons(){
   const pts=currentCell?.pts||0;
   const q=gameData.questions[currentCell.col][currentCell.row];
-  const isBonus=q.isBonus&&cfg.bonusOn&&bonusPhase;
-  const ag=document.getElementById('award-grid');
-  const dg=document.getElementById('deduct-grid');
-  ag.innerHTML='';dg.innerHTML='';
+  const isMC=!!(q.options&&q.options.length&&!q.isDrawing&&!q.isBonus);
+  const toggle=document.getElementById('outcome-toggle');
+  // For MC: outcome already known from mcAnswered; hide toggle
+  // For open/drawing: show toggle so teacher can pick
+  if(isMC){
+    toggle.style.display='none';
+    openOutcome=mcAnswered?mcAnswered.correct:null;
+  } else {
+    toggle.style.display='flex';
+    openOutcome=null;
+    document.getElementById('btn-oc-correct').classList.remove('sel');
+    document.getElementById('btn-oc-wrong').classList.remove('sel');
+  }
+  buildTeamPicker(pts);
+}
+
+function setOutcome(correct){
+  openOutcome=correct;
+  document.getElementById('btn-oc-correct').classList.toggle('sel',correct===true);
+  document.getElementById('btn-oc-wrong').classList.toggle('sel',correct===false);
+  showVerdictFlash(correct);
+  buildTeamPicker(currentCell?.pts||0);
+}
+
+function buildTeamPicker(pts){
+  const picker=document.getElementById('team-picker');
+  picker.innerHTML='';
+  const isMC=!!(currentCell&&gameData.questions[currentCell.col][currentCell.row].options?.length);
+  const effectiveOutcome= isMC ? (mcAnswered?.correct??null) : openOutcome;
   teams.forEach((t,i)=>{
-    const betAmt=isBonus?(parseInt(document.getElementById(`bet-${i}`)?.value)||0):pts;
-    const ab=document.createElement('button');
-    ab.className='award-btn';ab.style.borderColor=t.color;ab.style.color=t.color;
-    ab.textContent=`+${betAmt} ${t.name}`;
-    ab.onclick=()=>applyScore(i,betAmt,`+${betAmt}`);
-    ag.appendChild(ab);
-    const db=document.createElement('button');
-    db.className='award-btn';db.style.borderColor='var(--danger)';db.style.color='var(--danger)';
-    db.textContent=`−${betAmt} ${t.name}`;
-    db.onclick=()=>applyScore(i,-betAmt,`−${betAmt}`);
-    dg.appendChild(db);
+    const btn=document.createElement('button');
+    btn.className='team-pick-btn';
+    btn.style.borderColor=t.color;
+    btn.textContent=t.name;
+    if(effectiveOutcome===null){btn.disabled=true;}
+    btn.onclick=()=>{
+      if(effectiveOutcome===null) return;
+      const delta=effectiveOutcome?pts:-pts;
+      applyScore(i,delta,(delta>0?'+':'')+delta);
+      btn.classList.add('applied');
+      picker.querySelectorAll('.team-pick-btn').forEach(b=>{b.disabled=true;});
+      setTimeout(()=>closeModal(),500);
+    };
+    picker.appendChild(btn);
   });
 }
 
@@ -843,5 +986,8 @@ function zoomBoard(dir){
   document.getElementById('zoom-lbl').textContent=Math.round(bz*100)+'%';
 }
 </script>
+<div id="verdict-flash">
+  <span class="verdict-icon" id="verdict-icon"></span>
+</div>
 </body>
 </html>
