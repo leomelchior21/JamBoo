@@ -479,6 +479,36 @@ body{
 .btn-launch:disabled{opacity:.45;cursor:not-allowed;transform:none;}
 
 /* ═══════════════════════════════════════════
+   SPLASH SCREEN
+═══════════════════════════════════════════ */
+#splash{
+  position:fixed;inset:0;z-index:99999;
+  background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  pointer-events:none;
+}
+#splash.hide{
+  animation:splashOut .55s cubic-bezier(.4,0,.2,1) forwards;
+}
+@keyframes splashOut{
+  0%  {opacity:1;transform:translateY(0);}
+  100%{opacity:0;transform:translateY(-18px);}
+}
+.splash-logo{
+  height:130px;width:auto;
+  animation:splashFloat 1.8s ease-in-out forwards;
+  filter:drop-shadow(0 0 22px rgba(0,255,204,.5)) drop-shadow(0 0 8px rgba(191,0,255,.4));
+}
+@keyframes splashFloat{
+  0%  {transform:translateY(0)    scale(1)    rotate(-1deg);}
+  20% {transform:translateY(-10px) scale(1.04) rotate(1deg);}
+  40% {transform:translateY(4px)  scale(.98)  rotate(-.5deg);}
+  60% {transform:translateY(-6px) scale(1.02) rotate(.8deg);}
+  80% {transform:translateY(2px)  scale(1)    rotate(0deg);}
+  100%{transform:translateY(0)    scale(1)    rotate(0deg);}
+}
+
+/* ═══════════════════════════════════════════
    LOADING
 ═══════════════════════════════════════════ */
 .loading-overlay{
@@ -528,6 +558,11 @@ body{
 </style>
 </head>
 <body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <img class="splash-logo" src="Jamboo-logo-png.png" alt="JamBoo">
+</div>
 
 <!-- LOADING -->
 <div class="loading-overlay" id="loading">
@@ -917,6 +952,17 @@ function startGame(){
 }
 
 init();
+
+// Splash: wobble for 1.8s then fade out
+(function(){
+  const splash = document.getElementById('splash');
+  setTimeout(function(){
+    splash.classList.add('hide');
+    splash.addEventListener('animationend', function(){
+      splash.style.display = 'none';
+    }, {once:true});
+  }, 1900);
+})();
 </script>
 </body>
 </html>
