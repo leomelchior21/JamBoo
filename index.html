@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="arcade">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,52 +8,19 @@
 <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
 <style>
 /* ═══════════════════════════════════════════
-   THEME VARIABLES — 3 SKINS
+   RETRO / SYNTHWAVE THEME
 ═══════════════════════════════════════════ */
-[data-theme="arcade"] {
-  --bg:       #FF2D95;
-  --panel:    #131420;
-  --panel2:   #1A1B2E;
-  --border:   #F5C518;
-  --primary:  #00D1FF;
-  --accent:   #F5C518;
-  --danger:   #FF2D95;
-  --text:     #FFFFFF;
-  --text2:    rgba(255,255,255,0.5);
-  --gray:     rgba(255,255,255,0.07);
-  --shadow:   4px 4px 0 rgba(0,0,0,0.45);
-  --radius:   12px;
-  --fh:       'Fredoka One', cursive;
-  --fb:       'Nunito', sans-serif;
-}
-[data-theme="classroom"] {
-  --bg:       #EFF6FF;
-  --panel:    #FFFFFF;
-  --panel2:   #F1F5F9;
-  --border:   #3B82F6;
-  --primary:  #3B82F6;
-  --accent:   #10B981;
-  --danger:   #EF4444;
-  --text:     #1E293B;
-  --text2:    #64748B;
-  --gray:     rgba(0,0,0,0.04);
-  --shadow:   0 2px 16px rgba(59,130,246,0.14);
-  --radius:   16px;
-  --fh:       'Nunito', sans-serif;
-  --fb:       'Nunito', sans-serif;
-}
-[data-theme="retro"] {
+:root {
   --bg:       #0A0A1F;
   --panel:    #12122A;
   --panel2:   #0D0D22;
   --border:   #BF00FF;
   --primary:  #00FFCC;
   --accent:   #FF00BB;
-  --danger:   #FF4444;
   --text:     #FFFFFF;
-  --text2:    rgba(255,255,255,0.45);
-  --gray:     rgba(255,255,255,0.05);
-  --shadow:   0 0 24px rgba(0,255,204,0.18);
+  --text2:    rgba(255,255,255,.45);
+  --gray:     rgba(255,255,255,.05);
+  --shadow:   0 0 24px rgba(0,255,204,.18);
   --radius:   4px;
   --fh:       'Fredoka One', cursive;
   --fb:       'Nunito', sans-serif;
@@ -70,47 +37,45 @@ body{
   min-height:100vh;
   overflow-x:hidden;
   -webkit-font-smoothing:antialiased;
-  transition:background .3s;
 }
 
 /* ═══════════════════════════════════════════
    HEADER
 ═══════════════════════════════════════════ */
 .hdr{
-  background:var(--panel);
+  background:#FF2D95;
   border-bottom:3px solid var(--border);
-  height:62px;
+  min-height:96px;
   display:flex;align-items:center;
   position:relative;overflow:hidden;
 }
+/* Synthwave grid lines in header */
 .hdr-stars{
   position:absolute;inset:0;pointer-events:none;
   background-image:
-    radial-gradient(circle,rgba(255,255,255,.4) 1px,transparent 1px),
-    radial-gradient(circle,rgba(0,209,255,.5) 1px,transparent 1px),
-    radial-gradient(circle,rgba(245,197,24,.4) 1px,transparent 1px);
-  background-size:60px 38px,90px 52px,120px 68px;
-  background-position:10px 8px,35px 20px,70px 12px;
-  opacity:.55;
+    radial-gradient(circle,rgba(0,255,204,.35) 1px,transparent 1px),
+    radial-gradient(circle,rgba(191,0,255,.3) 1px,transparent 1px);
+  background-size:60px 38px,90px 52px;
+  background-position:10px 8px,35px 20px;
+  opacity:.3;
 }
-[data-theme="classroom"] .hdr-stars,[data-theme="retro"] .hdr-stars{opacity:.15;}
 .hdr-inner{
   position:relative;z-index:1;
   width:100%;max-width:880px;margin:0 auto;
   padding:0 18px;
   display:flex;align-items:center;justify-content:space-between;
 }
-.hdr-logo{height:42px;width:auto;display:block;}
+.hdr-logo{height:84px;width:auto;display:block;}
 .hdr-right{display:flex;align-items:center;gap:8px;}
 
 /* ═══════════════════════════════════════════
-   PILL GROUPS (lang + later usage)
+   LANG PILLS
 ═══════════════════════════════════════════ */
 .pill-group{
   display:inline-flex;
   background:var(--gray);
   border:2px solid var(--border);
-  border-radius:8px;overflow:hidden;
+  border-radius:var(--radius);overflow:hidden;
 }
 .pill-btn{
   padding:5px 11px;
@@ -145,17 +110,14 @@ body{
   text-align:center;padding:22px 40px 18px;
   display:flex;align-items:center;justify-content:center;gap:14px;
 }
-.title-deco{font-size:22px;font-weight:900;color:var(--primary);opacity:.7;}
+.title-deco{font-size:22px;font-weight:900;color:var(--primary);opacity:.6;}
 .page-title{
   font-family:var(--fh);
   font-size:clamp(24px,5.5vw,42px);
-  color:var(--accent);
-  text-shadow:2px 0 0 rgba(0,0,0,.5),-2px 0 0 rgba(0,0,0,.5),
-              0 2px 0 rgba(0,0,0,.5),0 -2px 0 rgba(0,0,0,.5);
+  color:var(--primary);
+  text-shadow:0 0 20px rgba(0,255,204,.5);
   letter-spacing:.3px;
 }
-[data-theme="classroom"] .page-title{color:var(--primary);text-shadow:none;}
-[data-theme="retro"] .page-title{color:var(--primary);text-shadow:0 0 20px rgba(0,255,204,.5);}
 
 /* ═══════════════════════════════════════════
    BENTO CONTAINER
@@ -172,12 +134,12 @@ body{
 .bento-row{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
 
 /* ═══════════════════════════════════════════
-   BBOX (bento cell)
+   BBOX
 ═══════════════════════════════════════════ */
 .bbox{
   background:var(--panel2);
   border:2px solid var(--border);
-  border-radius:calc(var(--radius) - 2px);
+  border-radius:var(--radius);
   padding:13px 15px;
 }
 .blabel{
@@ -186,7 +148,6 @@ body{
   margin-bottom:11px;padding-bottom:8px;
   border-bottom:1px solid rgba(255,255,255,.08);
 }
-[data-theme="classroom"] .blabel{border-bottom-color:rgba(0,0,0,.07);}
 .bicon{font-size:15px;}
 
 /* ═══════════════════════════════════════════
@@ -197,12 +158,11 @@ body{
   display:flex;align-items:center;gap:5px;
   padding:7px 13px;
   background:var(--gray);
-  border:2px solid rgba(255,255,255,.14);
-  border-radius:7px;
+  border:2px solid rgba(255,255,255,.12);
+  border-radius:var(--radius);
   color:var(--text);font-family:var(--fb);font-weight:800;font-size:13px;
   cursor:pointer;transition:border-color .12s,background .12s;
 }
-[data-theme="classroom"] .tbtn{border-color:rgba(0,0,0,.1);}
 .tbtn:hover{border-color:var(--primary);}
 .tbtn.active{background:var(--primary);border-color:var(--primary);color:var(--panel);}
 .tinput-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:5px;}
@@ -211,33 +171,31 @@ body{
   background:var(--gray);
   border:2px solid rgba(255,255,255,.1);
   border-left:3px solid var(--tc,var(--primary));
-  border-radius:6px;color:var(--text);
-  font-family:var(--fb);font-weight:700;font-size:12px;
+  border-radius:var(--radius);
+  color:var(--text);font-family:var(--fb);font-weight:700;font-size:12px;
   outline:none;width:100%;transition:border-color .12s;
 }
-[data-theme="classroom"] .tinput{background:#F8FAFC;border-color:rgba(0,0,0,.1);color:var(--text);}
 .tinput:focus{border-color:var(--primary);}
 
 /* ═══════════════════════════════════════════
-   SHARED DROPDOWN
+   DROPDOWN
 ═══════════════════════════════════════════ */
 .dd-wrap{position:relative;}
 .dd-btn{
   width:100%;display:flex;align-items:center;justify-content:space-between;
   padding:9px 13px;
-  background:rgba(255,255,255,.05);
-  border:2px solid var(--primary);border-radius:8px;
+  background:rgba(0,255,204,.05);
+  border:2px solid var(--primary);border-radius:var(--radius);
   color:var(--text);font-family:var(--fb);font-size:13px;font-weight:800;
   cursor:pointer;transition:background .12s;
 }
-[data-theme="classroom"] .dd-btn{background:rgba(59,130,246,.05);}
-.dd-btn:hover{background:rgba(255,255,255,.1);}
+.dd-btn:hover{background:rgba(0,255,204,.1);}
 .dd-arrow{color:var(--primary);font-size:11px;flex-shrink:0;}
 .dd-menu{
   display:none;position:absolute;
   top:calc(100% + 4px);left:0;right:0;
   background:var(--panel);border:2px solid var(--primary);
-  border-radius:8px;z-index:200;overflow:hidden;
+  border-radius:var(--radius);z-index:200;overflow:hidden;
   box-shadow:var(--shadow);
 }
 .dd-menu.open{display:block;}
@@ -246,10 +204,8 @@ body{
   cursor:pointer;color:var(--text);transition:background .1s;
   border-bottom:1px solid rgba(255,255,255,.06);
 }
-[data-theme="classroom"] .dd-opt{border-bottom-color:rgba(0,0,0,.06);}
 .dd-opt:last-child{border-bottom:none;}
-.dd-opt:hover{background:rgba(255,255,255,.09);}
-[data-theme="classroom"] .dd-opt:hover{background:rgba(59,130,246,.07);}
+.dd-opt:hover{background:rgba(0,255,204,.08);}
 .dd-opt.sel{color:var(--primary);}
 
 /* ═══════════════════════════════════════════
@@ -260,11 +216,10 @@ body{
   flex:1;min-width:60px;
   padding:8px 6px;text-align:center;
   background:var(--gray);
-  border:2px solid rgba(255,255,255,.12);border-radius:7px;
+  border:2px solid rgba(255,255,255,.12);border-radius:var(--radius);
   color:var(--text);font-family:var(--fb);font-weight:800;font-size:12px;
   cursor:pointer;transition:all .12s;
 }
-[data-theme="classroom"] .dbtn{border-color:rgba(0,0,0,.1);}
 .dbtn:hover{border-color:var(--primary);}
 .dbtn.active{background:var(--primary);border-color:var(--primary);color:var(--panel);}
 
@@ -277,7 +232,6 @@ body{
   background:var(--gray);border:2px solid rgba(255,255,255,.1);
   border-radius:20px;padding:6px 11px;
 }
-[data-theme="classroom"] .tog-group{border-color:rgba(0,0,0,.09);}
 .tog-label{font-size:12px;font-weight:800;color:var(--text);white-space:nowrap;}
 .tog{
   width:40px;height:20px;
@@ -296,45 +250,23 @@ body{
 .tog.on::after{background:var(--panel);transform:translateX(18px);}
 
 /* ═══════════════════════════════════════════
-   THEME SELECTOR
-═══════════════════════════════════════════ */
-.theme-row{display:flex;gap:8px;}
-.theme-btn{
-  flex:1;padding:10px 6px;
-  border-radius:10px;border:3px solid transparent;
-  cursor:pointer;text-align:center;
-  font-family:var(--fb);font-weight:800;font-size:11px;
-  transition:border-color .15s,transform .1s;
-}
-.theme-btn:hover{transform:translateY(-1px);}
-.theme-btn[data-t="arcade"]{background:#1A1B2E;color:#00D1FF;}
-.theme-btn[data-t="classroom"]{background:#EFF6FF;color:#3B82F6;}
-.theme-btn[data-t="retro"]{background:#12122A;color:#00FFCC;}
-.theme-btn.active[data-t="arcade"]{border-color:#F5C518;}
-.theme-btn.active[data-t="classroom"]{border-color:#3B82F6;}
-.theme-btn.active[data-t="retro"]{border-color:#BF00FF;}
-.theme-swatch{display:flex;gap:3px;justify-content:center;margin-bottom:5px;}
-.ts-dot{width:9px;height:9px;border-radius:50%;display:inline-block;}
-
-/* ═══════════════════════════════════════════
    PROMPT BOX
 ═══════════════════════════════════════════ */
 .prompt-box{
   background:var(--panel2);
   border:2px solid var(--border);
-  border-radius:calc(var(--radius) - 2px);
+  border-radius:var(--radius);
   padding:13px 15px;
 }
 .prompt-ta{
   width:100%;min-height:88px;
   padding:11px 13px;
   background:var(--gray);
-  border:2px solid rgba(255,255,255,.1);border-radius:8px;
+  border:2px solid rgba(255,255,255,.1);border-radius:var(--radius);
   color:var(--text);font-family:var(--fb);font-size:14px;font-weight:700;
   resize:vertical;outline:none;
   transition:border-color .15s;margin-bottom:11px;
 }
-[data-theme="classroom"] .prompt-ta{background:#F8FAFC;border-color:rgba(0,0,0,.1);color:var(--text);}
 .prompt-ta:focus{border-color:var(--primary);}
 .prompt-ta::placeholder{color:var(--text2);}
 
@@ -344,21 +276,18 @@ body{
 .btn-start{
   width:100%;padding:15px;
   background:var(--primary);
-  border:3px solid rgba(0,0,0,.3);border-radius:10px;
+  border:3px solid rgba(0,0,0,.3);border-radius:var(--radius);
   color:var(--panel);
   font-family:var(--fh);font-size:19px;letter-spacing:.3px;
   cursor:pointer;transition:filter .12s,transform .1s;
-  box-shadow:var(--shadow);
-}
-[data-theme="classroom"] .btn-start{
-  font-family:var(--fb);font-weight:900;border-color:var(--primary);
+  box-shadow:0 0 20px rgba(0,255,204,.3);
 }
 .btn-start:hover{filter:brightness(1.1);transform:translateY(-1px);}
 .btn-start:active{transform:translateY(1px);}
 .btn-start:disabled{opacity:.5;cursor:not-allowed;transform:none;}
 
 /* ═══════════════════════════════════════════
-   LOADING OVERLAY
+   LOADING
 ═══════════════════════════════════════════ */
 .loading-overlay{
   display:none;position:fixed;inset:0;
@@ -366,11 +295,11 @@ body{
   flex-direction:column;align-items:center;justify-content:center;gap:18px;
 }
 .loading-overlay.active{display:flex;}
-.load-logo{height:54px;}
+.load-logo{height:108px;}
 .load-bar-wrap{
   width:190px;height:5px;
   background:rgba(255,255,255,.08);
-  border:2px solid var(--primary);border-radius:3px;overflow:hidden;
+  border:2px solid var(--primary);border-radius:var(--radius);overflow:hidden;
 }
 .load-bar{height:100%;background:var(--primary);animation:sweep 1.2s linear infinite;}
 @keyframes sweep{0%{transform:translateX(-100%)}100%{transform:translateX(300%)}}
@@ -380,20 +309,19 @@ body{
 }
 
 /* ═══════════════════════════════════════════
-   BOTTOM GRID DECORATION (arcade/retro)
+   GRID FLOOR (synthwave)
 ═══════════════════════════════════════════ */
 .grid-floor{
   position:fixed;bottom:0;left:0;right:0;height:80px;
-  background:linear-gradient(to bottom,transparent,rgba(0,0,0,.25));
   pointer-events:none;z-index:0;
   background-image:
-    linear-gradient(rgba(0,209,255,.15) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(0,209,255,.15) 1px,transparent 1px);
+    linear-gradient(rgba(0,255,204,.12) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,255,204,.12) 1px,transparent 1px);
   background-size:40px 40px;
-  background-position:0 0;
-  perspective:400px;transform:rotateX(60deg);transform-origin:bottom;
+  transform:perspective(300px) rotateX(55deg);
+  transform-origin:bottom;
+  opacity:.7;
 }
-[data-theme="classroom"] .grid-floor{display:none;}
 
 /* ═══════════════════════════════════════════
    RESPONSIVE
@@ -401,7 +329,7 @@ body{
 @media(max-width:560px){
   .bento-row{grid-template-columns:1fr;}
   .hdr-inner{padding:0 12px;}
-  .theme-row{flex-wrap:wrap;}
+  .hdr-logo{height:64px;}
 }
 </style>
 </head>
@@ -448,20 +376,14 @@ body{
 
       <!-- TEAMS -->
       <div class="bbox">
-        <div class="blabel">
-          <span class="bicon">👥</span>
-          <span data-i18n="teamsTitle">Teams</span>
-        </div>
+        <div class="blabel"><span class="bicon">👥</span><span data-i18n="teamsTitle">Teams</span></div>
         <div class="tbtn-row" id="team-btn-row"></div>
         <div class="tinput-grid" id="team-inputs"></div>
       </div>
 
       <!-- BOARD SIZE -->
       <div class="bbox">
-        <div class="blabel">
-          <span class="bicon">⊞</span>
-          <span data-i18n="gridTitle">Board</span>
-        </div>
+        <div class="blabel"><span class="bicon">⊞</span><span data-i18n="gridTitle">Board</span></div>
         <div class="dd-wrap" style="margin-bottom:9px;">
           <button class="dd-btn" id="grid-btn" type="button" onclick="toggleDrop('grid-drop')">
             <span id="grid-label">4 × 3</span>
@@ -482,17 +404,14 @@ body{
         </p>
       </div>
 
-    </div><!-- /row 1 -->
+    </div>
 
     <!-- ROW 2: Difficulty + Q-Type -->
     <div class="bento-row">
 
       <!-- DIFFICULTY -->
       <div class="bbox">
-        <div class="blabel">
-          <span class="bicon">🎯</span>
-          <span data-i18n="diffTitle">Difficulty</span>
-        </div>
+        <div class="blabel"><span class="bicon">🎯</span><span data-i18n="diffTitle">Difficulty</span></div>
         <div class="diff-row">
           <button class="dbtn" data-val="easy" onclick="pickDiff(this)">🟢 <span data-i18n="easy">Easy</span></button>
           <button class="dbtn active" data-val="medium" onclick="pickDiff(this)">🟡 <span data-i18n="medium">Med</span></button>
@@ -503,32 +422,26 @@ body{
 
       <!-- QUESTION TYPE -->
       <div class="bbox">
-        <div class="blabel">
-          <span class="bicon">💬</span>
-          <span data-i18n="qtypeTitle">Question Type</span>
-        </div>
+        <div class="blabel"><span class="bicon">💬</span><span data-i18n="qtypeTitle">Question Type</span></div>
         <div class="dd-wrap">
           <button class="dd-btn" id="qtype-btn" type="button" onclick="toggleDrop('qtype-drop')">
             <span id="qtype-label">🅰️ Multiple Choice</span>
             <span class="dd-arrow">▾</span>
           </button>
           <div class="dd-menu" id="qtype-drop">
-            <div class="dd-opt sel" onclick="pickQtype('multiple',this)" data-label-key="mcLabel">🅰️ Multiple Choice</div>
-            <div class="dd-opt" onclick="pickQtype('open',this)" data-label-key="openLabel">💬 Open Ended</div>
-            <div class="dd-opt" onclick="pickQtype('drawing',this)" data-label-key="drawLabel">✏️ Draw It!</div>
-            <div class="dd-opt" onclick="pickQtype('mixed',this)" data-label-key="mixedLabel">🎲 Mixed</div>
+            <div class="dd-opt sel" onclick="pickQtype('multiple',this)">🅰️ <span data-i18n="mcLabel">Multiple Choice</span></div>
+            <div class="dd-opt" onclick="pickQtype('open',this)">💬 <span data-i18n="openLabel">Open Ended</span></div>
+            <div class="dd-opt" onclick="pickQtype('drawing',this)">✏️ <span data-i18n="drawLabel">Draw It!</span></div>
+            <div class="dd-opt" onclick="pickQtype('mixed',this)">🎲 <span data-i18n="mixedLabel">Mixed</span></div>
           </div>
         </div>
       </div>
 
-    </div><!-- /row 2 -->
+    </div>
 
     <!-- ROW 3: Modifiers -->
     <div class="bbox">
-      <div class="blabel">
-        <span class="bicon">⚙️</span>
-        <span data-i18n="modTitle">Modifiers</span>
-      </div>
+      <div class="blabel"><span class="bicon">⚙️</span><span data-i18n="modTitle">Modifiers</span></div>
       <div class="mod-row">
         <div class="tog-group">
           <span class="tog-label" data-i18n="timerLabel">Timer</span>
@@ -542,40 +455,6 @@ body{
           <span class="tog-label" data-i18n="speedLabel">Speed Mode</span>
           <div class="tog" id="tog-speed" onclick="this.classList.toggle('on')"></div>
         </div>
-      </div>
-    </div>
-
-    <!-- ROW 4: Theme -->
-    <div class="bbox">
-      <div class="blabel">
-        <span class="bicon">🎨</span>
-        <span data-i18n="themeTitle">Theme</span>
-      </div>
-      <div class="theme-row">
-        <button class="theme-btn active" data-t="arcade" onclick="setTheme('arcade')">
-          <div class="theme-swatch">
-            <span class="ts-dot" style="background:#FF2D95"></span>
-            <span class="ts-dot" style="background:#00D1FF"></span>
-            <span class="ts-dot" style="background:#F5C518"></span>
-          </div>
-          <span data-i18n="themeArcade">Arcade</span>
-        </button>
-        <button class="theme-btn" data-t="classroom" onclick="setTheme('classroom')">
-          <div class="theme-swatch">
-            <span class="ts-dot" style="background:#3B82F6"></span>
-            <span class="ts-dot" style="background:#10B981"></span>
-            <span class="ts-dot" style="background:#F59E0B"></span>
-          </div>
-          <span data-i18n="themeClassroom">Classroom</span>
-        </button>
-        <button class="theme-btn" data-t="retro" onclick="setTheme('retro')">
-          <div class="theme-swatch">
-            <span class="ts-dot" style="background:#BF00FF"></span>
-            <span class="ts-dot" style="background:#00FFCC"></span>
-            <span class="ts-dot" style="background:#FF00BB"></span>
-          </div>
-          <span data-i18n="themeRetro">Retro</span>
-        </button>
       </div>
     </div>
 
@@ -597,9 +476,7 @@ body{
 <div class="grid-floor"></div>
 
 <script>
-/* ══════════════════════════════════════════
-   I18N
-══════════════════════════════════════════ */
+/* ══════════ I18N ══════════ */
 const T = {
   en: {
     pageTitle:'Create your challenge!',
@@ -607,10 +484,9 @@ const T = {
     categoriesLabel:'Categories', rowsLabel:'Rows',
     diffTitle:'Difficulty', easy:'Easy', medium:'Med', hard:'Hard', mixed:'Mix',
     qtypeTitle:'Question Type',
-    mcLabel:'🅰️ Multiple Choice', openLabel:'💬 Open Ended',
-    drawLabel:'✏️ Draw It!', mixedLabel:'🎲 Mixed',
+    mcLabel:'Multiple Choice', openLabel:'Open Ended',
+    drawLabel:'Draw It!', mixedLabel:'Mixed',
     modTitle:'Modifiers', timerLabel:'Timer', bonusLabel:'Bonus Round', speedLabel:'Speed Mode',
-    themeTitle:'Theme', themeArcade:'Arcade', themeClassroom:'Classroom', themeRetro:'Retro',
     promptTitle:'Describe your quiz...',
     startBtn:'Start Mission →',
     promptPH:"Create a quiz about the French Revolution for 9th grade students...",
@@ -624,10 +500,9 @@ const T = {
     categoriesLabel:'Categorias', rowsLabel:'Linhas',
     diffTitle:'Dificuldade', easy:'Fácil', medium:'Médio', hard:'Difícil', mixed:'Misto',
     qtypeTitle:'Tipo de Pergunta',
-    mcLabel:'🅰️ Múltipla Escolha', openLabel:'💬 Aberta',
-    drawLabel:'✏️ Desenhe!', mixedLabel:'🎲 Mista',
+    mcLabel:'Múltipla Escolha', openLabel:'Aberta',
+    drawLabel:'Desenhe!', mixedLabel:'Mista',
     modTitle:'Modificadores', timerLabel:'Cronômetro', bonusLabel:'Rodada Bônus', speedLabel:'Velocidade',
-    themeTitle:'Tema', themeArcade:'Arcade', themeClassroom:'Sala de Aula', themeRetro:'Retrô',
     promptTitle:'Descreva seu quiz...',
     startBtn:'Iniciar Missão →',
     promptPH:"Crie um quiz sobre a Revolução Francesa para o 9º ano...",
@@ -641,10 +516,9 @@ const T = {
     categoriesLabel:'Categorías', rowsLabel:'Filas',
     diffTitle:'Dificultad', easy:'Fácil', medium:'Medio', hard:'Difícil', mixed:'Mixto',
     qtypeTitle:'Tipo de Pregunta',
-    mcLabel:'🅰️ Opción Múltiple', openLabel:'💬 Abierta',
-    drawLabel:'✏️ ¡Dibuja!', mixedLabel:'🎲 Mixta',
+    mcLabel:'Opción Múltiple', openLabel:'Abierta',
+    drawLabel:'¡Dibuja!', mixedLabel:'Mixta',
     modTitle:'Modificadores', timerLabel:'Temporizador', bonusLabel:'Ronda Bonus', speedLabel:'Velocidad',
-    themeTitle:'Tema', themeArcade:'Arcade', themeClassroom:'Aula', themeRetro:'Retro',
     promptTitle:'Describe tu quiz...',
     startBtn:'Iniciar Misión →',
     promptPH:"Crea un quiz sobre la Revolución Francesa para estudiantes de 9° grado...",
@@ -654,10 +528,10 @@ const T = {
   }
 };
 
-const TEAM_COLORS=['#00D1FF','#FF2D95','#F5C518','#22D3A4','#A78BFA','#FB923C','#34D399','#F472B6'];
+const TEAM_COLORS=['#00FFCC','#FF00BB','#BF00FF','#F5C518','#00D1FF','#FB923C','#34D399','#F472B6'];
 
 /* ══════════ STATE ══════════ */
-let lang='en', theme='arcade';
+let lang='en';
 let numTeams=4, numRows=3, numCols=4;
 let difficulty='medium', qType='multiple';
 let teams=[];
@@ -673,21 +547,14 @@ function init() {
 function renderDecos() {
   const w=document.getElementById('deco-wrap');
   const items=[
-    {t:'+',x:4,y:18,sz:26,col:'var(--primary)',op:.45},
-    {t:'✦',x:93,y:10,sz:16,col:'var(--accent)',op:.4},
-    {t:'+',x:7,y:65,sz:18,col:'var(--accent)',op:.35},
-    {t:'✦',x:96,y:60,sz:12,col:'var(--primary)',op:.3},
-    {t:'+',x:2,y:88,sz:22,col:'var(--primary)',op:.4},
-    {t:'+',x:91,y:85,sz:14,col:'var(--accent)',op:.3},
+    {t:'+',x:4,y:18,sz:26,col:'var(--primary)',op:.4},
+    {t:'✦',x:93,y:10,sz:16,col:'var(--accent)',op:.35},
+    {t:'+',x:7,y:65,sz:18,col:'var(--accent)',op:.3},
+    {t:'✦',x:96,y:60,sz:12,col:'var(--primary)',op:.25},
+    {t:'+',x:2,y:88,sz:22,col:'var(--primary)',op:.35},
+    {t:'+',x:91,y:85,sz:14,col:'var(--accent)',op:.25},
   ];
   w.innerHTML=items.map(d=>`<span class="deco" style="left:${d.x}%;top:${d.y}%;font-size:${d.sz}px;color:${d.col};opacity:${d.op}">${d.t}</span>`).join('');
-}
-
-/* ══════════ THEME ══════════ */
-function setTheme(t) {
-  theme=t;
-  document.documentElement.setAttribute('data-theme',t);
-  document.querySelectorAll('.theme-btn').forEach(b=>b.classList.toggle('active',b.dataset.t===t));
 }
 
 /* ══════════ LANG ══════════ */
@@ -706,12 +573,10 @@ function applyI18n() {
     const k=el.getAttribute('data-i18n');
     if(d[k]!==undefined) el.textContent=d[k];
   });
-  // Update qtype dropdown labels
   const qtKeys=['mcLabel','openLabel','drawLabel','mixedLabel'];
-  document.querySelectorAll('#qtype-drop .dd-opt').forEach((opt,i)=>{
-    if(qtKeys[i]) opt.textContent=d[qtKeys[i]]||opt.textContent;
-  });
-  document.getElementById('qtype-label').textContent=d[qtKeys[['multiple','open','drawing','mixed'].indexOf(qType)]]||d.mcLabel;
+  const qtVals=['multiple','open','drawing','mixed'];
+  document.getElementById('qtype-label').textContent=
+    ['🅰️ ','💬 ','✏️ ','🎲 '][qtVals.indexOf(qType)]+d[qtKeys[qtVals.indexOf(qType)]];
   renderTeamInputs();
 }
 
@@ -772,8 +637,9 @@ function pickDiff(btn) {
 function pickQtype(val,el) {
   qType=val;
   const keys=['mcLabel','openLabel','drawLabel','mixedLabel'];
+  const icons=['🅰️ ','💬 ','✏️ ','🎲 '];
   const idx=['multiple','open','drawing','mixed'].indexOf(val);
-  document.getElementById('qtype-label').textContent=T[lang][keys[idx]]||val;
+  document.getElementById('qtype-label').textContent=icons[idx]+T[lang][keys[idx]];
   document.querySelectorAll('#qtype-drop .dd-opt').forEach(o=>o.classList.remove('sel'));
   el.classList.add('sel');
   document.getElementById('qtype-drop').classList.remove('open');
@@ -792,7 +658,7 @@ function startGame() {
   const config={
     numTeams,numRows,numCols,difficulty,qType,
     teams:teams.slice(0,numTeams),
-    lang,qLang,theme,
+    lang,qLang,
     timerOn,bonusOn,speedOn,
     prompt
   };
@@ -805,7 +671,7 @@ function startGame() {
   window.location.href='game.html';
 }
 
-/* ══════════ CLOSE DROPS ON OUTSIDE CLICK ══════════ */
+/* ══════════ CLOSE DROPS ══════════ */
 document.addEventListener('click',e=>{
   if(!e.target.closest('#grid-btn')&&!e.target.closest('#grid-drop'))
     document.getElementById('grid-drop').classList.remove('open');
