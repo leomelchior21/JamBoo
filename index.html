@@ -3,32 +3,35 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>JamBoo — Create Your Challenge</title>
+<title>JamBoo — Quiz Generator 9000</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
 <style>
 /* ═══════════════════════════════════════════
-   RETRO / SYNTHWAVE
+   BASE
 ═══════════════════════════════════════════ */
-:root {
-  --bg:      #0A0A1F;
-  --panel:   #12122A;
-  --panel2:  #0D0D22;
-  --border:  #BF00FF;
-  --primary: #00FFCC;
-  --accent:  #FF00BB;
-  --text:    #FFFFFF;
-  --text2:   rgba(255,255,255,.45);
-  --gray:    rgba(255,255,255,.05);
-  --shadow:  0 0 28px rgba(0,255,204,.15);
-  --r:       6px;
-  --fh:      'Fredoka One', cursive;
-  --fb:      'Nunito', sans-serif;
+:root{
+  --bg:#07071A;
+  --panel:#0F0F24;
+  --module:#0A0A1E;
+  --border:#BF00FF;
+  --cyan:#00FFCC;
+  --pink:#FF2D95;
+  --amber:#F5C518;
+  --text:#FFFFFF;
+  --text2:rgba(255,255,255,.38);
+  --fh:'Fredoka One',cursive;
+  --fb:'Nunito',sans-serif;
+  --fmono:'Courier New',monospace;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 body{
-  font-family:var(--fb);background:var(--bg);color:var(--text);
-  min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased;
+  font-family:var(--fb);
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+  padding:0 0 60px;
 }
 
 /* ═══════════════════════════════════════════
@@ -37,322 +40,490 @@ body{
 .hdr{
   background:var(--panel);
   border-bottom:3px solid var(--border);
-  min-height:96px;
-  display:flex;align-items:center;
+  min-height:96px;display:flex;align-items:center;
   position:relative;overflow:hidden;
 }
-.hdr-stars{
-  position:absolute;inset:0;pointer-events:none;
+.hdr::before{
+  content:'';position:absolute;inset:0;pointer-events:none;
   background-image:
-    radial-gradient(circle,rgba(0,255,204,.3) 1px,transparent 1px),
-    radial-gradient(circle,rgba(191,0,255,.25) 1px,transparent 1px);
-  background-size:60px 38px,90px 52px;
-  background-position:10px 8px,35px 20px;
-  opacity:.35;
+    radial-gradient(circle,rgba(0,255,204,.28) 1px,transparent 1px),
+    radial-gradient(circle,rgba(191,0,255,.22) 1px,transparent 1px);
+  background-size:55px 35px,88px 50px;
+  background-position:8px 6px,30px 18px;
+  opacity:.4;
 }
 .hdr-inner{
-  position:relative;z-index:1;
-  width:100%;max-width:900px;margin:0 auto;
-  padding:0 24px;
+  position:relative;z-index:1;width:100%;max-width:980px;
+  margin:0 auto;padding:0 24px;
   display:flex;align-items:center;justify-content:space-between;
 }
 .hdr-logo{
-  height:84px;width:auto;display:block;
-  transition:transform .35s cubic-bezier(.34,1.56,.64,1), filter .35s ease;
+  height:84px;width:auto;
+  transition:transform .4s cubic-bezier(.34,1.56,.64,1),filter .4s ease;
   cursor:pointer;
 }
 .hdr-logo:hover{
-  transform:scale(1.1) translateY(-3px);
-  filter:drop-shadow(0 0 18px rgba(0,255,204,.7)) drop-shadow(0 0 6px rgba(191,0,255,.5));
+  transform:scale(1.11) translateY(-4px);
+  filter:drop-shadow(0 0 20px rgba(0,255,204,.75)) drop-shadow(0 0 8px rgba(191,0,255,.6));
 }
-
-/* ═══════════════════════════════════════════
-   LANG PILLS
-═══════════════════════════════════════════ */
+.hdr-right{display:flex;align-items:center;gap:10px;}
 .pill-group{
-  display:inline-flex;background:var(--gray);
-  border:2px solid var(--border);border-radius:var(--r);overflow:hidden;
+  display:inline-flex;background:rgba(255,255,255,.04);
+  border:2px solid var(--border);border-radius:6px;overflow:hidden;
 }
 .pill-btn{
-  padding:7px 14px;border:none;background:transparent;
-  color:var(--text2);font-family:var(--fb);font-weight:800;font-size:12px;
+  padding:7px 13px;border:none;background:transparent;
+  color:var(--text2);font-family:var(--fb);font-weight:800;font-size:11px;
   cursor:pointer;text-transform:uppercase;letter-spacing:.5px;
   transition:background .15s,color .15s;
 }
 .pill-btn+.pill-btn{border-left:2px solid var(--border);}
-.pill-btn.active{background:var(--border);color:var(--panel);}
+.pill-btn.active{background:var(--border);color:#fff;}
 
 /* ═══════════════════════════════════════════
-   SETUP BODY
+   SYNTH BODY (outer wrap)
 ═══════════════════════════════════════════ */
-.setup-body{
-  max-width:900px;margin:0 auto;
-  padding:0 16px 80px;
+.synth-body{
+  max-width:980px;margin:0 auto;
+  padding:20px 16px 0;
 }
 
-/* ═══════════════════════════════════════════
-   PAGE TITLE
-═══════════════════════════════════════════ */
-.page-title-wrap{
-  text-align:center;padding:28px 0 22px;
-  display:flex;align-items:center;justify-content:center;gap:16px;
-}
-.title-deco{font-size:24px;font-weight:900;color:var(--primary);opacity:.55;}
-.page-title{
+/* PAGE TITLE */
+.synth-title{
   font-family:var(--fh);
-  font-size:clamp(26px,5.5vw,44px);
-  color:var(--primary);
-  text-shadow:0 0 24px rgba(0,255,204,.5);
+  font-size:clamp(22px,4.5vw,36px);
+  color:var(--cyan);
+  text-shadow:0 0 20px rgba(0,255,204,.5);
+  text-align:center;
+  padding:18px 0 14px;
+  letter-spacing:.5px;
+}
+.synth-title small{
+  font-family:var(--fmono);
+  font-size:10px;letter-spacing:4px;text-transform:uppercase;
+  color:var(--text2);display:block;margin-top:4px;
 }
 
 /* ═══════════════════════════════════════════
-   MAIN CARD
+   SYNTH PANEL SHELL
 ═══════════════════════════════════════════ */
-.card{
-  background:var(--panel);
-  border:2px solid var(--border);
-  border-radius:var(--r);
-  padding:22px 24px;
-  box-shadow:var(--shadow);
+.synth-panel{
+  background:linear-gradient(170deg,#141430 0%,#0D0D22 55%,#121228 100%);
+  border:3px solid var(--border);
+  border-radius:14px;
+  padding:18px;
+  position:relative;
+  box-shadow:
+    0 0 0 1px rgba(191,0,255,.2),
+    0 0 60px rgba(191,0,255,.18),
+    inset 0 0 50px rgba(0,0,0,.35);
+}
+/* Panel grid texture */
+.synth-panel::before{
+  content:'';position:absolute;inset:0;border-radius:14px;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(255,255,255,.012) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.012) 1px,transparent 1px);
+  background-size:22px 22px;
+}
+/* Screw heads */
+.screw{
+  position:absolute;width:12px;height:12px;border-radius:50%;
+  background:radial-gradient(circle at 38% 38%,#2A2A48,#141428);
+  border:1px solid rgba(255,255,255,.08);
+  box-shadow:inset 0 0 3px rgba(0,0,0,.6);
+  z-index:2;
+}
+.screw::after{/* cross slot */
+  content:'';position:absolute;inset:0;
+  background:
+    linear-gradient(rgba(0,0,0,.5) 45%,transparent 45%,transparent 55%,rgba(0,0,0,.5) 55%),
+    linear-gradient(90deg,rgba(0,0,0,.5) 45%,transparent 45%,transparent 55%,rgba(0,0,0,.5) 55%);
+  border-radius:50%;
+}
+.screw-tl{top:10px;left:10px;}
+.screw-tr{top:10px;right:10px;}
+.screw-bl{bottom:10px;left:10px;}
+.screw-br{bottom:10px;right:10px;}
+
+/* ═══════════════════════════════════════════
+   MODULE (rack unit)
+═══════════════════════════════════════════ */
+.module{
+  background:linear-gradient(145deg,#111128 0%,#0A0A1C 100%);
+  border:1px solid rgba(191,0,255,.22);
+  border-radius:8px;
+  padding:16px;
   position:relative;
 }
-.card+.card{margin-top:10px;}
-
-/* Section label */
-.sec-label{
+.mod-tag{
+  font-family:var(--fmono);
+  font-size:9px;font-weight:bold;letter-spacing:3px;text-transform:uppercase;
+  color:rgba(191,0,255,.7);
+  padding-bottom:11px;margin-bottom:14px;
+  border-bottom:1px solid rgba(191,0,255,.14);
   display:flex;align-items:center;gap:8px;
-  font-size:12px;font-weight:900;text-transform:uppercase;
-  letter-spacing:1.5px;color:var(--text2);
-  margin-bottom:16px;
 }
-.sec-label span{font-size:16px;}
+.mod-tag-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--border);
+  box-shadow:0 0 6px rgba(191,0,255,.8);
+  flex-shrink:0;
+}
 
-/* 2-col card row */
-.card-row{
-  display:grid;grid-template-columns:1fr 1fr;gap:10px;
-}
-.card-row .card{margin-top:0;}
+/* Layout rows */
+.rack-row{display:grid;gap:10px;margin-bottom:10px;}
+.rack-row-2{grid-template-columns:1fr 1fr;}
+.rack-row-teams-board{grid-template-columns:1.15fr 1fr;}
+.rack-row-controls{grid-template-columns:1fr 1fr;}
 
 /* ═══════════════════════════════════════════
-   TEAMS
+   STEP SEQUENCER (team count)
 ═══════════════════════════════════════════ */
-.team-count-row{
-  display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;
+.sequencer{display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap;}
+.step-btn{
+  flex:1;min-width:50px;
+  height:44px;
+  border-radius:7px;
+  background:linear-gradient(160deg,#1C1C38,#12122A);
+  border:1px solid rgba(255,255,255,.07);
+  box-shadow:
+    inset 0 2px 6px rgba(0,0,0,.65),
+    inset 0 1px 0 rgba(255,255,255,.04),
+    0 1px 0 rgba(255,255,255,.03);
+  cursor:pointer;
+  color:var(--text2);
+  font-family:var(--fmono);font-weight:bold;font-size:14px;
+  display:flex;align-items:center;justify-content:center;gap:5px;
+  transition:all .12s;
 }
-.tcnt{
-  flex:1;min-width:52px;
-  padding:11px 8px;
-  background:var(--gray);
-  border:2px solid rgba(255,255,255,.1);border-radius:var(--r);
-  color:var(--text2);font-family:var(--fb);font-weight:900;font-size:14px;
-  cursor:pointer;text-align:center;
-  transition:all .15s;
-}
-.tcnt:hover{border-color:var(--primary);color:var(--text);}
-.tcnt.active{
-  background:var(--primary);border-color:var(--primary);
-  color:var(--panel);box-shadow:0 0 12px rgba(0,255,204,.4);
+.step-btn:hover{border-color:rgba(0,255,204,.3);color:rgba(255,255,255,.7);}
+.step-btn.active{
+  background:linear-gradient(160deg,#00FFDD,#00BF99);
+  border-color:var(--cyan);color:#000;font-weight:900;
+  box-shadow:
+    0 0 14px rgba(0,255,204,.65),
+    0 0 28px rgba(0,255,204,.25),
+    inset 0 1px 0 rgba(255,255,255,.35),
+    inset 0 0 10px rgba(255,255,255,.1);
 }
 
-.team-inputs-grid{
+/* ═══════════════════════════════════════════
+   LCD TEAM STRIPS
+═══════════════════════════════════════════ */
+.lcd-strips{
   display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(130px,1fr));
-  gap:8px;
+  grid-template-columns:repeat(auto-fill,minmax(120px,1fr));
+  gap:6px;
 }
-.tinput{
-  display:flex;align-items:center;gap:8px;
-  padding:10px 12px;
-  background:rgba(255,255,255,.04);
-  border:2px solid rgba(255,255,255,.08);
-  border-left:4px solid var(--tc,var(--primary));
-  border-radius:var(--r);overflow:hidden;
+.lcd-strip{
+  display:flex;align-items:center;gap:7px;
+  padding:7px 10px;
+  background:#04080A;
+  border:1px solid rgba(0,255,68,.18);
+  border-left:3px solid var(--tc,var(--cyan));
+  border-radius:4px;
+  box-shadow:inset 0 0 8px rgba(0,50,20,.5);
 }
-.tinput input{
+.lcd-strip input{
   flex:1;background:transparent;border:none;outline:none;
-  color:var(--text);font-family:var(--fb);font-weight:800;font-size:13px;
-  width:100%;
+  color:#00FF44;font-family:var(--fmono);font-size:12px;font-weight:bold;
+  width:100%;caret-color:#00FF44;min-width:0;
 }
-.tinput input::placeholder{color:var(--text2);}
+.lcd-strip input::placeholder{color:rgba(0,255,68,.3);}
 
 /* ═══════════════════════════════════════════
-   EXCEL GRID PICKER
+   LED MATRIX (board size picker)
 ═══════════════════════════════════════════ */
-.gp-wrap{display:flex;flex-direction:column;align-items:flex-start;gap:10px;}
-.gp-grid{
+.led-matrix-wrap{display:flex;flex-direction:column;align-items:flex-start;gap:10px;}
+.led-matrix{
   display:grid;
-  grid-template-columns:repeat(8,1fr);
   gap:4px;
   cursor:crosshair;
+  user-select:none;
 }
-.gp-cell{
-  width:36px;height:36px;
-  border:2px solid rgba(191,0,255,.2);
+.led-cell{
+  width:32px;height:32px;
   border-radius:4px;
-  background:transparent;
-  transition:background .08s,border-color .08s,transform .08s;
+  background:#070715;
+  border:1px solid rgba(191,0,255,.14);
+  transition:background .07s,border-color .07s,box-shadow .07s;
 }
-.gp-cell.hover{
-  background:rgba(0,255,204,.18);
-  border-color:rgba(0,255,204,.5);
+.led-cell.hover{
+  background:rgba(0,255,204,.2);
+  border-color:rgba(0,255,204,.55);
 }
-.gp-cell.sel{
+.led-cell.sel{
   background:rgba(0,255,204,.28);
-  border-color:var(--primary);
-  box-shadow:inset 0 0 6px rgba(0,255,204,.2);
+  border-color:var(--cyan);
+  box-shadow:0 0 5px rgba(0,255,204,.45),inset 0 0 5px rgba(0,255,204,.18);
 }
-.gp-label{
-  font-family:var(--fh);font-size:16px;color:var(--primary);
-  letter-spacing:.3px;
+.matrix-readout{margin-top:2px;}
+.matrix-main{
+  font-family:var(--fh);font-size:18px;
+  color:var(--cyan);text-shadow:0 0 10px rgba(0,255,204,.4);
 }
-.gp-sublabel{font-size:12px;font-weight:800;color:var(--text2);margin-top:2px;}
+.matrix-sub{font-family:var(--fmono);font-size:10px;color:var(--text2);letter-spacing:1px;}
 
 /* ═══════════════════════════════════════════
-   DIFFICULTY CHIPS
+   DRUM PADS (difficulty + q-type)
 ═══════════════════════════════════════════ */
-.chip-row{display:flex;gap:8px;flex-wrap:wrap;}
-.chip{
-  flex:1;min-width:80px;
-  display:flex;flex-direction:column;align-items:center;gap:5px;
-  padding:13px 10px;
-  background:var(--gray);
-  border:2px solid rgba(255,255,255,.1);border-radius:var(--r);
-  color:var(--text);font-family:var(--fb);font-weight:800;font-size:13px;
-  cursor:pointer;transition:all .15s;text-align:center;
+.pad-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.pad-btn{
+  aspect-ratio:1;
+  border-radius:9px;
+  background:linear-gradient(145deg,#1C1C38,#12122A);
+  border:1px solid rgba(255,255,255,.07);
+  box-shadow:
+    inset 0 3px 8px rgba(0,0,0,.7),
+    inset 0 1px 0 rgba(255,255,255,.04),
+    0 1px 0 rgba(255,255,255,.03);
+  cursor:pointer;
+  transition:all .12s;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:7px;
+  color:var(--text2);
+  font-family:var(--fmono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;
+  position:relative;overflow:hidden;
+  padding:10px 6px;
 }
-.chip .chip-icon{font-size:20px;display:block;}
-.chip:hover{border-color:var(--primary);}
-.chip.active{
-  background:rgba(0,255,204,.12);
-  border-color:var(--primary);color:var(--primary);
-  box-shadow:0 0 12px rgba(0,255,204,.2);
+/* LED dot in top-right corner */
+.pad-btn::before{
+  content:'';position:absolute;top:7px;right:7px;
+  width:6px;height:6px;border-radius:50%;
+  background:rgba(255,255,255,.1);
+  transition:all .12s;
 }
+.pad-btn .pad-icon{font-size:22px;transition:transform .12s;}
+.pad-btn:hover{border-color:rgba(255,255,255,.18);}
+.pad-btn:hover .pad-icon{transform:scale(1.15);}
+
+/* Cyan active (difficulty) */
+.pad-btn.active{
+  background:linear-gradient(145deg,rgba(0,255,204,.12),rgba(0,255,204,.04));
+  border-color:var(--cyan);color:var(--cyan);
+  box-shadow:
+    0 0 18px rgba(0,255,204,.35),
+    inset 0 0 14px rgba(0,255,204,.07),
+    inset 0 2px 5px rgba(0,0,0,.4);
+}
+.pad-btn.active::before{background:var(--cyan);box-shadow:0 0 8px rgba(0,255,204,.9);}
+
+/* Magenta active (q-type) */
+.pad-btn.active-accent{
+  background:linear-gradient(145deg,rgba(255,0,187,.12),rgba(255,0,187,.04));
+  border-color:var(--pink);color:var(--pink);
+  box-shadow:
+    0 0 18px rgba(255,45,149,.35),
+    inset 0 0 14px rgba(255,45,149,.07),
+    inset 0 2px 5px rgba(0,0,0,.4);
+}
+.pad-btn.active-accent::before{background:var(--pink);box-shadow:0 0 8px rgba(255,45,149,.9);}
+.pad-btn.active-accent::after{content:'';position:absolute;inset:0;background:transparent;}
 
 /* ═══════════════════════════════════════════
-   QUESTION TYPE CHIPS
+   FX CHAIN (modifiers — vertical lever switches)
 ═══════════════════════════════════════════ */
-.qchip-row{display:flex;gap:8px;flex-wrap:wrap;}
-.qchip{
-  flex:1;min-width:80px;
-  display:flex;flex-direction:column;align-items:center;gap:5px;
-  padding:13px 10px;
-  background:var(--gray);
-  border:2px solid rgba(255,255,255,.1);border-radius:var(--r);
-  color:var(--text);font-family:var(--fb);font-weight:800;font-size:12px;
-  cursor:pointer;transition:all .15s;text-align:center;
+.fx-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+.fx-unit{
+  display:flex;flex-direction:column;align-items:center;gap:10px;
+  padding:18px 12px 16px;
+  background:linear-gradient(145deg,#111128,#0A0A1C);
+  border:1px solid rgba(191,0,255,.18);
+  border-radius:8px;
+  transition:border-color .2s;
 }
-.qchip .qchip-icon{font-size:20px;display:block;}
-.qchip:hover{border-color:var(--accent);}
-.qchip.active{
-  background:rgba(255,0,187,.12);
-  border-color:var(--accent);color:var(--accent);
-  box-shadow:0 0 12px rgba(255,0,187,.2);
+.fx-unit.on{border-color:rgba(0,255,204,.4);}
+
+/* LED indicator */
+.fx-led{
+  width:11px;height:11px;border-radius:50%;
+  background:rgba(255,255,255,.1);
+  border:1px solid rgba(255,255,255,.08);
+  box-shadow:inset 0 0 3px rgba(0,0,0,.5);
+  transition:all .2s;flex-shrink:0;
+}
+.fx-led.on{
+  background:var(--cyan);
+  box-shadow:0 0 10px rgba(0,255,204,.9),0 0 20px rgba(0,255,204,.45);
+  border-color:rgba(255,255,255,.3);
 }
 
-/* ═══════════════════════════════════════════
-   MODIFIERS
-═══════════════════════════════════════════ */
-.mod-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
-.mod-item{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:14px 16px;
-  background:var(--gray);
-  border:2px solid rgba(255,255,255,.08);border-radius:var(--r);
-  gap:12px;
+/* Vertical lever toggle */
+.lever-track{
+  width:46px;height:76px;
+  background:linear-gradient(180deg,#0A0A1C,#121228);
+  border:2px solid rgba(255,255,255,.09);
+  border-radius:23px;
+  position:relative;
+  box-shadow:inset 0 3px 10px rgba(0,0,0,.7),inset 0 0 0 1px rgba(0,0,0,.3);
+  cursor:pointer;
+  transition:border-color .2s;
+  flex-shrink:0;
 }
-.mod-info{}
-.mod-name{font-weight:900;font-size:13px;color:var(--text);margin-bottom:2px;}
-.mod-desc{font-size:11px;color:var(--text2);}
-.tog{
-  width:44px;height:24px;flex-shrink:0;
-  background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.15);
-  border-radius:12px;cursor:pointer;
-  position:relative;transition:all .2s;
+.lever-track.on{border-color:rgba(0,255,204,.35);}
+.lever-knob{
+  position:absolute;
+  width:34px;height:26px;
+  left:4px;
+  bottom:4px; /* OFF = bottom */
+  border-radius:17px;
+  background:linear-gradient(180deg,#2A2A48,#181830);
+  border:1px solid rgba(255,255,255,.13);
+  box-shadow:0 2px 6px rgba(0,0,0,.6),0 1px 0 rgba(255,255,255,.08);
+  transition:bottom .22s cubic-bezier(.34,1.4,.64,1),background .22s,box-shadow .22s;
 }
-.tog.on{background:var(--primary);border-color:var(--primary);box-shadow:0 0 10px rgba(0,255,204,.35);}
-.tog::after{
+.lever-track.on .lever-knob{
+  bottom:42px; /* ON = top */
+  background:linear-gradient(180deg,#00FFDD,#00BF99);
+  box-shadow:0 0 14px rgba(0,255,204,.6),0 2px 4px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.3);
+}
+/* Notch marks */
+.lever-track::before,.lever-track::after{
   content:'';position:absolute;
-  top:2px;left:3px;
-  width:14px;height:14px;
-  background:rgba(255,255,255,.5);border-radius:50%;
-  transition:transform .2s;
+  right:-8px;width:5px;height:2px;
+  background:rgba(255,255,255,.12);border-radius:1px;
 }
-.tog.on::after{background:var(--panel);transform:translateX(18px);}
+.lever-track::before{top:18px;}
+.lever-track::after{bottom:18px;}
+
+.fx-labels{text-align:center;}
+.fx-name{
+  font-family:var(--fmono);font-size:9px;font-weight:bold;
+  letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.65);
+  margin-bottom:3px;
+}
+.fx-desc{font-size:9px;color:var(--text2);letter-spacing:.5px;}
 
 /* ═══════════════════════════════════════════
-   PROMPT BOX
+   LCD SIGNAL INPUT (prompt)
 ═══════════════════════════════════════════ */
-.prompt-ta{
-  width:100%;min-height:90px;
+.lcd-screen{
+  position:relative;
+  background:#030C03;
+  border:2px solid rgba(0,255,68,.22);
+  border-radius:6px;
+  overflow:hidden;
+  margin-bottom:14px;
+  box-shadow:
+    inset 0 0 24px rgba(0,80,20,.45),
+    0 0 0 1px rgba(0,255,68,.08);
+}
+.lcd-screen::after{/* scanlines */
+  content:'';position:absolute;inset:0;pointer-events:none;z-index:2;
+  background:repeating-linear-gradient(
+    0deg,rgba(0,0,0,.13) 0px,rgba(0,0,0,.13) 1px,
+    transparent 1px,transparent 3px
+  );
+}
+.lcd-ta{
+  display:block;width:100%;min-height:80px;
   padding:14px 16px;
-  background:rgba(255,255,255,.04);
-  border:2px solid rgba(255,255,255,.1);border-radius:var(--r);
-  color:var(--text);font-family:var(--fb);font-size:14px;font-weight:700;
-  resize:vertical;outline:none;
-  transition:border-color .15s;margin-bottom:14px;
+  background:transparent;border:none;outline:none;
+  color:#00FF44;font-family:var(--fmono);font-size:13px;line-height:1.7;
+  resize:vertical;caret-color:#00FF44;
+  position:relative;z-index:1;
 }
-.prompt-ta:focus{border-color:var(--primary);box-shadow:0 0 12px rgba(0,255,204,.1);}
-.prompt-ta::placeholder{color:var(--text2);}
+.lcd-ta::placeholder{color:rgba(0,255,68,.32);}
+.lcd-cursor{/* blinking cursor effect on label */
+  display:inline-block;width:8px;height:12px;
+  background:#00FF44;margin-left:4px;vertical-align:middle;
+  animation:blink .9s step-end infinite;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
 
 /* ═══════════════════════════════════════════
-   START BUTTON
+   LAUNCH BUTTON
 ═══════════════════════════════════════════ */
-.btn-start{
-  width:100%;padding:16px;
-  background:var(--primary);
-  border:3px solid rgba(0,0,0,.25);border-radius:var(--r);
-  color:var(--panel);
-  font-family:var(--fh);font-size:20px;letter-spacing:.5px;
-  cursor:pointer;transition:filter .15s,transform .12s,box-shadow .15s;
-  box-shadow:0 0 24px rgba(0,255,204,.35);
+.launch-wrap{
+  display:flex;flex-direction:column;align-items:center;gap:10px;
+  padding:4px 0 6px;
 }
-.btn-start:hover{filter:brightness(1.08);transform:translateY(-2px);box-shadow:0 0 36px rgba(0,255,204,.55);}
-.btn-start:active{transform:translateY(1px);}
-.btn-start:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none;}
+.launch-label{
+  font-family:var(--fmono);font-size:9px;letter-spacing:4px;
+  text-transform:uppercase;color:var(--text2);
+}
+.btn-launch{
+  width:100%;padding:18px 24px;
+  background:linear-gradient(180deg,#FF2D95 0%,#CC1070 100%);
+  border:none;
+  border-top:2px solid rgba(255,255,255,.22);
+  border-bottom:4px solid rgba(0,0,0,.45);
+  border-radius:8px;
+  color:#fff;
+  font-family:var(--fmono);font-size:15px;font-weight:bold;letter-spacing:5px;
+  text-transform:uppercase;cursor:pointer;
+  transition:all .14s;
+  box-shadow:
+    0 0 30px rgba(255,45,149,.4),
+    0 0 60px rgba(255,45,149,.18);
+  position:relative;overflow:hidden;
+}
+.btn-launch::before{/* shimmer stripe */
+  content:'';position:absolute;top:0;left:-100%;
+  width:60%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent);
+  transition:left .6s ease;
+}
+.btn-launch:hover::before{left:140%;}
+.btn-launch:hover{
+  filter:brightness(1.12);transform:translateY(-3px);
+  box-shadow:0 0 45px rgba(255,45,149,.65),0 0 80px rgba(255,45,149,.28),
+             0 6px 16px rgba(0,0,0,.4);
+}
+.btn-launch:active{
+  transform:translateY(2px);
+  border-top-width:4px;border-bottom-width:2px;
+  box-shadow:0 0 20px rgba(255,45,149,.4);
+}
+.btn-launch:disabled{opacity:.45;cursor:not-allowed;transform:none;}
 
 /* ═══════════════════════════════════════════
    LOADING
 ═══════════════════════════════════════════ */
 .loading-overlay{
   display:none;position:fixed;inset:0;
-  background:var(--panel);z-index:9999;
+  background:rgba(7,7,26,.97);z-index:9999;
   flex-direction:column;align-items:center;justify-content:center;gap:20px;
 }
 .loading-overlay.active{display:flex;}
-.load-logo{height:108px;animation:logoPulse 2s ease-in-out infinite;}
-@keyframes logoPulse{0%,100%{filter:drop-shadow(0 0 10px rgba(0,255,204,.4))}50%{filter:drop-shadow(0 0 24px rgba(0,255,204,.8));}}
-.load-bar-wrap{
-  width:200px;height:5px;
-  background:rgba(255,255,255,.07);
-  border:2px solid var(--primary);border-radius:3px;overflow:hidden;
+.load-logo{height:110px;animation:logoPulse 2s ease-in-out infinite;}
+@keyframes logoPulse{
+  0%,100%{filter:drop-shadow(0 0 12px rgba(0,255,204,.4));}
+  50%{filter:drop-shadow(0 0 28px rgba(0,255,204,.85)) drop-shadow(0 0 10px rgba(191,0,255,.6));}
 }
-.load-bar{height:100%;background:var(--primary);animation:sweep 1.2s linear infinite;}
+.load-bar-wrap{
+  width:210px;height:4px;
+  background:rgba(255,255,255,.06);
+  border:1px solid var(--cyan);border-radius:2px;overflow:hidden;
+}
+.load-bar{height:100%;background:var(--cyan);animation:sweep 1.2s linear infinite;}
 @keyframes sweep{0%{transform:translateX(-100%)}100%{transform:translateX(300%)}}
-.load-text{font-family:var(--fh);font-size:12px;color:var(--text2);letter-spacing:3px;text-transform:uppercase;}
+.load-text{font-family:var(--fmono);font-size:11px;color:var(--text2);letter-spacing:4px;text-transform:uppercase;}
 
-/* ═══════════════════════════════════════════
-   GRID FLOOR
-═══════════════════════════════════════════ */
+/* Synthwave floor */
 .grid-floor{
-  position:fixed;bottom:0;left:0;right:0;height:80px;
+  position:fixed;bottom:0;left:0;right:0;height:70px;
   pointer-events:none;z-index:0;
   background-image:
-    linear-gradient(rgba(0,255,204,.1) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(0,255,204,.1) 1px,transparent 1px);
+    linear-gradient(rgba(0,255,204,.09) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,255,204,.09) 1px,transparent 1px);
   background-size:40px 40px;
-  transform:perspective(300px) rotateX(55deg);transform-origin:bottom;opacity:.6;
+  transform:perspective(260px) rotateX(58deg);transform-origin:bottom;opacity:.5;
 }
 
 /* ═══════════════════════════════════════════
    RESPONSIVE
 ═══════════════════════════════════════════ */
-@media(max-width:620px){
-  .card-row{grid-template-columns:1fr;}
-  .mod-grid{grid-template-columns:1fr;}
+@media(max-width:680px){
+  .rack-row-teams-board,.rack-row-controls{grid-template-columns:1fr;}
+  .fx-row{grid-template-columns:1fr;}
   .hdr-logo{height:64px;}
-  .gp-cell{width:28px;height:28px;}
+  .led-cell{width:24px;height:24px;}
 }
 @media(max-width:400px){
-  .gp-cell{width:22px;height:22px;}
+  .led-cell{width:19px;height:19px;}
+  .pad-grid{grid-template-columns:1fr 1fr;}
 }
 </style>
 </head>
@@ -367,7 +538,6 @@ body{
 
 <!-- HEADER -->
 <header class="hdr">
-  <div class="hdr-stars"></div>
   <div class="hdr-inner">
     <img class="hdr-logo" src="Jamboo-logo-png.png" alt="JamBoo">
     <div class="hdr-right">
@@ -380,120 +550,150 @@ body{
   </div>
 </header>
 
-<main class="setup-body">
+<div class="synth-body">
 
-  <div class="page-title-wrap">
-    <span class="title-deco">+</span>
-    <h1 class="page-title" id="page-title">Create your challenge!</h1>
-    <span class="title-deco">+</span>
+  <div class="synth-title">
+    <span id="page-title">Create your challenge!</span>
+    <small>JAMBOO QUIZ GENERATOR 9000</small>
   </div>
 
-  <!-- TEAMS -->
-  <div class="card">
-    <div class="sec-label"><span>👥</span><span data-i18n="teamsTitle">Teams</span></div>
-    <div class="team-count-row" id="team-count-row"></div>
-    <div class="team-inputs-grid" id="team-inputs"></div>
-  </div>
+  <!-- ══════ SYNTH PANEL ══════ -->
+  <div class="synth-panel">
+    <div class="screw screw-tl"></div>
+    <div class="screw screw-tr"></div>
+    <div class="screw screw-bl"></div>
+    <div class="screw screw-br"></div>
 
-  <!-- BOARD SIZE (excel picker) -->
-  <div class="card">
-    <div class="sec-label"><span>⊞</span><span data-i18n="gridTitle">Board Size</span></div>
-    <div class="gp-wrap">
-      <div class="gp-grid" id="gp-grid"></div>
-      <div>
-        <div class="gp-label" id="gp-label">4 Categories × 3 Rows</div>
-        <div class="gp-sublabel" id="gp-sublabel">12 questions total</div>
+    <!-- ROW 1: Player Bank + Board Matrix -->
+    <div class="rack-row rack-row-teams-board" style="margin-bottom:10px;">
+
+      <!-- PLAYER BANK -->
+      <div class="module">
+        <div class="mod-tag"><span class="mod-tag-dot"></span><span data-i18n="teamsTitle">PLAYER BANK</span></div>
+        <div class="sequencer" id="team-count-row"></div>
+        <div class="lcd-strips" id="team-inputs"></div>
       </div>
-    </div>
-  </div>
 
-  <!-- DIFFICULTY + QUESTION TYPE -->
-  <div class="card-row">
-
-    <div class="card">
-      <div class="sec-label"><span>🎯</span><span data-i18n="diffTitle">Difficulty</span></div>
-      <div class="chip-row" id="diff-row">
-        <button class="chip" data-val="easy" onclick="pickDiff(this)">
-          <span class="chip-icon">🟢</span>
-          <span data-i18n="easy">Easy</span>
-        </button>
-        <button class="chip active" data-val="medium" onclick="pickDiff(this)">
-          <span class="chip-icon">🟡</span>
-          <span data-i18n="medium">Medium</span>
-        </button>
-        <button class="chip" data-val="hard" onclick="pickDiff(this)">
-          <span class="chip-icon">🔴</span>
-          <span data-i18n="hard">Hard</span>
-        </button>
-        <button class="chip" data-val="mixed" onclick="pickDiff(this)">
-          <span class="chip-icon">🎲</span>
-          <span data-i18n="mixed">Mixed</span>
-        </button>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="sec-label"><span>💬</span><span data-i18n="qtypeTitle">Question Type</span></div>
-      <div class="qchip-row">
-        <button class="qchip active" data-val="multiple" onclick="pickQtype('multiple',this)">
-          <span class="qchip-icon">🅰️</span>
-          <span data-i18n="mcLabel">Multiple Choice</span>
-        </button>
-        <button class="qchip" data-val="open" onclick="pickQtype('open',this)">
-          <span class="qchip-icon">💬</span>
-          <span data-i18n="openLabel">Open Ended</span>
-        </button>
-        <button class="qchip" data-val="drawing" onclick="pickQtype('drawing',this)">
-          <span class="qchip-icon">✏️</span>
-          <span data-i18n="drawLabel">Draw It!</span>
-        </button>
-        <button class="qchip" data-val="mixed" onclick="pickQtype('mixed',this)">
-          <span class="qchip-icon">🎲</span>
-          <span data-i18n="mixedLabel">Mixed</span>
-        </button>
-      </div>
-    </div>
-
-  </div><!-- /card-row -->
-
-  <!-- MODIFIERS -->
-  <div class="card">
-    <div class="sec-label"><span>⚙️</span><span data-i18n="modTitle">Modifiers</span></div>
-    <div class="mod-grid">
-      <div class="mod-item">
-        <div class="mod-info">
-          <div class="mod-name" data-i18n="timerLabel">Timer</div>
-          <div class="mod-desc" data-i18n="timerDesc">30s per question</div>
+      <!-- BOARD MATRIX -->
+      <div class="module">
+        <div class="mod-tag"><span class="mod-tag-dot"></span><span data-i18n="gridTitle">BOARD MATRIX</span></div>
+        <div class="led-matrix-wrap">
+          <div class="led-matrix" id="gp-grid"></div>
+          <div class="matrix-readout">
+            <div class="matrix-main" id="gp-label">4 × 3</div>
+            <div class="matrix-sub" id="gp-sublabel">12 questions</div>
+          </div>
         </div>
-        <div class="tog on" id="tog-timer" onclick="this.classList.toggle('on')"></div>
       </div>
-      <div class="mod-item">
-        <div class="mod-info">
-          <div class="mod-name" data-i18n="bonusLabel">Bonus Round</div>
-          <div class="mod-desc" data-i18n="bonusDesc">Teams bet points</div>
+
+    </div><!-- /row 1 -->
+
+    <!-- ROW 2: Difficulty + Voice Select -->
+    <div class="rack-row rack-row-controls" style="margin-bottom:10px;">
+
+      <!-- DIFFICULTY PADS -->
+      <div class="module">
+        <div class="mod-tag"><span class="mod-tag-dot"></span><span data-i18n="diffTitle">DIFFICULTY LEVEL</span></div>
+        <div class="pad-grid" id="diff-pads">
+          <button class="pad-btn active" data-val="easy" onclick="pickDiff(this)">
+            <span class="pad-icon">🟢</span><span data-i18n="easy">EASY</span>
+          </button>
+          <button class="pad-btn" data-val="medium" onclick="pickDiff(this)">
+            <span class="pad-icon">🟡</span><span data-i18n="medium">MED</span>
+          </button>
+          <button class="pad-btn" data-val="hard" onclick="pickDiff(this)">
+            <span class="pad-icon">🔴</span><span data-i18n="hard">HARD</span>
+          </button>
+          <button class="pad-btn" data-val="mixed" onclick="pickDiff(this)">
+            <span class="pad-icon">🎲</span><span data-i18n="mixed">MIX</span>
+          </button>
         </div>
-        <div class="tog on" id="tog-bonus" onclick="this.classList.toggle('on')"></div>
       </div>
-      <div class="mod-item">
-        <div class="mod-info">
-          <div class="mod-name" data-i18n="speedLabel">Speed Mode</div>
-          <div class="mod-desc" data-i18n="speedDesc">15s, first buzzer wins</div>
+
+      <!-- VOICE SELECT (Q-Type) -->
+      <div class="module">
+        <div class="mod-tag"><span class="mod-tag-dot"></span><span data-i18n="qtypeTitle">VOICE SELECT</span></div>
+        <div class="pad-grid" id="qtype-pads">
+          <button class="pad-btn active-accent" data-val="multiple" onclick="pickQtype('multiple',this)">
+            <span class="pad-icon">🅰️</span><span data-i18n="mcLabel">M.CHOICE</span>
+          </button>
+          <button class="pad-btn" data-val="open" onclick="pickQtype('open',this)">
+            <span class="pad-icon">💬</span><span data-i18n="openLabel">OPEN</span>
+          </button>
+          <button class="pad-btn" data-val="drawing" onclick="pickQtype('drawing',this)">
+            <span class="pad-icon">✏️</span><span data-i18n="drawLabel">DRAW</span>
+          </button>
+          <button class="pad-btn" data-val="mixed" onclick="pickQtype('mixed',this)">
+            <span class="pad-icon">🎲</span><span data-i18n="mixedLabel">MIXED</span>
+          </button>
         </div>
-        <div class="tog" id="tog-speed" onclick="this.classList.toggle('on')"></div>
+      </div>
+
+    </div><!-- /row 2 -->
+
+    <!-- ROW 3: FX Chain (Modifiers) -->
+    <div class="module" style="margin-bottom:10px;">
+      <div class="mod-tag"><span class="mod-tag-dot"></span><span data-i18n="modTitle">FX CHAIN — MODIFIERS</span></div>
+      <div class="fx-row">
+
+        <div class="fx-unit on" id="fx-timer">
+          <div class="fx-led on" id="led-timer"></div>
+          <div class="lever-track on" id="tog-timer" onclick="toggleFX('timer')">
+            <div class="lever-knob"></div>
+          </div>
+          <div class="fx-labels">
+            <div class="fx-name" data-i18n="timerLabel">TIMER</div>
+            <div class="fx-desc" data-i18n="timerDesc">30s per question</div>
+          </div>
+        </div>
+
+        <div class="fx-unit on" id="fx-bonus">
+          <div class="fx-led on" id="led-bonus"></div>
+          <div class="lever-track on" id="tog-bonus" onclick="toggleFX('bonus')">
+            <div class="lever-knob"></div>
+          </div>
+          <div class="fx-labels">
+            <div class="fx-name" data-i18n="bonusLabel">BONUS</div>
+            <div class="fx-desc" data-i18n="bonusDesc">Teams bet points</div>
+          </div>
+        </div>
+
+        <div class="fx-unit" id="fx-speed">
+          <div class="fx-led" id="led-speed"></div>
+          <div class="lever-track" id="tog-speed" onclick="toggleFX('speed')">
+            <div class="lever-knob"></div>
+          </div>
+          <div class="fx-labels">
+            <div class="fx-name" data-i18n="speedLabel">SPEED</div>
+            <div class="fx-desc" data-i18n="speedDesc">15s, first buzzer wins</div>
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /row 3 -->
+
+    <!-- ROW 4: Signal Input (AI Prompt) -->
+    <div class="module" style="margin-bottom:14px;">
+      <div class="mod-tag">
+        <span class="mod-tag-dot"></span>
+        <span data-i18n="promptTitle">SIGNAL INPUT</span>
+        <span class="lcd-cursor"></span>
+      </div>
+      <div class="lcd-screen">
+        <textarea class="lcd-ta" id="ai-prompt" placeholder="> Describe your quiz... e.g. French Revolution for 9th grade students"></textarea>
       </div>
     </div>
-  </div>
 
-  <!-- PROMPT + START -->
-  <div class="card">
-    <div class="sec-label"><span>🤖</span><span data-i18n="promptTitle">Describe your quiz</span></div>
-    <textarea class="prompt-ta" id="ai-prompt" placeholder="Create a quiz about the French Revolution for 9th grade students..."></textarea>
-    <button class="btn-start" id="gen-btn" onclick="startGame()">
-      <span data-i18n="startBtn">Start Mission →</span>
-    </button>
-  </div>
+    <!-- LAUNCH -->
+    <div class="launch-wrap">
+      <div class="launch-label" data-i18n="launchLabel">— INITIATE SEQUENCE —</div>
+      <button class="btn-launch" id="gen-btn" onclick="startGame()">
+        ▶ &nbsp;<span data-i18n="startBtn">LAUNCH MISSION</span>
+      </button>
+    </div>
 
-</main>
+  </div><!-- /synth-panel -->
+</div><!-- /synth-body -->
 
 <div class="grid-floor"></div>
 
@@ -502,85 +702,92 @@ body{
 const T = {
   en:{
     pageTitle:'Create your challenge!',
-    teamsTitle:'Teams', gridTitle:'Board Size',
-    diffTitle:'Difficulty', easy:'Easy', medium:'Medium', hard:'Hard', mixed:'Mixed',
-    qtypeTitle:'Question Type',
-    mcLabel:'Multiple Choice', openLabel:'Open Ended', drawLabel:'Draw It!', mixedLabel:'Mixed',
-    modTitle:'Modifiers',
-    timerLabel:'Timer', timerDesc:'30s per question',
-    bonusLabel:'Bonus Round', bonusDesc:'Teams bet points',
-    speedLabel:'Speed Mode', speedDesc:'15s, first buzzer wins',
-    promptTitle:'Describe your quiz',
-    startBtn:'Start Mission →',
-    promptPH:"Create a quiz about the French Revolution for 9th grade students...",
+    teamsTitle:'PLAYER BANK', gridTitle:'BOARD MATRIX',
+    diffTitle:'DIFFICULTY LEVEL',
+    easy:'EASY', medium:'MED', hard:'HARD', mixed:'MIX',
+    qtypeTitle:'VOICE SELECT',
+    mcLabel:'M.CHOICE', openLabel:'OPEN', drawLabel:'DRAW', mixedLabel:'MIXED',
+    modTitle:'FX CHAIN — MODIFIERS',
+    timerLabel:'TIMER', timerDesc:'30s per question',
+    bonusLabel:'BONUS', bonusDesc:'Teams bet points',
+    speedLabel:'SPEED', speedDesc:'15s, first buzzer wins',
+    promptTitle:'SIGNAL INPUT',
+    launchLabel:'— INITIATE SEQUENCE —',
+    startBtn:'LAUNCH MISSION',
+    promptPH:'> Describe your quiz... e.g. French Revolution for 9th grade students',
     noPrompt:'Please describe your quiz topic!',
     generating:'Generating your game...',
     teamDefaults:['Team 1','Team 2','Team 3','Team 4','Team 5','Team 6','Team 7','Team 8'],
-    categories:'Categories', rows:'Rows', questions:'questions total',
+    categories:'CAT', rows:'ROW', questions:'questions',
   },
   pt:{
     pageTitle:'Crie seu desafio!',
-    teamsTitle:'Times', gridTitle:'Tamanho do Tabuleiro',
-    diffTitle:'Dificuldade', easy:'Fácil', medium:'Médio', hard:'Difícil', mixed:'Misto',
-    qtypeTitle:'Tipo de Pergunta',
-    mcLabel:'Múltipla Escolha', openLabel:'Aberta', drawLabel:'Desenhe!', mixedLabel:'Mista',
-    modTitle:'Modificadores',
-    timerLabel:'Cronômetro', timerDesc:'30s por pergunta',
-    bonusLabel:'Rodada Bônus', bonusDesc:'Times apostam pontos',
-    speedLabel:'Velocidade', speedDesc:'15s, primeiro a tocar vence',
-    promptTitle:'Descreva seu quiz',
-    startBtn:'Iniciar Missão →',
-    promptPH:"Crie um quiz sobre a Revolução Francesa para o 9º ano...",
+    teamsTitle:'JOGADORES', gridTitle:'MATRIZ DO JOGO',
+    diffTitle:'NÍVEL DE DIFICULDADE',
+    easy:'FÁCIL', medium:'MÉDIO', hard:'DIFÍCIL', mixed:'MISTO',
+    qtypeTitle:'TIPO DE VOZ',
+    mcLabel:'M.ESCOLHA', openLabel:'ABERTA', drawLabel:'DRAW', mixedLabel:'MISTA',
+    modTitle:'CADEIA DE EFEITOS',
+    timerLabel:'TIMER', timerDesc:'30s por pergunta',
+    bonusLabel:'BÔNUS', bonusDesc:'Times apostam pontos',
+    speedLabel:'SPEED', speedDesc:'15s, primeiro a tocar',
+    promptTitle:'ENTRADA DE SINAL',
+    launchLabel:'— INICIAR SEQUÊNCIA —',
+    startBtn:'LANÇAR MISSÃO',
+    promptPH:'> Descreva seu quiz... ex: Revolução Francesa para o 9º ano',
     noPrompt:'Por favor, descreva o tema do quiz!',
     generating:'Gerando seu jogo...',
     teamDefaults:['Time 1','Time 2','Time 3','Time 4','Time 5','Time 6','Time 7','Time 8'],
-    categories:'Categorias', rows:'Linhas', questions:'perguntas no total',
+    categories:'CAT', rows:'LIN', questions:'perguntas',
   },
   es:{
     pageTitle:'¡Crea tu desafío!',
-    teamsTitle:'Equipos', gridTitle:'Tamaño del Tablero',
-    diffTitle:'Dificultad', easy:'Fácil', medium:'Medio', hard:'Difícil', mixed:'Mixto',
-    qtypeTitle:'Tipo de Pregunta',
-    mcLabel:'Opción Múltiple', openLabel:'Abierta', drawLabel:'¡Dibuja!', mixedLabel:'Mixta',
-    modTitle:'Modificadores',
-    timerLabel:'Temporizador', timerDesc:'30s por pregunta',
-    bonusLabel:'Ronda Bonus', bonusDesc:'Equipos apuestan puntos',
-    speedLabel:'Velocidad', speedDesc:'15s, primero en pulsar gana',
-    promptTitle:'Describe tu quiz',
-    startBtn:'Iniciar Misión →',
-    promptPH:"Crea un quiz sobre la Revolución Francesa para estudiantes de 9° grado...",
+    teamsTitle:'JUGADORES', gridTitle:'MATRIZ DEL TABLERO',
+    diffTitle:'NIVEL DE DIFICULTAD',
+    easy:'FÁCIL', medium:'MEDIO', hard:'DIFÍCIL', mixed:'MIXTO',
+    qtypeTitle:'SELECCIÓN DE VOZ',
+    mcLabel:'M.OPCIÓN', openLabel:'ABIERTA', drawLabel:'DIBUJO', mixedLabel:'MIXTA',
+    modTitle:'CADENA DE FX',
+    timerLabel:'TIMER', timerDesc:'30s por pregunta',
+    bonusLabel:'BONUS', bonusDesc:'Equipos apuestan puntos',
+    speedLabel:'SPEED', speedDesc:'15s, primero en pulsar',
+    promptTitle:'ENTRADA DE SEÑAL',
+    launchLabel:'— INICIAR SECUENCIA —',
+    startBtn:'LANZAR MISIÓN',
+    promptPH:'> Describe tu quiz... ej: Revolución Francesa para 9° grado',
     noPrompt:'¡Por favor describe el tema de tu quiz!',
     generating:'Generando tu juego...',
     teamDefaults:['Equipo 1','Equipo 2','Equipo 3','Equipo 4','Equipo 5','Equipo 6','Equipo 7','Equipo 8'],
-    categories:'Categorías', rows:'Filas', questions:'preguntas en total',
+    categories:'CAT', rows:'FIL', questions:'preguntas',
   }
 };
 
 const TEAM_COLORS=['#00FFCC','#FF00BB','#BF00FF','#F5C518','#00D1FF','#FB923C','#34D399','#F472B6'];
 
 /* ══════════ STATE ══════════ */
-let lang='en';
-let numTeams=4, numRows=3, numCols=4;
-let difficulty='medium', qType='multiple';
+let lang='en', numTeams=4, numRows=3, numCols=4;
+let difficulty='easy', qType='multiple';
 let teams=[];
+const fxState={timer:true,bonus:true,speed:false};
 
 /* ══════════ INIT ══════════ */
-function init() {
-  teams = T[lang].teamDefaults.map((n,i)=>({name:n,color:TEAM_COLORS[i]}));
+function init(){
+  teams=T[lang].teamDefaults.map((n,i)=>({name:n,color:TEAM_COLORS[i]}));
   renderTeamButtons();
   initGridPicker();
   applyI18n();
 }
 
 /* ══════════ LANG ══════════ */
-function setLang(l) {
+function setLang(l){
   lang=l;
-  const langs=['en','pt','es'];
-  document.querySelectorAll('#lang-group .pill-btn').forEach((b,i)=>b.classList.toggle('active',langs[i]===l));
+  ['en','pt','es'].forEach((x,i)=>
+    document.querySelectorAll('#lang-group .pill-btn')[i].classList.toggle('active',x===l)
+  );
   applyI18n();
 }
 
-function applyI18n() {
+function applyI18n(){
   const d=T[lang];
   document.getElementById('page-title').textContent=d.pageTitle;
   document.getElementById('ai-prompt').placeholder=d.promptPH;
@@ -593,27 +800,27 @@ function applyI18n() {
 }
 
 /* ══════════ TEAMS ══════════ */
-function renderTeamButtons() {
+function renderTeamButtons(){
   const row=document.getElementById('team-count-row');
   row.innerHTML='';
   [2,3,4,5,6,8].forEach(n=>{
     const b=document.createElement('button');
-    b.className='tcnt'+(n===numTeams?' active':'');
-    b.innerHTML=`<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="display:inline;vertical-align:middle;margin-right:4px"><circle cx="9" cy="7" r="4"/><path d="M2 21v-2a7 7 0 0 1 14 0v2"/><circle cx="19" cy="8" r="3"/><path d="M19 14c2.8.3 5 1.9 5 4v1"/></svg>${n}`;
+    b.className='step-btn'+(n===numTeams?' active':'');
+    b.innerHTML=`<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="7" r="4"/><path d="M2 21v-2a7 7 0 0 1 14 0v2"/><circle cx="19" cy="8" r="3"/><path d="M19 14c2.8.3 5 1.9 5 4v1"/></svg>${n}`;
     b.onclick=()=>{numTeams=n;renderTeamButtons();};
     row.appendChild(b);
   });
   renderTeamInputs();
 }
 
-function renderTeamInputs() {
+function renderTeamInputs(){
   const g=document.getElementById('team-inputs');
   g.innerHTML='';
   const defs=T[lang].teamDefaults;
   for(let i=0;i<numTeams;i++){
     if(!teams[i]) teams[i]={name:defs[i],color:TEAM_COLORS[i]};
     const wrap=document.createElement('div');
-    wrap.className='tinput';
+    wrap.className='lcd-strip';
     wrap.style.setProperty('--tc',TEAM_COLORS[i]);
     const inp=document.createElement('input');
     inp.type='text';inp.value=teams[i].name;
@@ -627,78 +834,81 @@ function renderTeamInputs() {
 /* ══════════ EXCEL GRID PICKER ══════════ */
 const GP_COLS=8, GP_ROWS=6;
 
-function initGridPicker() {
+function initGridPicker(){
   const grid=document.getElementById('gp-grid');
   grid.style.gridTemplateColumns=`repeat(${GP_COLS},1fr)`;
   grid.innerHTML='';
-
   for(let r=0;r<GP_ROWS;r++){
     for(let c=0;c<GP_COLS;c++){
       const cell=document.createElement('div');
-      cell.className='gp-cell';
+      cell.className='led-cell';
       cell.dataset.c=c;cell.dataset.r=r;
       cell.addEventListener('mouseenter',()=>highlightGrid(c,r,false));
       cell.addEventListener('click',()=>{numCols=c+1;numRows=r+1;highlightGrid(c,r,true);updateGridLabel();});
       grid.appendChild(cell);
     }
   }
-
   grid.addEventListener('mouseleave',()=>highlightGrid(numCols-1,numRows-1,true));
   highlightGrid(numCols-1,numRows-1,true);
   updateGridLabel();
 }
 
-function highlightGrid(maxC,maxR,permanent) {
-  document.querySelectorAll('.gp-cell').forEach(cell=>{
-    const c=+cell.dataset.c, r=+cell.dataset.r;
+function highlightGrid(maxC,maxR,perm){
+  document.querySelectorAll('.led-cell').forEach(cell=>{
+    const c=+cell.dataset.c,r=+cell.dataset.r;
     const inside=c<=maxC&&r<=maxR;
-    cell.classList.toggle('hover',inside&&!permanent);
-    cell.classList.toggle('sel',inside&&permanent);
+    cell.classList.toggle('hover',inside&&!perm);
+    cell.classList.toggle('sel',inside&&perm);
   });
-  if(!permanent){
-    const d=T[lang];
+  const d=T[lang];
+  if(!perm){
     document.getElementById('gp-label').textContent=`${maxC+1} ${d.categories} × ${maxR+1} ${d.rows}`;
     document.getElementById('gp-sublabel').textContent=`${(maxC+1)*(maxR+1)} ${d.questions}`;
   }
 }
 
-function updateGridLabel() {
+function updateGridLabel(){
   const d=T[lang];
   document.getElementById('gp-label').textContent=`${numCols} ${d.categories} × ${numRows} ${d.rows}`;
   document.getElementById('gp-sublabel').textContent=`${numCols*numRows} ${d.questions}`;
   highlightGrid(numCols-1,numRows-1,true);
 }
 
-/* ══════════ DIFFICULTY ══════════ */
-function pickDiff(btn) {
+/* ══════════ DIFFICULTY PADS ══════════ */
+function pickDiff(btn){
   difficulty=btn.dataset.val;
-  document.querySelectorAll('#diff-row .chip').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('#diff-pads .pad-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
 }
 
-/* ══════════ Q TYPE ══════════ */
-function pickQtype(val,btn) {
+/* ══════════ QTYPE PADS ══════════ */
+function pickQtype(val,btn){
   qType=val;
-  document.querySelectorAll('.qchip').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
+  document.querySelectorAll('#qtype-pads .pad-btn').forEach(b=>b.classList.remove('active-accent'));
+  btn.classList.add('active-accent');
+}
+
+/* ══════════ FX LEVERS ══════════ */
+function toggleFX(name){
+  fxState[name]=!fxState[name];
+  const on=fxState[name];
+  document.getElementById('tog-'+name).classList.toggle('on',on);
+  document.getElementById('led-'+name).classList.toggle('on',on);
+  document.getElementById('fx-'+name).classList.toggle('on',on);
 }
 
 /* ══════════ START ══════════ */
-function startGame() {
+function startGame(){
   const prompt=document.getElementById('ai-prompt').value.trim();
   if(!prompt){alert(T[lang].noPrompt);return;}
-
-  const timerOn=document.getElementById('tog-timer').classList.contains('on');
-  const bonusOn=document.getElementById('tog-bonus').classList.contains('on');
-  const speedOn=document.getElementById('tog-speed').classList.contains('on');
   const qLang={en:'English',pt:'Portuguese',es:'Spanish'}[lang];
-
   const config={
     numTeams,numRows,numCols,difficulty,qType,
     teams:teams.slice(0,numTeams),
-    lang,qLang,timerOn,bonusOn,speedOn,prompt
+    lang,qLang,
+    timerOn:fxState.timer,bonusOn:fxState.bonus,speedOn:fxState.speed,
+    prompt
   };
-
   document.getElementById('load-text').textContent=T[lang].generating;
   document.getElementById('loading').classList.add('active');
   document.getElementById('gen-btn').disabled=true;
