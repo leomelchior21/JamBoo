@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="arcade">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JamBoo — Create Your Challenge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════
+   THEME VARIABLES — 3 SKINS
+═══════════════════════════════════════════ */
+[data-theme="arcade"] {
+  --bg:       #FF2D95;
+  --panel:    #131420;
+  --panel2:   #1A1B2E;
+  --border:   #F5C518;
+  --primary:  #00D1FF;
+  --accent:   #F5C518;
+  --danger:   #FF2D95;
+  --text:     #FFFFFF;
+  --text2:    rgba(255,255,255,0.5);
+  --gray:     rgba(255,255,255,0.07);
+  --shadow:   4px 4px 0 rgba(0,0,0,0.45);
+  --radius:   12px;
+  --fh:       'Fredoka One', cursive;
+  --fb:       'Nunito', sans-serif;
+}
+[data-theme="classroom"] {
+  --bg:       #EFF6FF;
+  --panel:    #FFFFFF;
+  --panel2:   #F1F5F9;
+  --border:   #3B82F6;
+  --primary:  #3B82F6;
+  --accent:   #10B981;
+  --danger:   #EF4444;
+  --text:     #1E293B;
+  --text2:    #64748B;
+  --gray:     rgba(0,0,0,0.04);
+  --shadow:   0 2px 16px rgba(59,130,246,0.14);
+  --radius:   16px;
+  --fh:       'Nunito', sans-serif;
+  --fb:       'Nunito', sans-serif;
+}
+[data-theme="retro"] {
+  --bg:       #0A0A1F;
+  --panel:    #12122A;
+  --panel2:   #0D0D22;
+  --border:   #BF00FF;
+  --primary:  #00FFCC;
+  --accent:   #FF00BB;
+  --danger:   #FF4444;
+  --text:     #FFFFFF;
+  --text2:    rgba(255,255,255,0.45);
+  --gray:     rgba(255,255,255,0.05);
+  --shadow:   0 0 24px rgba(0,255,204,0.18);
+  --radius:   4px;
+  --fh:       'Fredoka One', cursive;
+  --fb:       'Nunito', sans-serif;
+}
+
+/* ═══════════════════════════════════════════
+   RESET + BASE
+═══════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{
+  font-family:var(--fb);
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+  transition:background .3s;
+}
+
+/* ═══════════════════════════════════════════
+   HEADER
+═══════════════════════════════════════════ */
+.hdr{
+  background:var(--panel);
+  border-bottom:3px solid var(--border);
+  height:62px;
+  display:flex;align-items:center;
+  position:relative;overflow:hidden;
+}
+.hdr-stars{
+  position:absolute;inset:0;pointer-events:none;
+  background-image:
+    radial-gradient(circle,rgba(255,255,255,.4) 1px,transparent 1px),
+    radial-gradient(circle,rgba(0,209,255,.5) 1px,transparent 1px),
+    radial-gradient(circle,rgba(245,197,24,.4) 1px,transparent 1px);
+  background-size:60px 38px,90px 52px,120px 68px;
+  background-position:10px 8px,35px 20px,70px 12px;
+  opacity:.55;
+}
+[data-theme="classroom"] .hdr-stars,[data-theme="retro"] .hdr-stars{opacity:.15;}
+.hdr-inner{
+  position:relative;z-index:1;
+  width:100%;max-width:880px;margin:0 auto;
+  padding:0 18px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.hdr-logo{height:42px;width:auto;display:block;}
+.hdr-right{display:flex;align-items:center;gap:8px;}
+
+/* ═══════════════════════════════════════════
+   PILL GROUPS (lang + later usage)
+═══════════════════════════════════════════ */
+.pill-group{
+  display:inline-flex;
+  background:var(--gray);
+  border:2px solid var(--border);
+  border-radius:8px;overflow:hidden;
+}
+.pill-btn{
+  padding:5px 11px;
+  border:none;background:transparent;
+  color:var(--text2);
+  font-family:var(--fb);font-weight:800;font-size:11px;
+  cursor:pointer;text-transform:uppercase;letter-spacing:.5px;
+  transition:background .15s,color .15s;
+}
+.pill-btn+.pill-btn{border-left:2px solid var(--border);}
+.pill-btn.active{background:var(--border);color:var(--panel);}
+
+/* ═══════════════════════════════════════════
+   DECORATIONS
+═══════════════════════════════════════════ */
+.deco-wrap{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:0;}
+.deco{position:absolute;font-weight:900;line-height:1;user-select:none;}
+
+/* ═══════════════════════════════════════════
+   SETUP BODY
+═══════════════════════════════════════════ */
+.setup-body{
+  max-width:880px;margin:0 auto;
+  padding:0 14px 80px;
+  position:relative;z-index:1;
+}
+
+/* ═══════════════════════════════════════════
+   PAGE TITLE
+═══════════════════════════════════════════ */
+.page-title-wrap{
+  text-align:center;padding:22px 40px 18px;
+  display:flex;align-items:center;justify-content:center;gap:14px;
+}
+.title-deco{font-size:22px;font-weight:900;color:var(--primary);opacity:.7;}
+.page-title{
+  font-family:var(--fh);
+  font-size:clamp(24px,5.5vw,42px);
+  color:var(--accent);
+  text-shadow:2px 0 0 rgba(0,0,0,.5),-2px 0 0 rgba(0,0,0,.5),
+              0 2px 0 rgba(0,0,0,.5),0 -2px 0 rgba(0,0,0,.5);
+  letter-spacing:.3px;
+}
+[data-theme="classroom"] .page-title{color:var(--primary);text-shadow:none;}
+[data-theme="retro"] .page-title{color:var(--primary);text-shadow:0 0 20px rgba(0,255,204,.5);}
+
+/* ═══════════════════════════════════════════
+   BENTO CONTAINER
+═══════════════════════════════════════════ */
+.bento-container{
+  background:var(--panel);
+  border:3px solid var(--border);
+  border-radius:var(--radius);
+  padding:12px;
+  display:flex;flex-direction:column;gap:9px;
+  position:relative;z-index:1;
+  box-shadow:var(--shadow);
+}
+.bento-row{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+
+/* ═══════════════════════════════════════════
+   BBOX (bento cell)
+═══════════════════════════════════════════ */
+.bbox{
+  background:var(--panel2);
+  border:2px solid var(--border);
+  border-radius:calc(var(--radius) - 2px);
+  padding:13px 15px;
+}
+.blabel{
+  display:flex;align-items:center;gap:6px;
+  font-size:13px;font-weight:900;color:var(--text);
+  margin-bottom:11px;padding-bottom:8px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+[data-theme="classroom"] .blabel{border-bottom-color:rgba(0,0,0,.07);}
+.bicon{font-size:15px;}
+
+/* ═══════════════════════════════════════════
+   TEAM BUTTONS
+═══════════════════════════════════════════ */
+.tbtn-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:9px;}
+.tbtn{
+  display:flex;align-items:center;gap:5px;
+  padding:7px 13px;
+  background:var(--gray);
+  border:2px solid rgba(255,255,255,.14);
+  border-radius:7px;
+  color:var(--text);font-family:var(--fb);font-weight:800;font-size:13px;
+  cursor:pointer;transition:border-color .12s,background .12s;
+}
+[data-theme="classroom"] .tbtn{border-color:rgba(0,0,0,.1);}
+.tbtn:hover{border-color:var(--primary);}
+.tbtn.active{background:var(--primary);border-color:var(--primary);color:var(--panel);}
+.tinput-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:5px;}
+.tinput{
+  padding:6px 9px;
+  background:var(--gray);
+  border:2px solid rgba(255,255,255,.1);
+  border-left:3px solid var(--tc,var(--primary));
+  border-radius:6px;color:var(--text);
+  font-family:var(--fb);font-weight:700;font-size:12px;
+  outline:none;width:100%;transition:border-color .12s;
+}
+[data-theme="classroom"] .tinput{background:#F8FAFC;border-color:rgba(0,0,0,.1);color:var(--text);}
+.tinput:focus{border-color:var(--primary);}
+
+/* ═══════════════════════════════════════════
+   SHARED DROPDOWN
+═══════════════════════════════════════════ */
+.dd-wrap{position:relative;}
+.dd-btn{
+  width:100%;display:flex;align-items:center;justify-content:space-between;
+  padding:9px 13px;
+  background:rgba(255,255,255,.05);
+  border:2px solid var(--primary);border-radius:8px;
+  color:var(--text);font-family:var(--fb);font-size:13px;font-weight:800;
+  cursor:pointer;transition:background .12s;
+}
+[data-theme="classroom"] .dd-btn{background:rgba(59,130,246,.05);}
+.dd-btn:hover{background:rgba(255,255,255,.1);}
+.dd-arrow{color:var(--primary);font-size:11px;flex-shrink:0;}
+.dd-menu{
+  display:none;position:absolute;
+  top:calc(100% + 4px);left:0;right:0;
+  background:var(--panel);border:2px solid var(--primary);
+  border-radius:8px;z-index:200;overflow:hidden;
+  box-shadow:var(--shadow);
+}
+.dd-menu.open{display:block;}
+.dd-opt{
+  padding:9px 13px;font-weight:800;font-size:13px;
+  cursor:pointer;color:var(--text);transition:background .1s;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+[data-theme="classroom"] .dd-opt{border-bottom-color:rgba(0,0,0,.06);}
+.dd-opt:last-child{border-bottom:none;}
+.dd-opt:hover{background:rgba(255,255,255,.09);}
+[data-theme="classroom"] .dd-opt:hover{background:rgba(59,130,246,.07);}
+.dd-opt.sel{color:var(--primary);}
+
+/* ═══════════════════════════════════════════
+   DIFFICULTY BUTTONS
+═══════════════════════════════════════════ */
+.diff-row{display:flex;gap:6px;flex-wrap:wrap;}
+.dbtn{
+  flex:1;min-width:60px;
+  padding:8px 6px;text-align:center;
+  background:var(--gray);
+  border:2px solid rgba(255,255,255,.12);border-radius:7px;
+  color:var(--text);font-family:var(--fb);font-weight:800;font-size:12px;
+  cursor:pointer;transition:all .12s;
+}
+[data-theme="classroom"] .dbtn{border-color:rgba(0,0,0,.1);}
+.dbtn:hover{border-color:var(--primary);}
+.dbtn.active{background:var(--primary);border-color:var(--primary);color:var(--panel);}
+
+/* ═══════════════════════════════════════════
+   MODIFIERS (toggles)
+═══════════════════════════════════════════ */
+.mod-row{display:flex;gap:7px;flex-wrap:wrap;}
+.tog-group{
+  display:flex;align-items:center;gap:7px;
+  background:var(--gray);border:2px solid rgba(255,255,255,.1);
+  border-radius:20px;padding:6px 11px;
+}
+[data-theme="classroom"] .tog-group{border-color:rgba(0,0,0,.09);}
+.tog-label{font-size:12px;font-weight:800;color:var(--text);white-space:nowrap;}
+.tog{
+  width:40px;height:20px;
+  background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.18);
+  border-radius:10px;cursor:pointer;
+  position:relative;transition:all .2s;flex-shrink:0;
+}
+.tog.on{background:var(--primary);border-color:var(--primary);}
+.tog::after{
+  content:'';position:absolute;
+  top:1px;left:2px;
+  width:12px;height:12px;
+  background:rgba(255,255,255,.5);border-radius:50%;
+  transition:transform .2s;
+}
+.tog.on::after{background:var(--panel);transform:translateX(18px);}
+
+/* ═══════════════════════════════════════════
+   THEME SELECTOR
+═══════════════════════════════════════════ */
+.theme-row{display:flex;gap:8px;}
+.theme-btn{
+  flex:1;padding:10px 6px;
+  border-radius:10px;border:3px solid transparent;
+  cursor:pointer;text-align:center;
+  font-family:var(--fb);font-weight:800;font-size:11px;
+  transition:border-color .15s,transform .1s;
+}
+.theme-btn:hover{transform:translateY(-1px);}
+.theme-btn[data-t="arcade"]{background:#1A1B2E;color:#00D1FF;}
+.theme-btn[data-t="classroom"]{background:#EFF6FF;color:#3B82F6;}
+.theme-btn[data-t="retro"]{background:#12122A;color:#00FFCC;}
+.theme-btn.active[data-t="arcade"]{border-color:#F5C518;}
+.theme-btn.active[data-t="classroom"]{border-color:#3B82F6;}
+.theme-btn.active[data-t="retro"]{border-color:#BF00FF;}
+.theme-swatch{display:flex;gap:3px;justify-content:center;margin-bottom:5px;}
+.ts-dot{width:9px;height:9px;border-radius:50%;display:inline-block;}
+
+/* ═══════════════════════════════════════════
+   PROMPT BOX
+═══════════════════════════════════════════ */
+.prompt-box{
+  background:var(--panel2);
+  border:2px solid var(--border);
+  border-radius:calc(var(--radius) - 2px);
+  padding:13px 15px;
+}
+.prompt-ta{
+  width:100%;min-height:88px;
+  padding:11px 13px;
+  background:var(--gray);
+  border:2px solid rgba(255,255,255,.1);border-radius:8px;
+  color:var(--text);font-family:var(--fb);font-size:14px;font-weight:700;
+  resize:vertical;outline:none;
+  transition:border-color .15s;margin-bottom:11px;
+}
+[data-theme="classroom"] .prompt-ta{background:#F8FAFC;border-color:rgba(0,0,0,.1);color:var(--text);}
+.prompt-ta:focus{border-color:var(--primary);}
+.prompt-ta::placeholder{color:var(--text2);}
+
+/* ═══════════════════════════════════════════
+   START BUTTON
+═══════════════════════════════════════════ */
+.btn-start{
+  width:100%;padding:15px;
+  background:var(--primary);
+  border:3px solid rgba(0,0,0,.3);border-radius:10px;
+  color:var(--panel);
+  font-family:var(--fh);font-size:19px;letter-spacing:.3px;
+  cursor:pointer;transition:filter .12s,transform .1s;
+  box-shadow:var(--shadow);
+}
+[data-theme="classroom"] .btn-start{
+  font-family:var(--fb);font-weight:900;border-color:var(--primary);
+}
+.btn-start:hover{filter:brightness(1.1);transform:translateY(-1px);}
+.btn-start:active{transform:translateY(1px);}
+.btn-start:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+
+/* ═══════════════════════════════════════════
+   LOADING OVERLAY
+═══════════════════════════════════════════ */
+.loading-overlay{
+  display:none;position:fixed;inset:0;
+  background:var(--panel);z-index:9999;
+  flex-direction:column;align-items:center;justify-content:center;gap:18px;
+}
+.loading-overlay.active{display:flex;}
+.load-logo{height:54px;}
+.load-bar-wrap{
+  width:190px;height:5px;
+  background:rgba(255,255,255,.08);
+  border:2px solid var(--primary);border-radius:3px;overflow:hidden;
+}
+.load-bar{height:100%;background:var(--primary);animation:sweep 1.2s linear infinite;}
+@keyframes sweep{0%{transform:translateX(-100%)}100%{transform:translateX(300%)}}
+.load-text{
+  font-family:var(--fh);font-size:12px;
+  color:var(--text2);letter-spacing:3px;text-transform:uppercase;
+}
+
+/* ═══════════════════════════════════════════
+   BOTTOM GRID DECORATION (arcade/retro)
+═══════════════════════════════════════════ */
+.grid-floor{
+  position:fixed;bottom:0;left:0;right:0;height:80px;
+  background:linear-gradient(to bottom,transparent,rgba(0,0,0,.25));
+  pointer-events:none;z-index:0;
+  background-image:
+    linear-gradient(rgba(0,209,255,.15) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,209,255,.15) 1px,transparent 1px);
+  background-size:40px 40px;
+  background-position:0 0;
+  perspective:400px;transform:rotateX(60deg);transform-origin:bottom;
+}
+[data-theme="classroom"] .grid-floor{display:none;}
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════ */
+@media(max-width:560px){
+  .bento-row{grid-template-columns:1fr;}
+  .hdr-inner{padding:0 12px;}
+  .theme-row{flex-wrap:wrap;}
+}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loading">
+  <img class="load-logo" src="Jamboo-logo-png.png" alt="JamBoo">
+  <div class="load-bar-wrap"><div class="load-bar"></div></div>
+  <p class="load-text" id="load-text">Generating...</p>
+</div>
+
+<!-- HEADER -->
+<header class="hdr">
+  <div class="hdr-stars"></div>
+  <div class="hdr-inner">
+    <img class="hdr-logo" src="Jamboo-logo-png.png" alt="JamBoo">
+    <div class="hdr-right">
+      <div class="pill-group" id="lang-group">
+        <button class="pill-btn active" onclick="setLang('en')">🇬🇧 EN</button>
+        <button class="pill-btn" onclick="setLang('pt')">🇧🇷 PT</button>
+        <button class="pill-btn" onclick="setLang('es')">🇪🇸 ES</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- DECORATIONS -->
+<div class="deco-wrap" id="deco-wrap"></div>
+
+<!-- MAIN -->
+<main class="setup-body">
+
+  <div class="page-title-wrap">
+    <span class="title-deco">+</span>
+    <h1 class="page-title" id="page-title">Create your challenge!</h1>
+    <span class="title-deco">+</span>
+  </div>
+
+  <div class="bento-container">
+
+    <!-- ROW 1: Teams + Board -->
+    <div class="bento-row">
+
+      <!-- TEAMS -->
+      <div class="bbox">
+        <div class="blabel">
+          <span class="bicon">👥</span>
+          <span data-i18n="teamsTitle">Teams</span>
+        </div>
+        <div class="tbtn-row" id="team-btn-row"></div>
+        <div class="tinput-grid" id="team-inputs"></div>
+      </div>
+
+      <!-- BOARD SIZE -->
+      <div class="bbox">
+        <div class="blabel">
+          <span class="bicon">⊞</span>
+          <span data-i18n="gridTitle">Board</span>
+        </div>
+        <div class="dd-wrap" style="margin-bottom:9px;">
+          <button class="dd-btn" id="grid-btn" type="button" onclick="toggleDrop('grid-drop')">
+            <span id="grid-label">4 × 3</span>
+            <span class="dd-arrow">▾</span>
+          </button>
+          <div class="dd-menu" id="grid-drop">
+            <div class="dd-opt sel" onclick="pickGrid(4,3,this)">4 × 3 <small style="color:var(--text2)">(12 q)</small></div>
+            <div class="dd-opt" onclick="pickGrid(5,4,this)">5 × 4 <small style="color:var(--text2)">(20 q)</small></div>
+            <div class="dd-opt" onclick="pickGrid(5,5,this)">5 × 5 <small style="color:var(--text2)">(25 q)</small></div>
+            <div class="dd-opt" onclick="pickGrid(6,5,this)">6 × 5 <small style="color:var(--text2)">(30 q)</small></div>
+            <div class="dd-opt" onclick="pickGrid(6,6,this)">6 × 6 <small style="color:var(--text2)">(36 q)</small></div>
+          </div>
+        </div>
+        <p style="font-size:12px;font-weight:800;color:var(--text2);">
+          <span data-i18n="categoriesLabel">Categories</span> <strong id="grid-cols" style="color:var(--text)">4</strong>
+          <span style="margin:0 6px;opacity:.3">|</span>
+          <span data-i18n="rowsLabel">Rows</span> <strong id="grid-rows" style="color:var(--text)">3</strong>
+        </p>
+      </div>
+
+    </div><!-- /row 1 -->
+
+    <!-- ROW 2: Difficulty + Q-Type -->
+    <div class="bento-row">
+
+      <!-- DIFFICULTY -->
+      <div class="bbox">
+        <div class="blabel">
+          <span class="bicon">🎯</span>
+          <span data-i18n="diffTitle">Difficulty</span>
+        </div>
+        <div class="diff-row">
+          <button class="dbtn" data-val="easy" onclick="pickDiff(this)">🟢 <span data-i18n="easy">Easy</span></button>
+          <button class="dbtn active" data-val="medium" onclick="pickDiff(this)">🟡 <span data-i18n="medium">Med</span></button>
+          <button class="dbtn" data-val="hard" onclick="pickDiff(this)">🔴 <span data-i18n="hard">Hard</span></button>
+          <button class="dbtn" data-val="mixed" onclick="pickDiff(this)">🎲 <span data-i18n="mixed">Mix</span></button>
+        </div>
+      </div>
+
+      <!-- QUESTION TYPE -->
+      <div class="bbox">
+        <div class="blabel">
+          <span class="bicon">💬</span>
+          <span data-i18n="qtypeTitle">Question Type</span>
+        </div>
+        <div class="dd-wrap">
+          <button class="dd-btn" id="qtype-btn" type="button" onclick="toggleDrop('qtype-drop')">
+            <span id="qtype-label">🅰️ Multiple Choice</span>
+            <span class="dd-arrow">▾</span>
+          </button>
+          <div class="dd-menu" id="qtype-drop">
+            <div class="dd-opt sel" onclick="pickQtype('multiple',this)" data-label-key="mcLabel">🅰️ Multiple Choice</div>
+            <div class="dd-opt" onclick="pickQtype('open',this)" data-label-key="openLabel">💬 Open Ended</div>
+            <div class="dd-opt" onclick="pickQtype('drawing',this)" data-label-key="drawLabel">✏️ Draw It!</div>
+            <div class="dd-opt" onclick="pickQtype('mixed',this)" data-label-key="mixedLabel">🎲 Mixed</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /row 2 -->
+
+    <!-- ROW 3: Modifiers -->
+    <div class="bbox">
+      <div class="blabel">
+        <span class="bicon">⚙️</span>
+        <span data-i18n="modTitle">Modifiers</span>
+      </div>
+      <div class="mod-row">
+        <div class="tog-group">
+          <span class="tog-label" data-i18n="timerLabel">Timer</span>
+          <div class="tog on" id="tog-timer" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <div class="tog-group">
+          <span class="tog-label" data-i18n="bonusLabel">Bonus Round</span>
+          <div class="tog on" id="tog-bonus" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <div class="tog-group">
+          <span class="tog-label" data-i18n="speedLabel">Speed Mode</span>
+          <div class="tog" id="tog-speed" onclick="this.classList.toggle('on')"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROW 4: Theme -->
+    <div class="bbox">
+      <div class="blabel">
+        <span class="bicon">🎨</span>
+        <span data-i18n="themeTitle">Theme</span>
+      </div>
+      <div class="theme-row">
+        <button class="theme-btn active" data-t="arcade" onclick="setTheme('arcade')">
+          <div class="theme-swatch">
+            <span class="ts-dot" style="background:#FF2D95"></span>
+            <span class="ts-dot" style="background:#00D1FF"></span>
+            <span class="ts-dot" style="background:#F5C518"></span>
+          </div>
+          <span data-i18n="themeArcade">Arcade</span>
+        </button>
+        <button class="theme-btn" data-t="classroom" onclick="setTheme('classroom')">
+          <div class="theme-swatch">
+            <span class="ts-dot" style="background:#3B82F6"></span>
+            <span class="ts-dot" style="background:#10B981"></span>
+            <span class="ts-dot" style="background:#F59E0B"></span>
+          </div>
+          <span data-i18n="themeClassroom">Classroom</span>
+        </button>
+        <button class="theme-btn" data-t="retro" onclick="setTheme('retro')">
+          <div class="theme-swatch">
+            <span class="ts-dot" style="background:#BF00FF"></span>
+            <span class="ts-dot" style="background:#00FFCC"></span>
+            <span class="ts-dot" style="background:#FF00BB"></span>
+          </div>
+          <span data-i18n="themeRetro">Retro</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- PROMPT -->
+    <div class="prompt-box">
+      <div class="blabel" style="margin-bottom:9px;border-bottom:none;padding-bottom:0;">
+        <span class="bicon">🤖</span>
+        <span data-i18n="promptTitle">Describe your quiz...</span>
+      </div>
+      <textarea class="prompt-ta" id="ai-prompt" placeholder="Create a quiz about the French Revolution for 9th grade students..."></textarea>
+      <button class="btn-start" id="gen-btn" onclick="startGame()">
+        <span data-i18n="startBtn">Start Mission →</span>
+      </button>
+    </div>
+
+  </div><!-- /bento-container -->
+</main>
+
+<div class="grid-floor"></div>
+
+<script>
+/* ══════════════════════════════════════════
+   I18N
+══════════════════════════════════════════ */
+const T = {
+  en: {
+    pageTitle:'Create your challenge!',
+    teamsTitle:'Teams', gridTitle:'Board',
+    categoriesLabel:'Categories', rowsLabel:'Rows',
+    diffTitle:'Difficulty', easy:'Easy', medium:'Med', hard:'Hard', mixed:'Mix',
+    qtypeTitle:'Question Type',
+    mcLabel:'🅰️ Multiple Choice', openLabel:'💬 Open Ended',
+    drawLabel:'✏️ Draw It!', mixedLabel:'🎲 Mixed',
+    modTitle:'Modifiers', timerLabel:'Timer', bonusLabel:'Bonus Round', speedLabel:'Speed Mode',
+    themeTitle:'Theme', themeArcade:'Arcade', themeClassroom:'Classroom', themeRetro:'Retro',
+    promptTitle:'Describe your quiz...',
+    startBtn:'Start Mission →',
+    promptPH:"Create a quiz about the French Revolution for 9th grade students...",
+    noPrompt:'Please describe your quiz topic!',
+    generating:'Generating your game...',
+    teamDefaults:['Team 1','Team 2','Team 3','Team 4','Team 5','Team 6','Team 7','Team 8'],
+  },
+  pt: {
+    pageTitle:'Crie seu desafio!',
+    teamsTitle:'Times', gridTitle:'Tabuleiro',
+    categoriesLabel:'Categorias', rowsLabel:'Linhas',
+    diffTitle:'Dificuldade', easy:'Fácil', medium:'Médio', hard:'Difícil', mixed:'Misto',
+    qtypeTitle:'Tipo de Pergunta',
+    mcLabel:'🅰️ Múltipla Escolha', openLabel:'💬 Aberta',
+    drawLabel:'✏️ Desenhe!', mixedLabel:'🎲 Mista',
+    modTitle:'Modificadores', timerLabel:'Cronômetro', bonusLabel:'Rodada Bônus', speedLabel:'Velocidade',
+    themeTitle:'Tema', themeArcade:'Arcade', themeClassroom:'Sala de Aula', themeRetro:'Retrô',
+    promptTitle:'Descreva seu quiz...',
+    startBtn:'Iniciar Missão →',
+    promptPH:"Crie um quiz sobre a Revolução Francesa para o 9º ano...",
+    noPrompt:'Por favor, descreva o tema do quiz!',
+    generating:'Gerando seu jogo...',
+    teamDefaults:['Time 1','Time 2','Time 3','Time 4','Time 5','Time 6','Time 7','Time 8'],
+  },
+  es: {
+    pageTitle:'¡Crea tu desafío!',
+    teamsTitle:'Equipos', gridTitle:'Tablero',
+    categoriesLabel:'Categorías', rowsLabel:'Filas',
+    diffTitle:'Dificultad', easy:'Fácil', medium:'Medio', hard:'Difícil', mixed:'Mixto',
+    qtypeTitle:'Tipo de Pregunta',
+    mcLabel:'🅰️ Opción Múltiple', openLabel:'💬 Abierta',
+    drawLabel:'✏️ ¡Dibuja!', mixedLabel:'🎲 Mixta',
+    modTitle:'Modificadores', timerLabel:'Temporizador', bonusLabel:'Ronda Bonus', speedLabel:'Velocidad',
+    themeTitle:'Tema', themeArcade:'Arcade', themeClassroom:'Aula', themeRetro:'Retro',
+    promptTitle:'Describe tu quiz...',
+    startBtn:'Iniciar Misión →',
+    promptPH:"Crea un quiz sobre la Revolución Francesa para estudiantes de 9° grado...",
+    noPrompt:'¡Por favor describe el tema de tu quiz!',
+    generating:'Generando tu juego...',
+    teamDefaults:['Equipo 1','Equipo 2','Equipo 3','Equipo 4','Equipo 5','Equipo 6','Equipo 7','Equipo 8'],
+  }
+};
+
+const TEAM_COLORS=['#00D1FF','#FF2D95','#F5C518','#22D3A4','#A78BFA','#FB923C','#34D399','#F472B6'];
+
+/* ══════════ STATE ══════════ */
+let lang='en', theme='arcade';
+let numTeams=4, numRows=3, numCols=4;
+let difficulty='medium', qType='multiple';
+let teams=[];
+
+/* ══════════ INIT ══════════ */
+function init() {
+  teams = T[lang].teamDefaults.map((n,i)=>({name:n,color:TEAM_COLORS[i]}));
+  renderTeamButtons();
+  renderDecos();
+  applyI18n();
+}
+
+function renderDecos() {
+  const w=document.getElementById('deco-wrap');
+  const items=[
+    {t:'+',x:4,y:18,sz:26,col:'var(--primary)',op:.45},
+    {t:'✦',x:93,y:10,sz:16,col:'var(--accent)',op:.4},
+    {t:'+',x:7,y:65,sz:18,col:'var(--accent)',op:.35},
+    {t:'✦',x:96,y:60,sz:12,col:'var(--primary)',op:.3},
+    {t:'+',x:2,y:88,sz:22,col:'var(--primary)',op:.4},
+    {t:'+',x:91,y:85,sz:14,col:'var(--accent)',op:.3},
+  ];
+  w.innerHTML=items.map(d=>`<span class="deco" style="left:${d.x}%;top:${d.y}%;font-size:${d.sz}px;color:${d.col};opacity:${d.op}">${d.t}</span>`).join('');
+}
+
+/* ══════════ THEME ══════════ */
+function setTheme(t) {
+  theme=t;
+  document.documentElement.setAttribute('data-theme',t);
+  document.querySelectorAll('.theme-btn').forEach(b=>b.classList.toggle('active',b.dataset.t===t));
+}
+
+/* ══════════ LANG ══════════ */
+function setLang(l) {
+  lang=l;
+  const langs=['en','pt','es'];
+  document.querySelectorAll('#lang-group .pill-btn').forEach((b,i)=>b.classList.toggle('active',langs[i]===l));
+  applyI18n();
+}
+
+function applyI18n() {
+  const d=T[lang];
+  document.getElementById('page-title').textContent=d.pageTitle;
+  document.getElementById('ai-prompt').placeholder=d.promptPH;
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const k=el.getAttribute('data-i18n');
+    if(d[k]!==undefined) el.textContent=d[k];
+  });
+  // Update qtype dropdown labels
+  const qtKeys=['mcLabel','openLabel','drawLabel','mixedLabel'];
+  document.querySelectorAll('#qtype-drop .dd-opt').forEach((opt,i)=>{
+    if(qtKeys[i]) opt.textContent=d[qtKeys[i]]||opt.textContent;
+  });
+  document.getElementById('qtype-label').textContent=d[qtKeys[['multiple','open','drawing','mixed'].indexOf(qType)]]||d.mcLabel;
+  renderTeamInputs();
+}
+
+/* ══════════ TEAMS ══════════ */
+function renderTeamButtons() {
+  const row=document.getElementById('team-btn-row');
+  row.innerHTML='';
+  [2,3,4,5,6,8].forEach(n=>{
+    const b=document.createElement('button');
+    b.className='tbtn'+(n===numTeams?' active':'');
+    b.innerHTML=`<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink:0"><circle cx="9" cy="7" r="4"/><path d="M2 21v-2a7 7 0 0 1 14 0v2"/><circle cx="19" cy="8" r="3"/><path d="M19 14c2.8.3 5 1.9 5 4v1"/></svg>${n}`;
+    b.onclick=()=>{numTeams=n;renderTeamButtons();};
+    row.appendChild(b);
+  });
+  renderTeamInputs();
+}
+
+function renderTeamInputs() {
+  const g=document.getElementById('team-inputs');
+  g.innerHTML='';
+  const defs=T[lang].teamDefaults;
+  for(let i=0;i<numTeams;i++){
+    if(!teams[i]) teams[i]={name:defs[i],color:TEAM_COLORS[i]};
+    const inp=document.createElement('input');
+    inp.className='tinput';inp.type='text';inp.value=teams[i].name;
+    inp.style.setProperty('--tc',TEAM_COLORS[i]);
+    inp.oninput=e=>teams[i].name=e.target.value;
+    g.appendChild(inp);
+  }
+}
+
+/* ══════════ GRID ══════════ */
+function toggleDrop(id) {
+  ['grid-drop','qtype-drop'].forEach(d=>{
+    if(d!==id) document.getElementById(d).classList.remove('open');
+  });
+  document.getElementById(id).classList.toggle('open');
+}
+
+function pickGrid(cols,rows,el) {
+  numCols=cols;numRows=rows;
+  document.getElementById('grid-label').textContent=`${cols} × ${rows}`;
+  document.getElementById('grid-cols').textContent=cols;
+  document.getElementById('grid-rows').textContent=rows;
+  document.querySelectorAll('#grid-drop .dd-opt').forEach(o=>o.classList.remove('sel'));
+  el.classList.add('sel');
+  document.getElementById('grid-drop').classList.remove('open');
+}
+
+/* ══════════ DIFFICULTY ══════════ */
+function pickDiff(btn) {
+  difficulty=btn.dataset.val;
+  document.querySelectorAll('.dbtn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+/* ══════════ Q TYPE ══════════ */
+function pickQtype(val,el) {
+  qType=val;
+  const keys=['mcLabel','openLabel','drawLabel','mixedLabel'];
+  const idx=['multiple','open','drawing','mixed'].indexOf(val);
+  document.getElementById('qtype-label').textContent=T[lang][keys[idx]]||val;
+  document.querySelectorAll('#qtype-drop .dd-opt').forEach(o=>o.classList.remove('sel'));
+  el.classList.add('sel');
+  document.getElementById('qtype-drop').classList.remove('open');
+}
+
+/* ══════════ START ══════════ */
+function startGame() {
+  const prompt=document.getElementById('ai-prompt').value.trim();
+  if(!prompt){alert(T[lang].noPrompt);return;}
+
+  const timerOn=document.getElementById('tog-timer').classList.contains('on');
+  const bonusOn=document.getElementById('tog-bonus').classList.contains('on');
+  const speedOn=document.getElementById('tog-speed').classList.contains('on');
+  const qLang={en:'English',pt:'Portuguese',es:'Spanish'}[lang];
+
+  const config={
+    numTeams,numRows,numCols,difficulty,qType,
+    teams:teams.slice(0,numTeams),
+    lang,qLang,theme,
+    timerOn,bonusOn,speedOn,
+    prompt
+  };
+
+  document.getElementById('load-text').textContent=T[lang].generating;
+  document.getElementById('loading').classList.add('active');
+  document.getElementById('gen-btn').disabled=true;
+
+  localStorage.setItem('jamboo_config',JSON.stringify(config));
+  window.location.href='game.html';
+}
+
+/* ══════════ CLOSE DROPS ON OUTSIDE CLICK ══════════ */
+document.addEventListener('click',e=>{
+  if(!e.target.closest('#grid-btn')&&!e.target.closest('#grid-drop'))
+    document.getElementById('grid-drop').classList.remove('open');
+  if(!e.target.closest('#qtype-btn')&&!e.target.closest('#qtype-drop'))
+    document.getElementById('qtype-drop').classList.remove('open');
+});
+
+init();
+</script>
+</body>
+</html>

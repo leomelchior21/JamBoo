@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="arcade">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JamBoo — Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════
+   THEMES (same as setup)
+═══════════════════════════════════════════ */
+[data-theme="arcade"] {
+  --bg:#131420; --bg2:#1A1B2E; --border:#F5C518;
+  --primary:#00D1FF; --accent:#F5C518; --danger:#FF2D95;
+  --text:#FFFFFF; --text2:rgba(255,255,255,.5); --gray:rgba(255,255,255,.07);
+  --shadow:4px 4px 0 rgba(0,0,0,.45); --radius:10px;
+  --fh:'Fredoka One',cursive; --fb:'Nunito',sans-serif;
+  --cat-bg:#0D0E1C; --cat-color:#00D1FF;
+  --cell-bg:#1A1B2E; --cell-hover:#222340;
+  --cell-used:#0D0E1C; --cell-used-text:rgba(255,255,255,.18);
+}
+[data-theme="classroom"] {
+  --bg:#EFF6FF; --bg2:#FFFFFF; --border:#3B82F6;
+  --primary:#3B82F6; --accent:#10B981; --danger:#EF4444;
+  --text:#1E293B; --text2:#64748B; --gray:rgba(0,0,0,.04);
+  --shadow:0 2px 16px rgba(59,130,246,.14); --radius:14px;
+  --fh:'Nunito',sans-serif; --fb:'Nunito',sans-serif;
+  --cat-bg:#DBEAFE; --cat-color:#1D4ED8;
+  --cell-bg:#FFFFFF; --cell-hover:#EFF6FF;
+  --cell-used:#F1F5F9; --cell-used-text:rgba(30,41,59,.25);
+}
+[data-theme="retro"] {
+  --bg:#0A0A1F; --bg2:#12122A; --border:#BF00FF;
+  --primary:#00FFCC; --accent:#FF00BB; --danger:#FF4444;
+  --text:#FFFFFF; --text2:rgba(255,255,255,.45); --gray:rgba(255,255,255,.05);
+  --shadow:0 0 24px rgba(0,255,204,.18); --radius:4px;
+  --fh:'Fredoka One',cursive; --fb:'Nunito',sans-serif;
+  --cat-bg:#0D0D22; --cat-color:#00FFCC;
+  --cell-bg:#12122A; --cell-hover:#1A1A3A;
+  --cell-used:#080818; --cell-used-text:rgba(255,255,255,.15);
+}
+
+/* ═══════════════════════════════════════════
+   RESET + BASE
+═══════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{
+  font-family:var(--fb);background:var(--bg);color:var(--text);
+  min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased;
+}
+
+/* ═══════════════════════════════════════════
+   LOADING
+═══════════════════════════════════════════ */
+#loading{
+  position:fixed;inset:0;background:var(--bg);z-index:9999;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
+}
+#loading.hidden{display:none;}
+.load-logo{height:54px;}
+.load-bar-wrap{
+  width:200px;height:5px;
+  background:rgba(255,255,255,.08);
+  border:2px solid var(--primary);border-radius:3px;overflow:hidden;
+}
+.load-bar{height:100%;background:var(--primary);animation:sweep 1.2s linear infinite;}
+@keyframes sweep{0%{transform:translateX(-100%)}100%{transform:translateX(300%)}}
+.load-text{font-family:var(--fh);font-size:12px;color:var(--text2);letter-spacing:3px;text-transform:uppercase;}
+
+/* ═══════════════════════════════════════════
+   GAME WRAPPER (hidden until ready)
+═══════════════════════════════════════════ */
+#game-wrap{display:none;}
+#game-wrap.ready{display:block;}
+
+/* ═══════════════════════════════════════════
+   HEADER
+═══════════════════════════════════════════ */
+.ghdr{
+  background:var(--bg2);border-bottom:3px solid var(--border);
+  padding:8px 16px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  position:sticky;top:0;z-index:100;
+}
+.ghdr-logo{height:36px;width:auto;cursor:pointer;}
+.ghdr-back{
+  display:flex;align-items:center;gap:6px;
+  padding:6px 12px;background:var(--gray);
+  border:2px solid rgba(255,255,255,.12);border-radius:7px;
+  color:var(--text2);font-family:var(--fb);font-weight:800;font-size:12px;
+  cursor:pointer;text-decoration:none;transition:border-color .12s;
+  white-space:nowrap;
+}
+[data-theme="classroom"] .ghdr-back{border-color:rgba(0,0,0,.1);}
+.ghdr-back:hover{border-color:var(--primary);color:var(--text);}
+
+/* ═══════════════════════════════════════════
+   SCOREBOARD (top bar)
+═══════════════════════════════════════════ */
+.scorebar{
+  display:flex;align-items:center;gap:6px;flex:1;
+  overflow-x:auto;padding:2px 0;
+  scrollbar-width:none;
+}
+.scorebar::-webkit-scrollbar{display:none;}
+.score-card{
+  display:flex;flex-direction:column;align-items:center;
+  padding:5px 10px;min-width:80px;
+  background:var(--gray);
+  border:2px solid rgba(255,255,255,.12);border-radius:8px;
+  position:relative;overflow:hidden;flex-shrink:0;
+  transition:border-color .2s;
+}
+[data-theme="classroom"] .score-card{border-color:rgba(0,0,0,.1);}
+.score-card.active-team{animation:scoreFlash .5s ease;}
+@keyframes scoreFlash{0%,100%{transform:scale(1)}50%{transform:scale(1.06);}}
+.score-name{
+  font-size:10px;font-weight:900;
+  text-transform:uppercase;letter-spacing:.5px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  max-width:70px;
+}
+.score-val{font-family:var(--fh);font-size:18px;line-height:1.1;}
+.score-popup{
+  position:absolute;top:0;left:50%;transform:translateX(-50%);
+  font-family:var(--fh);font-size:14px;font-weight:900;
+  animation:popUp 1.4s ease forwards;pointer-events:none;white-space:nowrap;
+}
+@keyframes popUp{0%{opacity:1;transform:translateX(-50%) translateY(0)}100%{opacity:0;transform:translateX(-50%) translateY(-28px)}}
+
+/* ═══════════════════════════════════════════
+   BOARD
+═══════════════════════════════════════════ */
+.board-wrap{padding:16px;overflow-x:auto;}
+.board{
+  display:grid;
+  gap:8px;
+  min-width:400px;
+}
+.board-cell{
+  border-radius:var(--radius);
+  display:flex;align-items:center;justify-content:center;
+  text-align:center;padding:10px 8px;
+  font-family:var(--fh);
+  transition:all .15s;
+  position:relative;overflow:hidden;
+}
+
+/* Category header cells */
+.cat-cell{
+  background:var(--cat-bg);
+  border:2px solid var(--border);
+  color:var(--cat-color);
+  font-size:clamp(12px,1.8vw,16px);
+  min-height:60px;
+  letter-spacing:.3px;line-height:1.2;
+  text-transform:uppercase;
+}
+
+/* Question cells */
+.q-cell{
+  background:var(--cell-bg);
+  border:2px solid var(--border);
+  cursor:pointer;
+  min-height:72px;
+  flex-direction:column;gap:4px;
+}
+.q-cell:hover:not(.used){
+  background:var(--cell-hover);
+  border-color:var(--primary);
+  transform:translateY(-2px);
+  box-shadow:var(--shadow);
+}
+.q-cell.used{
+  background:var(--cell-used);
+  border-color:rgba(255,255,255,.06);
+  cursor:default;transform:none;box-shadow:none;
+}
+[data-theme="classroom"] .q-cell.used{border-color:rgba(0,0,0,.06);}
+.cell-pts{
+  font-size:clamp(18px,3vw,28px);
+  color:var(--accent);
+  line-height:1;
+}
+.q-cell.used .cell-pts{color:var(--cell-used-text);}
+.cell-check{font-size:18px;opacity:.4;}
+.bonus-star{font-size:13px;position:absolute;top:4px;right:6px;}
+
+/* Timer bar on cell */
+.cell-timer{
+  position:absolute;bottom:0;left:0;height:3px;
+  background:var(--primary);transition:width 1s linear;
+  width:100%;
+}
+
+/* ═══════════════════════════════════════════
+   MODAL OVERLAY
+═══════════════════════════════════════════ */
+.modal-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.75);z-index:500;
+  align-items:center;justify-content:center;padding:16px;
+}
+.modal-overlay.active{display:flex;}
+
+.modal{
+  background:var(--bg2);
+  border:3px solid var(--border);
+  border-radius:var(--radius);
+  width:100%;max-width:640px;
+  max-height:90vh;overflow-y:auto;
+  box-shadow:var(--shadow);
+  position:relative;
+  animation:modalIn .2s ease;
+}
+@keyframes modalIn{from{transform:scale(.94);opacity:0}to{transform:scale(1);opacity:1}}
+
+.modal-head{
+  background:var(--bg);
+  border-bottom:2px solid var(--border);
+  padding:14px 18px;
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+}
+.modal-cat{
+  font-family:var(--fh);font-size:13px;
+  color:var(--primary);letter-spacing:1px;text-transform:uppercase;
+}
+.modal-pts{
+  font-family:var(--fh);font-size:24px;color:var(--accent);line-height:1;
+}
+.modal-close{
+  width:32px;height:32px;border-radius:50%;
+  background:var(--gray);border:2px solid rgba(255,255,255,.15);
+  color:var(--text2);font-size:16px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all .12s;flex-shrink:0;
+}
+[data-theme="classroom"] .modal-close{border-color:rgba(0,0,0,.1);}
+.modal-close:hover{border-color:var(--danger);color:var(--danger);}
+
+.modal-body{padding:18px;}
+
+/* Question text */
+.q-text{
+  font-size:clamp(16px,2.5vw,22px);font-weight:800;
+  line-height:1.45;margin-bottom:16px;text-align:center;
+}
+
+/* Timer bar in modal */
+.modal-timer-bar{
+  height:4px;background:rgba(255,255,255,.1);
+  border-radius:2px;margin-bottom:14px;overflow:hidden;
+}
+.modal-timer-fill{
+  height:100%;background:var(--primary);
+  transition:width 1s linear;
+  width:100%;
+}
+.modal-timer-fill.warning{background:var(--danger);}
+
+/* MC options */
+.mc-grid{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:8px;margin-bottom:14px;
+}
+.mc-opt{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;
+  background:var(--gray);
+  border:2px solid rgba(255,255,255,.12);border-radius:8px;
+  color:var(--text);font-family:var(--fb);font-weight:800;font-size:13px;
+  cursor:pointer;text-align:left;transition:all .12s;
+}
+[data-theme="classroom"] .mc-opt{border-color:rgba(0,0,0,.1);}
+.mc-opt:hover:not(:disabled){border-color:var(--primary);background:rgba(255,255,255,.1);}
+.mc-letter{
+  width:26px;height:26px;border-radius:50%;
+  background:var(--border);color:var(--bg);
+  font-family:var(--fh);font-size:14px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.mc-opt.correct{background:rgba(34,211,164,.2);border-color:#22D3A4 !important;}
+.mc-opt.correct .mc-letter{background:#22D3A4;color:#000;}
+.mc-opt.wrong{background:rgba(255,45,149,.15);border-color:var(--danger) !important;}
+.mc-opt.wrong .mc-letter{background:var(--danger);color:#fff;}
+.mc-opt:disabled{cursor:default;}
+
+/* Drawing section */
+.drawing-section{margin-bottom:14px;}
+.canvas-wrap{
+  background:rgba(255,255,255,.97);border:2px solid var(--border);
+  border-radius:8px;overflow:hidden;cursor:crosshair;
+}
+.drawing-canvas{display:block;width:100%;touch-action:none;}
+.draw-tools{display:flex;gap:7px;margin-top:8px;flex-wrap:wrap;align-items:center;}
+.draw-btn{
+  width:26px;height:26px;border-radius:50%;border:3px solid transparent;
+  cursor:pointer;transition:border-color .12s;flex-shrink:0;
+}
+.draw-btn.active{border-color:var(--text);}
+.draw-clear{
+  padding:5px 12px;background:var(--gray);
+  border:2px solid rgba(255,255,255,.15);border-radius:6px;
+  color:var(--text);font-family:var(--fb);font-weight:800;font-size:12px;
+  cursor:pointer;margin-left:auto;
+}
+[data-theme="classroom"] .draw-clear{border-color:rgba(0,0,0,.1);}
+
+/* Answer box */
+.answer-box{
+  background:rgba(0,209,255,.08);
+  border:2px solid var(--primary);border-radius:8px;
+  padding:12px 14px;margin-bottom:12px;
+  display:none;
+}
+.answer-box.shown{display:block;}
+.answer-label{
+  font-size:11px;font-weight:900;text-transform:uppercase;
+  letter-spacing:1px;color:var(--primary);margin-bottom:4px;
+}
+.answer-text{font-size:16px;font-weight:800;line-height:1.4;}
+
+/* Award section */
+.award-section{display:none;}
+.award-section.shown{display:block;}
+.award-title{font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:1px;color:var(--text2);margin-bottom:6px;}
+.award-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px;margin-bottom:8px;}
+.award-btn{
+  padding:8px 10px;border-radius:7px;
+  background:var(--gray);border:2px solid;
+  font-family:var(--fb);font-weight:800;font-size:12px;
+  cursor:pointer;transition:all .12s;text-align:center;
+}
+.award-btn:hover{filter:brightness(1.2);}
+
+/* Bonus section */
+.bonus-section{
+  background:rgba(245,197,24,.07);border:2px solid var(--accent);
+  border-radius:8px;padding:12px 14px;margin-bottom:12px;
+}
+.bonus-title{font-family:var(--fh);font-size:15px;color:var(--accent);margin-bottom:10px;}
+.bonus-bets{display:flex;flex-direction:column;gap:6px;margin-bottom:10px;}
+.bonus-bet-row{display:flex;align-items:center;gap:8px;}
+.bonus-team-name{font-weight:800;font-size:13px;min-width:80px;}
+.bonus-bet-input{
+  width:80px;padding:5px 8px;
+  background:var(--gray);border:2px solid rgba(255,255,255,.15);border-radius:6px;
+  color:var(--text);font-family:var(--fb);font-weight:800;font-size:13px;
+  outline:none;
+}
+[data-theme="classroom"] .bonus-bet-input{border-color:rgba(0,0,0,.1);background:#F8FAFC;color:var(--text);}
+
+/* Action buttons */
+.action-row{display:flex;gap:8px;flex-wrap:wrap;}
+.btn-reveal{
+  flex:1;padding:12px;
+  background:var(--primary);border:3px solid rgba(0,0,0,.2);border-radius:8px;
+  color:var(--bg);font-family:var(--fh);font-size:16px;
+  cursor:pointer;transition:all .12s;
+}
+.btn-reveal:hover{filter:brightness(1.1);}
+.btn-done{
+  padding:12px 20px;
+  background:var(--gray);border:2px solid rgba(255,255,255,.15);border-radius:8px;
+  color:var(--text);font-family:var(--fh);font-size:15px;
+  cursor:pointer;transition:all .12s;display:none;
+}
+[data-theme="classroom"] .btn-done{border-color:rgba(0,0,0,.1);}
+.btn-done:hover{border-color:var(--text);}
+
+/* ═══════════════════════════════════════════
+   WINNER SCREEN
+═══════════════════════════════════════════ */
+#winner-screen{display:none;min-height:100vh;}
+#winner-screen.active{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 16px;}
+.winner-title{font-family:var(--fh);font-size:clamp(28px,7vw,54px);color:var(--accent);text-align:center;margin-bottom:6px;}
+.winner-subtitle{font-family:var(--fh);font-size:clamp(18px,4vw,30px);text-align:center;margin-bottom:8px;}
+.winner-pts{font-size:18px;font-weight:800;color:var(--text2);text-align:center;margin-bottom:28px;}
+.final-cards{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:28px;}
+.final-card{
+  background:var(--bg2);border:3px solid;border-radius:var(--radius);
+  padding:18px 22px;text-align:center;min-width:120px;
+  box-shadow:var(--shadow);
+}
+.final-rank{font-size:28px;margin-bottom:4px;}
+.final-name{font-weight:900;font-size:16px;margin-bottom:2px;}
+.final-score{font-family:var(--fh);font-size:22px;}
+.btn-play-again{
+  padding:14px 36px;
+  background:var(--primary);border:3px solid rgba(0,0,0,.2);border-radius:10px;
+  color:var(--bg);font-family:var(--fh);font-size:20px;
+  cursor:pointer;transition:all .12s;box-shadow:var(--shadow);
+}
+.btn-play-again:hover{filter:brightness(1.1);transform:translateY(-2px);}
+
+/* Confetti */
+.confetti-piece{
+  position:fixed;border-radius:2px;pointer-events:none;z-index:9998;
+  animation:fall linear forwards;
+}
+@keyframes fall{
+  0%{transform:translateY(-20px) rotate(0deg);opacity:1;}
+  100%{transform:translateY(100vh) rotate(720deg);opacity:0;}
+}
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════ */
+@media(max-width:480px){
+  .mc-grid{grid-template-columns:1fr;}
+  .award-grid{grid-template-columns:1fr 1fr;}
+  .score-card{min-width:65px;}
+}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading">
+  <img class="load-logo" src="Jamboo-logo-png.png" alt="JamBoo">
+  <div class="load-bar-wrap"><div class="load-bar"></div></div>
+  <p class="load-text" id="load-text">Generating your game...</p>
+</div>
+
+<!-- GAME WRAPPER -->
+<div id="game-wrap">
+
+  <!-- HEADER -->
+  <header class="ghdr">
+    <a class="ghdr-back" href="index.html">← <span id="lbl-back">Setup</span></a>
+    <img class="ghdr-logo" src="Jamboo-logo-png.png" alt="JamBoo" onclick="window.location.href='index.html'">
+    <div class="scorebar" id="scorebar"></div>
+    <button class="ghdr-back" onclick="endGame()" style="border-color:rgba(255,100,100,.3);" id="lbl-end">🏆 End</button>
+  </header>
+
+  <!-- BOARD -->
+  <div class="board-wrap">
+    <div class="board" id="board"></div>
+  </div>
+
+  <!-- WINNER SCREEN -->
+  <div id="winner-screen">
+    <div class="winner-title" id="winner-title">🏆</div>
+    <div class="winner-subtitle" id="winner-name"></div>
+    <div class="winner-pts" id="winner-pts"></div>
+    <div class="final-cards" id="final-cards"></div>
+    <button class="btn-play-again" onclick="window.location.href='index.html'" id="lbl-again">Play Again →</button>
+  </div>
+
+</div><!-- /game-wrap -->
+
+<!-- QUESTION MODAL -->
+<div class="modal-overlay" id="q-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <div class="modal-cat" id="modal-cat"></div>
+        <div class="modal-pts" id="modal-pts"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <!-- Timer bar -->
+      <div class="modal-timer-bar" id="timer-bar-wrap" style="display:none;">
+        <div class="modal-timer-fill" id="timer-fill"></div>
+      </div>
+      <!-- Question -->
+      <p class="q-text" id="modal-question"></p>
+      <!-- Bonus -->
+      <div class="bonus-section" id="bonus-section" style="display:none;">
+        <div class="bonus-title">⭐ <span id="lbl-bonus-title">Bonus Round — Place your bets!</span></div>
+        <div class="bonus-bets" id="bonus-bets"></div>
+        <button class="btn-reveal" id="bonus-reveal-btn" onclick="revealBonusAnswer()">
+          <span id="lbl-reveal-bonus">Reveal Question →</span>
+        </button>
+      </div>
+      <!-- MC options -->
+      <div class="mc-grid" id="mc-grid" style="display:none;"></div>
+      <!-- Drawing -->
+      <div class="drawing-section" id="drawing-section" style="display:none;">
+        <div class="canvas-wrap">
+          <canvas class="drawing-canvas" id="drawing-canvas" height="220"></canvas>
+        </div>
+        <div class="draw-tools">
+          <button class="draw-btn active" data-color="#000000" style="background:#000000;" onclick="setDrawColor(this)"></button>
+          <button class="draw-btn" data-color="#EF4444" style="background:#EF4444;" onclick="setDrawColor(this)"></button>
+          <button class="draw-btn" data-color="#3B82F6" style="background:#3B82F6;" onclick="setDrawColor(this)"></button>
+          <button class="draw-btn" data-color="#22D3A4" style="background:#22D3A4;" onclick="setDrawColor(this)"></button>
+          <button class="draw-btn" data-color="#F5C518" style="background:#F5C518;" onclick="setDrawColor(this)"></button>
+          <button class="draw-btn" data-color="#FFFFFF" style="background:#FFFFFF;border-color:rgba(0,0,0,.3);" onclick="setDrawColor(this)"></button>
+          <button class="draw-clear" onclick="clearCanvas()" id="lbl-clear">🗑 Clear</button>
+        </div>
+      </div>
+      <!-- Answer box -->
+      <div class="answer-box" id="answer-box">
+        <div class="answer-label" id="lbl-answer">Answer</div>
+        <div class="answer-text" id="answer-text"></div>
+      </div>
+      <!-- Award section -->
+      <div class="award-section" id="award-section">
+        <div class="award-title" id="lbl-award">+ Award Points</div>
+        <div class="award-grid" id="award-grid"></div>
+        <div class="award-title" id="lbl-deduct">− Deduct Points</div>
+        <div class="award-grid" id="deduct-grid"></div>
+      </div>
+      <!-- Action row -->
+      <div class="action-row">
+        <button class="btn-reveal" id="reveal-btn" onclick="revealAnswer()"><span id="lbl-reveal">Reveal Answer</span></button>
+        <button class="btn-done" id="done-btn" onclick="closeModal()"><span id="lbl-done">Done ✓</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════
+   I18N STRINGS (game screen)
+══════════════════════════════════════════ */
+const GT = {
+  en:{
+    back:'Setup', end:'🏆 End', reveal:'Reveal Answer', done:'Done ✓',
+    answer:'Answer', award:'+ Award Points', deduct:'− Deduct Points',
+    bonusTitle:'Bonus Round — Place your bets!', revealBonus:'Reveal Question →',
+    clear:'🗑 Clear', winner:'Winner!', playAgain:'Play Again →',
+    pts:'pts', generating:'Generating your game...',
+    errorGen:'Error generating game. Please go back and try again.',
+    noConfig:'No game configuration found. Please go back to setup.',
+  },
+  pt:{
+    back:'Início', end:'🏆 Fim', reveal:'Revelar Resposta', done:'Feito ✓',
+    answer:'Resposta', award:'+ Dar Pontos', deduct:'− Retirar Pontos',
+    bonusTitle:'Rodada Bônus — Façam suas apostas!', revealBonus:'Revelar Pergunta →',
+    clear:'🗑 Limpar', winner:'Vencedor!', playAgain:'Jogar Novamente →',
+    pts:'pontos', generating:'Gerando seu jogo...',
+    errorGen:'Erro ao gerar o jogo. Volte e tente novamente.',
+    noConfig:'Configuração não encontrada. Volte ao início.',
+  },
+  es:{
+    back:'Inicio', end:'🏆 Fin', reveal:'Revelar Respuesta', done:'Listo ✓',
+    answer:'Respuesta', award:'+ Dar Puntos', deduct:'− Quitar Puntos',
+    bonusTitle:'Ronda Bonus — ¡Hagan sus apuestas!', revealBonus:'Revelar Pregunta →',
+    clear:'🗑 Limpiar', winner:'¡Ganador!', playAgain:'Jugar de Nuevo →',
+    pts:'puntos', generating:'Generando tu juego...',
+    errorGen:'Error al generar el juego. Vuelve e intenta de nuevo.',
+    noConfig:'Configuración no encontrada. Vuelve al inicio.',
+  }
+};
+
+/* ══════════════════════════════════════════
+   STATE
+══════════════════════════════════════════ */
+let cfg = {}, gameData = null;
+let teams = [], lang = 'en';
+let currentCell = null;
+let timerInterval = null;
+let drawCtx = null, isDrawing = false, drawColor = '#000000';
+let bonusPhase = false; // true = question shown, false = betting phase
+
+/* ══════════════════════════════════════════
+   BOOT
+══════════════════════════════════════════ */
+async function boot() {
+  const raw = localStorage.getItem('jamboo_config');
+  if (!raw) {
+    alert(GT.en.noConfig);
+    window.location.href = 'index.html';
+    return;
+  }
+  cfg = JSON.parse(raw);
+  lang = cfg.lang || 'en';
+  teams = cfg.teams.map(t => ({...t, score: 0}));
+
+  // Apply theme
+  document.documentElement.setAttribute('data-theme', cfg.theme || 'arcade');
+
+  // Apply i18n labels
+  applyLabels();
+  document.getElementById('load-text').textContent = GT[lang].generating;
+
+  try {
+    const response = await fetch('/api/generate', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(buildPayload())
+    });
+    if (!response.ok) throw new Error('API error ' + response.status);
+    const data = await response.json();
+    const text = data.choices?.[0]?.message?.content;
+    if (!text) throw new Error('Empty response');
+    const clean = text.replace(/```json|```/g,'').trim();
+    gameData = JSON.parse(clean);
+  } catch(e) {
+    console.error(e);
+    alert(GT[lang].errorGen);
+    document.getElementById('loading').classList.add('hidden');
+    return;
+  }
+
+  buildBoard();
+  renderScorebar();
+  document.getElementById('loading').classList.add('hidden');
+  document.getElementById('game-wrap').classList.add('ready');
+}
+
+/* ══════════════════════════════════════════
+   PROMPT BUILDER
+══════════════════════════════════════════ */
+function buildPayload() {
+  const {numCols, numRows, difficulty, qType, qLang, prompt, bonusOn} = cfg;
+  const pts = Array.from({length: numRows}, (_, i) => (i + 1) * 100);
+
+  const mcNote = (qType === 'multiple' || qType === 'mixed')
+    ? 'Multiple choice questions MUST include "options": ["A text","B text","C text","D text"] (exactly 4) and "correctIndex": 0–3.'
+    : '';
+  const drawNote = (qType === 'drawing' || qType === 'mixed')
+    ? 'Drawing questions: set "isDrawing": true, omit options/correctIndex.'
+    : '';
+  const bonusNote = bonusOn
+    ? `Exactly ONE question per category must have "isBonus": true (teams wager points before seeing it).`
+    : '"isBonus" should always be false.';
+
+  const sys = `You are a quiz game generator for educators. Create a Jeopardy-style quiz board as JSON.
+
+EXACT SCHEMA:
+{
+  "categories": ["Cat1", "Cat2", ...],
+  "questions": [
+    [ { "question":"...", "answer":"...", "type":"${qType}", "options":[], "correctIndex":0, "isBonus":false, "isDrawing":false }, ... (${numRows} items) ],
+    ... (${numCols} arrays total)
+  ]
+}
+
+RULES:
+- Exactly ${numCols} categories, ${numRows} questions each (point values: ${pts.join(', ')} — ascending difficulty)
+- All content in ${qLang}
+- Difficulty: ${difficulty}
+- Question type: ${qType}
+- ${mcNote}
+- ${drawNote}
+- ${bonusNote}
+- Return ONLY raw JSON — no explanation, no markdown fences.`;
+
+  return {
+    messages: [
+      {role: 'system', content: sys},
+      {role: 'user', content: `Topic: ${prompt}\n\nReturn ONLY valid JSON.`}
+    ]
+  };
+}
+
+/* ══════════════════════════════════════════
+   I18N LABELS
+══════════════════════════════════════════ */
+function applyLabels() {
+  const G = GT[lang];
+  document.getElementById('lbl-back').textContent = G.back;
+  document.getElementById('lbl-end').textContent = G.end;
+  document.getElementById('lbl-reveal').textContent = G.reveal;
+  document.getElementById('lbl-done').textContent = G.done;
+  document.getElementById('lbl-answer').textContent = G.answer;
+  document.getElementById('lbl-award').textContent = G.award;
+  document.getElementById('lbl-deduct').textContent = G.deduct;
+  document.getElementById('lbl-bonus-title').textContent = G.bonusTitle;
+  document.getElementById('lbl-reveal-bonus').textContent = G.revealBonus;
+  document.getElementById('lbl-clear').textContent = G.clear;
+  document.getElementById('lbl-again').textContent = G.playAgain;
+}
+
+/* ══════════════════════════════════════════
+   BOARD BUILDER
+══════════════════════════════════════════ */
+function buildBoard() {
+  const board = document.getElementById('board');
+  const cols = gameData.categories.length;
+  const rows = gameData.questions[0].length;
+  const pts = Array.from({length: rows}, (_, i) => (i + 1) * 100);
+
+  board.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+  board.innerHTML = '';
+
+  // Category row
+  gameData.categories.forEach(cat => {
+    const c = document.createElement('div');
+    c.className = 'board-cell cat-cell';
+    c.textContent = cat;
+    board.appendChild(c);
+  });
+
+  // Question cells
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const q = gameData.questions[c][r];
+      const cell = document.createElement('div');
+      cell.className = 'board-cell q-cell';
+      cell.dataset.col = c;
+      cell.dataset.row = r;
+      cell.dataset.pts = pts[r];
+      cell.innerHTML = `<div class="cell-pts">${pts[r]}</div>`;
+      if (q.isBonus) cell.innerHTML += `<div class="bonus-star">⭐</div>`;
+      cell.onclick = () => openQuestion(c, r, pts[r], cell);
+      board.appendChild(cell);
+    }
+  }
+}
+
+/* ══════════════════════════════════════════
+   SCOREBAR
+══════════════════════════════════════════ */
+function renderScorebar() {
+  const sb = document.getElementById('scorebar');
+  sb.innerHTML = '';
+  teams.forEach((t, i) => {
+    const c = document.createElement('div');
+    c.className = 'score-card';
+    c.id = `sc-${i}`;
+    c.style.borderColor = t.color + '66';
+    c.style.color = t.color;
+    c.innerHTML = `<div class="score-name">${t.name}</div><div class="score-val" id="sv-${i}">0</div>`;
+    sb.appendChild(c);
+  });
+}
+
+/* ══════════════════════════════════════════
+   OPEN QUESTION
+══════════════════════════════════════════ */
+function openQuestion(col, row, pts, cell) {
+  if (cell.classList.contains('used')) return;
+  currentCell = {col, row, pts, cell};
+  const q = gameData.questions[col][row];
+  const G = GT[lang];
+
+  // Reset modal
+  document.getElementById('modal-cat').textContent = gameData.categories[col].toUpperCase();
+  document.getElementById('modal-pts').textContent = pts;
+  document.getElementById('modal-question').textContent = q.question;
+  document.getElementById('mc-grid').style.display = 'none';
+  document.getElementById('drawing-section').style.display = 'none';
+  document.getElementById('bonus-section').style.display = 'none';
+  document.getElementById('answer-box').classList.remove('shown');
+  document.getElementById('award-section').classList.remove('shown');
+  document.getElementById('reveal-btn').style.display = '';
+  document.getElementById('reveal-btn').disabled = false;
+  document.getElementById('done-btn').style.display = 'none';
+  document.getElementById('answer-text').textContent = q.answer;
+  bonusPhase = false;
+
+  // Bonus round
+  if (q.isBonus && cfg.bonusOn) {
+    document.getElementById('bonus-section').style.display = 'block';
+    document.getElementById('reveal-btn').style.display = 'none';
+    renderBonusBets();
+  }
+
+  // MC options
+  if (q.options && q.options.length && !q.isBonus) {
+    buildMC(q);
+  }
+
+  // Drawing
+  if (q.isDrawing) {
+    document.getElementById('drawing-section').style.display = 'block';
+    setTimeout(initCanvas, 60);
+  }
+
+  // Timer
+  clearTimerBar();
+  if (cfg.timerOn && !q.isBonus) {
+    const secs = cfg.speedOn ? 15 : 30;
+    startTimerBar(secs);
+  }
+
+  document.getElementById('q-modal').classList.add('active');
+}
+
+function buildMC(q) {
+  const mc = document.getElementById('mc-grid');
+  mc.style.display = 'grid';
+  mc.innerHTML = '';
+  q.options.forEach((opt, i) => {
+    const b = document.createElement('button');
+    b.className = 'mc-opt';
+    b.innerHTML = `<div class="mc-letter">${'ABCD'[i]}</div><span>${opt}</span>`;
+    b.onclick = () => {
+      if (document.getElementById('answer-box').classList.contains('shown')) return;
+      const ok = i === q.correctIndex;
+      b.classList.add(ok ? 'correct' : 'wrong');
+      if (!ok) mc.querySelectorAll('.mc-opt')[q.correctIndex].classList.add('correct');
+      mc.querySelectorAll('.mc-opt').forEach(btn => btn.disabled = true);
+    };
+    mc.appendChild(b);
+  });
+}
+
+/* ══════════════════════════════════════════
+   BONUS ROUND
+══════════════════════════════════════════ */
+function renderBonusBets() {
+  const d = document.getElementById('bonus-bets');
+  d.innerHTML = '';
+  teams.forEach((t, i) => {
+    const row = document.createElement('div');
+    row.className = 'bonus-bet-row';
+    row.innerHTML = `
+      <span class="bonus-team-name" style="color:${t.color}">${t.name}</span>
+      <input class="bonus-bet-input" type="number" min="0" max="${Math.max(t.score,100)}" value="0" id="bet-${i}">
+    `;
+    d.appendChild(row);
+  });
+}
+
+function revealBonusAnswer() {
+  if (!bonusPhase) {
+    // Show the question's MC / text, reveal btn
+    bonusPhase = true;
+    const q = gameData.questions[currentCell.col][currentCell.row];
+    document.getElementById('bonus-reveal-btn').style.display = 'none';
+    if (q.options && q.options.length) buildMC(q);
+    document.getElementById('reveal-btn').style.display = '';
+    if (cfg.timerOn) startTimerBar(cfg.speedOn ? 15 : 30);
+  }
+}
+
+/* ══════════════════════════════════════════
+   REVEAL + AWARD
+══════════════════════════════════════════ */
+function revealAnswer() {
+  clearTimerBar();
+  document.getElementById('answer-box').classList.add('shown');
+  document.getElementById('reveal-btn').style.display = 'none';
+  document.getElementById('done-btn').style.display = '';
+  buildAwardButtons();
+  document.getElementById('award-section').classList.add('shown');
+}
+
+function buildAwardButtons() {
+  const pts = currentCell?.pts || 0;
+  const q = gameData.questions[currentCell.col][currentCell.row];
+  const isBonus = q.isBonus && cfg.bonusOn && bonusPhase;
+  const G = GT[lang];
+
+  const ag = document.getElementById('award-grid');
+  const dg = document.getElementById('deduct-grid');
+  ag.innerHTML = '';
+  dg.innerHTML = '';
+
+  teams.forEach((t, i) => {
+    const betAmt = isBonus ? (parseInt(document.getElementById(`bet-${i}`)?.value) || 0) : pts;
+
+    const ab = document.createElement('button');
+    ab.className = 'award-btn';
+    ab.style.borderColor = t.color;
+    ab.style.color = t.color;
+    ab.textContent = `+${betAmt} ${t.name}`;
+    ab.onclick = () => applyScore(i, betAmt, `+${betAmt}`);
+    ag.appendChild(ab);
+
+    const db = document.createElement('button');
+    db.className = 'award-btn';
+    db.style.borderColor = 'var(--danger)';
+    db.style.color = 'var(--danger)';
+    db.textContent = `−${betAmt} ${t.name}`;
+    db.onclick = () => applyScore(i, -betAmt, `−${betAmt}`);
+    dg.appendChild(db);
+  });
+}
+
+function applyScore(idx, delta, label) {
+  teams[idx].score += delta;
+  const val = document.getElementById(`sv-${idx}`);
+  if (val) val.textContent = teams[idx].score;
+  const card = document.getElementById(`sc-${idx}`);
+  if (card) {
+    const pop = document.createElement('div');
+    pop.className = 'score-popup';
+    pop.textContent = label;
+    pop.style.color = delta > 0 ? 'var(--primary)' : 'var(--danger)';
+    card.appendChild(pop);
+    setTimeout(() => pop.remove(), 1600);
+    card.classList.add('active-team');
+    setTimeout(() => card.classList.remove('active-team'), 600);
+  }
+}
+
+/* ══════════════════════════════════════════
+   CLOSE MODAL
+══════════════════════════════════════════ */
+function closeModal() {
+  clearTimerBar();
+  document.getElementById('q-modal').classList.remove('active');
+  if (currentCell) {
+    currentCell.cell.classList.add('used');
+    currentCell.cell.innerHTML = `<div class="cell-pts" style="opacity:.2">${currentCell.pts}</div><div class="cell-check">✓</div>`;
+    currentCell = null;
+  }
+  checkAllAnswered();
+}
+
+function checkAllAnswered() {
+  const cells = document.querySelectorAll('.q-cell');
+  const allDone = [...cells].every(c => c.classList.contains('used'));
+  if (allDone) setTimeout(endGame, 600);
+}
+
+/* ══════════════════════════════════════════
+   TIMER
+══════════════════════════════════════════ */
+function startTimerBar(secs) {
+  const wrap = document.getElementById('timer-bar-wrap');
+  const fill = document.getElementById('timer-fill');
+  wrap.style.display = 'block';
+  fill.style.transition = 'none';
+  fill.style.width = '100%';
+  fill.classList.remove('warning');
+
+  let remaining = secs;
+  setTimeout(() => {
+    fill.style.transition = `width ${secs}s linear`;
+    fill.style.width = '0%';
+  }, 50);
+
+  timerInterval = setInterval(() => {
+    remaining--;
+    if (remaining <= Math.floor(secs * 0.3)) fill.classList.add('warning');
+    if (remaining <= 0) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+      // Auto-reveal when time is up
+      if (!document.getElementById('answer-box').classList.contains('shown')) {
+        revealAnswer();
+      }
+    }
+  }, 1000);
+}
+
+function clearTimerBar() {
+  if (timerInterval) {clearInterval(timerInterval); timerInterval = null;}
+  document.getElementById('timer-bar-wrap').style.display = 'none';
+  document.getElementById('timer-fill').style.width = '100%';
+  document.getElementById('timer-fill').classList.remove('warning');
+}
+
+/* ══════════════════════════════════════════
+   DRAWING CANVAS
+══════════════════════════════════════════ */
+function initCanvas() {
+  const canvas = document.getElementById('drawing-canvas');
+  canvas.width = canvas.offsetWidth || 560;
+  drawCtx = canvas.getContext('2d');
+  drawCtx.clearRect(0, 0, canvas.width, canvas.height);
+  drawCtx.strokeStyle = drawColor;
+  drawCtx.lineWidth = 3;
+  drawCtx.lineCap = 'round';
+  drawCtx.lineJoin = 'round';
+
+  canvas.onpointerdown = e => {
+    isDrawing = true;
+    const r = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / r.width;
+    const scaleY = canvas.height / r.height;
+    drawCtx.beginPath();
+    drawCtx.moveTo((e.clientX - r.left) * scaleX, (e.clientY - r.top) * scaleY);
+    canvas.setPointerCapture(e.pointerId);
+  };
+  canvas.onpointermove = e => {
+    if (!isDrawing) return;
+    const r = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / r.width;
+    const scaleY = canvas.height / r.height;
+    drawCtx.lineTo((e.clientX - r.left) * scaleX, (e.clientY - r.top) * scaleY);
+    drawCtx.stroke();
+  };
+  canvas.onpointerup = () => isDrawing = false;
+}
+
+function setDrawColor(btn) {
+  drawColor = btn.dataset.color;
+  if (drawCtx) drawCtx.strokeStyle = drawColor;
+  document.querySelectorAll('.draw-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function clearCanvas() {
+  if (drawCtx) {
+    const cv = document.getElementById('drawing-canvas');
+    drawCtx.clearRect(0, 0, cv.width, cv.height);
+  }
+}
+
+/* ══════════════════════════════════════════
+   END GAME / WINNER
+══════════════════════════════════════════ */
+function endGame() {
+  const G = GT[lang];
+  const sorted = [...teams].sort((a, b) => b.score - a.score);
+  const winner = sorted[0];
+
+  document.getElementById('winner-name').textContent = winner.name;
+  document.getElementById('winner-name').style.color = winner.color;
+  document.getElementById('winner-pts').textContent = `${winner.score} ${G.pts}`;
+  document.getElementById('winner-title').textContent = G.winner;
+
+  const fc = document.getElementById('final-cards');
+  fc.innerHTML = '';
+  const medals = ['🥇','🥈','🥉'];
+  sorted.forEach((t, i) => {
+    const c = document.createElement('div');
+    c.className = 'final-card';
+    c.style.borderColor = t.color;
+    c.style.color = t.color;
+    c.innerHTML = `<div class="final-rank">${medals[i] || '#' + (i+1)}</div>
+      <div class="final-name">${t.name}</div>
+      <div class="final-score">${t.score}</div>`;
+    fc.appendChild(c);
+  });
+
+  document.getElementById('game-wrap').style.display = 'none';
+  document.getElementById('winner-screen').classList.add('active');
+  launchConfetti();
+}
+
+function launchConfetti() {
+  const cols = ['#FF2D95','#00D1FF','#F5C518','#22D3A4','#A78BFA','#FB923C'];
+  for (let i = 0; i < 80; i++) {
+    setTimeout(() => {
+      const c = document.createElement('div');
+      c.className = 'confetti-piece';
+      c.style.left = Math.random() * 100 + 'vw';
+      c.style.top = '-10px';
+      c.style.background = cols[Math.floor(Math.random() * cols.length)];
+      c.style.width = c.style.height = (Math.random() * 8 + 5) + 'px';
+      c.style.animationDuration = (Math.random() * 2 + 1.5) + 's';
+      c.style.animationDelay = (Math.random() * 0.8) + 's';
+      document.body.appendChild(c);
+      setTimeout(() => c.remove(), 4000);
+    }, i * 35);
+  }
+}
+
+/* ══════════════════════════════════════════
+   CLOSE MODAL ON BACKDROP CLICK
+══════════════════════════════════════════ */
+document.getElementById('q-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('q-modal')) closeModal();
+});
+
+/* ══════════════════════════════════════════
+   BOOT
+══════════════════════════════════════════ */
+boot();
+</script>
+</body>
+</html>
