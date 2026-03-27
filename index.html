@@ -49,7 +49,11 @@ body::before{
   box-shadow:0 4px 0 rgba(102,0,255,.3);
   min-height:110px;
   display:flex;align-items:center;
-  position:relative;overflow:visible;z-index:10;
+  position:sticky;top:0;overflow:visible;z-index:100;
+  transition:min-height .35s ease;
+}
+.hdr.hdr-scrolled{
+  min-height:77px;
 }
 .hdr::before{
   content:'';position:absolute;inset:0;pointer-events:none;overflow:hidden;
@@ -276,7 +280,7 @@ body::before{
 }
 .lcd-strip{
   display:flex;align-items:center;gap:6px;
-  padding:8px 12px;min-width:150px;
+  padding:16px 24px;min-width:240px;
   background:#020C02;
   border:2px solid rgba(0,255,65,.22);
   border-left:4px solid var(--tc,var(--green));
@@ -288,7 +292,7 @@ body::before{
 }
 .lcd-strip input{
   flex:1;background:transparent;border:none;outline:none;
-  color:var(--green);font-family:var(--fp);font-size:8px;
+  color:var(--green);font-family:var(--fp);font-size:16px;
   caret-color:var(--green);min-width:0;
 }
 .lcd-strip input::placeholder{color:rgba(0,255,65,.22);}
@@ -324,10 +328,10 @@ body::before{
   );
 }
 .lcd-ta{
-  display:block;width:100%;min-height:80px;
-  padding:14px 16px;
+  display:block;width:100%;min-height:160px;
+  padding:28px 32px;
   background:transparent;border:none;outline:none;
-  color:var(--green);font-family:var(--fp);font-size:9px;line-height:2;
+  color:var(--green);font-family:var(--fp);font-size:18px;line-height:2;
   resize:vertical;caret-color:var(--green);position:relative;z-index:1;
 }
 .lcd-ta::placeholder{color:rgba(0,255,65,.25);}
@@ -784,6 +788,22 @@ function startGame(){
 }
 
 init();
+
+// Sticky header scroll-shrink
+(function(){
+  const hdr=document.querySelector('.hdr');
+  let ticking=false;
+  window.addEventListener('scroll',function(){
+    if(!ticking){
+      requestAnimationFrame(function(){
+        if(window.scrollY>10) hdr.classList.add('hdr-scrolled');
+        else hdr.classList.remove('hdr-scrolled');
+        ticking=false;
+      });
+      ticking=true;
+    }
+  },{passive:true});
+})();
 
 // Splash
 (function(){
