@@ -132,6 +132,27 @@ body::before{
 .screw-br{bottom:-2px;right:-2px;}
 
 /* ═══════════════════════════════
+   LED MATRIX GRID PICKER
+═══════════════════════════════ */
+.led-matrix{
+  display:grid;gap:3px;
+  cursor:crosshair;user-select:none;
+}
+.led-cell{
+  width:22px;height:22px;
+  background:#090920;border:2px solid #1A1144;
+  transition:background .05s,border-color .05s;
+}
+.led-cell.hover{background:rgba(0,255,255,.2);border-color:var(--cyan);}
+.led-cell.sel{
+  background:rgba(0,255,255,.28);border-color:var(--cyan);
+  box-shadow:inset 0 0 4px rgba(0,255,255,.35);
+}
+.matrix-readout{text-align:center;}
+.matrix-main{font-size:11px;color:var(--cyan);text-shadow:2px 2px 0 var(--b1);margin-bottom:4px;}
+.matrix-sub{font-size:6px;color:var(--dim);letter-spacing:1px;}
+
+/* ═══════════════════════════════
    MIXER / FADER BANK
 ═══════════════════════════════ */
 .fader-bank{
@@ -510,28 +531,14 @@ input[type=range].fader::-moz-range-thumb{
 
       <div class="fader-divider"></div>
 
-      <!-- SECTION 2: BOARD SIZE -->
+      <!-- SECTION 2: BOARD SIZE (pixel grid picker) -->
       <div class="fader-section">
         <div class="section-lbl" data-i18n="gridTitle">BOARD SIZE</div>
-        <div class="fader-group">
-          <div class="fader-col">
-            <div class="fader-val" id="cols-val">4</div>
-            <div class="fader-slider-wrap">
-              <div class="fader-rail"></div>
-              <input type="range" class="fader" id="cols-fader" min="1" max="8" step="1" value="4" oninput="onColsFader(this)">
-            </div>
-            <div class="fader-label" data-i18n="colsLabel">CATEG</div>
-          </div>
-          <div class="fader-col">
-            <div class="fader-val" id="rows-val">3</div>
-            <div class="fader-slider-wrap">
-              <div class="fader-rail"></div>
-              <input type="range" class="fader" id="rows-fader" min="1" max="6" step="1" value="3" oninput="onRowsFader(this)">
-            </div>
-            <div class="fader-label" data-i18n="rowsLabel">ROWS</div>
-          </div>
+        <div class="led-matrix" id="gp-grid"></div>
+        <div class="matrix-readout">
+          <div class="matrix-main" id="gp-label">4 × 3</div>
+          <div class="matrix-sub" id="gp-sublabel">12 questions</div>
         </div>
-        <div class="fader-val" id="board-summary" style="font-size:6px;background:transparent;border:none;color:var(--dim);letter-spacing:1px;">12 questions</div>
       </div>
 
       <div class="fader-divider"></div>
@@ -722,8 +729,8 @@ const fxState={timer:true,bonus:true,speed:false};
 function init(){
   teams=T[lang].teamDefaults.map((n,i)=>({name:n,color:TEAM_COLORS[i]}));
   renderTeamInputs();
+  initGridPicker();
   applyI18n();
-  updateBoardSummary();
 }
 
 /* ══════════ LANG ══════════ */
@@ -750,7 +757,7 @@ function applyI18n(){
   if(di) onDiffFader(di,true);
   const qi=document.getElementById('qtype-fader');
   if(qi) onQtypeFader(qi,true);
-  updateBoardSummary();
+  updateGridLabel();
   renderTeamInputs();
 }
 
@@ -759,16 +766,6 @@ function onTeamsFader(el, silent){
   numTeams=TEAMS_MAP[+el.value];
   document.getElementById('teams-val').textContent=numTeams;
   if(!silent) renderTeamInputs();
-}
-function onColsFader(el){
-  numCols=+el.value;
-  document.getElementById('cols-val').textContent=numCols;
-  updateBoardSummary();
-}
-function onRowsFader(el){
-  numRows=+el.value;
-  document.getElementById('rows-val').textContent=numRows;
-  updateBoardSummary();
 }
 function onDiffFader(el, silent){
   const idx=+el.value;
@@ -780,9 +777,45 @@ function onQtypeFader(el, silent){
   qType=QTYPE_MAP[idx];
   document.getElementById('qtype-val').textContent=T[lang]['qt'+idx];
 }
-function updateBoardSummary(){
-  const el=document.getElementById('board-summary');
-  if(el) el.textContent=`${numCols*numRows} ${T[lang].questions}`;
+
+/* ══════════ GRID PICKER ══════════ */
+const GP_COLS=8, GP_ROWS=6;
+function initGridPicker(){
+  const grid=document.getElementById('gp-grid');
+  grid.style.gridTemplateColumns=`repeat(${GP_COLS},1fr)`;
+  grid.innerHTML='';
+  for(let r=0;r<GP_ROWS;r++){
+    for(let c=0;c<GP_COLS;c++){
+      const cell=document.createElement('div');
+      cell.className='led-cell';
+      cell.dataset.c=c;cell.dataset.r=r;
+      cell.addEventListener('mouseenter',()=>highlightGrid(c,r,false));
+      cell.addEventListener('click',()=>{numCols=c+1;numRows=r+1;highlightGrid(c,r,true);updateGridLabel();});
+      grid.appendChild(cell);
+    }
+  }
+  grid.addEventListener('mouseleave',()=>highlightGrid(numCols-1,numRows-1,true));
+  highlightGrid(numCols-1,numRows-1,true);
+  updateGridLabel();
+}
+function highlightGrid(maxC,maxR,perm){
+  document.querySelectorAll('.led-cell').forEach(cell=>{
+    const c=+cell.dataset.c,r=+cell.dataset.r;
+    const inside=c<=maxC&&r<=maxR;
+    cell.classList.toggle('hover',inside&&!perm);
+    cell.classList.toggle('sel',inside&&perm);
+  });
+  const d=T[lang];
+  if(!perm){
+    document.getElementById('gp-label').textContent=`${maxC+1} × ${maxR+1}`;
+    document.getElementById('gp-sublabel').textContent=`${(maxC+1)*(maxR+1)} ${d.questions}`;
+  }
+}
+function updateGridLabel(){
+  const d=T[lang];
+  document.getElementById('gp-label').textContent=`${numCols} × ${numRows}`;
+  document.getElementById('gp-sublabel').textContent=`${numCols*numRows} ${d.questions}`;
+  highlightGrid(numCols-1,numRows-1,true);
 }
 
 /* ══════════ TEAM INPUTS ══════════ */
