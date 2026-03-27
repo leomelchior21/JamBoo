@@ -53,19 +53,26 @@ body{
 }
 #loading.hidden{display:none;}
 
-/* logo shake animation */
+/* logo: 500% zoom-in → settles at 200% of original, then gentle wobble */
 .load-logo{
-  height:108px;
-  animation:logoShake .55s steps(4) infinite;
+  height:216px; /* 200% of original 108px */
   image-rendering:pixelated;
-  filter:drop-shadow(0 0 14px #BF00FF);
+  filter:drop-shadow(0 0 24px #BF00FF) drop-shadow(0 0 8px #FF00BB);
+  animation:
+    logoZoomIn 1.6s cubic-bezier(0.16, 1, 0.3, 1) forwards,
+    logoWobble 3.2s ease-in-out 1.6s infinite;
 }
-@keyframes logoShake{
-  0%  {transform:rotate(0deg)   translateY(0);}
-  25% {transform:rotate(-3deg)  translateY(-3px);}
-  50% {transform:rotate(0deg)   translateY(0);}
-  75% {transform:rotate(3deg)   translateY(-2px);}
-  100%{transform:rotate(0deg)   translateY(0);}
+@keyframes logoZoomIn{
+  from{ transform:scale(5); opacity:.6; filter:blur(4px); }
+  to  { transform:scale(1); opacity:1;  filter:blur(0);   }
+}
+@keyframes logoWobble{
+  0%  { transform:rotate(0deg)    translateY(0);    }
+  20% { transform:rotate(-1.5deg) translateY(-5px); }
+  40% { transform:rotate(.8deg)   translateY(-2px); }
+  60% { transform:rotate(-1.2deg) translateY(-6px); }
+  80% { transform:rotate(.5deg)   translateY(-1px); }
+  100%{ transform:rotate(0deg)    translateY(0);    }
 }
 
 /* ── RUBE GOLDBERG MACHINE ── */
