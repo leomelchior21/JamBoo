@@ -631,18 +631,20 @@ body{
     <div class="board" id="board"></div>
   </div>
 
-  <div id="winner-screen">
-    <div class="winner-title" id="winner-title">🏆</div>
-    <div class="winner-subtitle" id="winner-name"></div>
-    <div class="winner-pts" id="winner-pts"></div>
-    <div class="final-cards" id="final-cards"></div>
-    <div class="winner-actions">
-      <button class="btn-winner btn-winner-primary" onclick="window.location.href='index.html'" id="lbl-again">▶ Play Again</button>
-      <button class="btn-winner btn-winner-secondary" onclick="sameTeams()" id="lbl-same-teams">↺ Same Teams, New Game</button>
-      <button class="btn-winner btn-winner-ghost" onclick="goHome()" id="lbl-home">⌂ Home</button>
-    </div>
-  </div>
 
+</div>
+
+<!-- WINNER SCREEN (outside game-wrap so it isn't hidden by endGame) -->
+<div id="winner-screen">
+  <div class="winner-title" id="winner-title">🏆</div>
+  <div class="winner-subtitle" id="winner-name"></div>
+  <div class="winner-pts" id="winner-pts"></div>
+  <div class="final-cards" id="final-cards"></div>
+  <div class="winner-actions">
+    <button class="btn-winner btn-winner-primary" onclick="window.location.href='index.html'" id="lbl-again">▶ Play Again</button>
+    <button class="btn-winner btn-winner-secondary" onclick="sameTeams()" id="lbl-same-teams">↺ Same Teams, New Game</button>
+    <button class="btn-winner btn-winner-ghost" onclick="goHome()" id="lbl-home">⌂ Home</button>
+  </div>
 </div>
 
 <!-- QUESTION MODAL -->
@@ -1142,6 +1144,7 @@ function endGame() {
   });
   document.getElementById('game-wrap').style.display='none';
   document.getElementById('winner-screen').classList.add('active');
+  document.getElementById('winner-screen').style.display='flex';
   launchConfetti();
 }
 
