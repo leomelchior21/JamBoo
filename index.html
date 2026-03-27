@@ -8,80 +8,74 @@
 <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
 <style>
 /* ═══════════════════════════════════════════
-   RETRO / SYNTHWAVE THEME
+   RETRO / SYNTHWAVE
 ═══════════════════════════════════════════ */
 :root {
-  --bg:       #0A0A1F;
-  --panel:    #12122A;
-  --panel2:   #0D0D22;
-  --border:   #BF00FF;
-  --primary:  #00FFCC;
-  --accent:   #FF00BB;
-  --text:     #FFFFFF;
-  --text2:    rgba(255,255,255,.45);
-  --gray:     rgba(255,255,255,.05);
-  --shadow:   0 0 24px rgba(0,255,204,.18);
-  --radius:   4px;
-  --fh:       'Fredoka One', cursive;
-  --fb:       'Nunito', sans-serif;
+  --bg:      #0A0A1F;
+  --panel:   #12122A;
+  --panel2:  #0D0D22;
+  --border:  #BF00FF;
+  --primary: #00FFCC;
+  --accent:  #FF00BB;
+  --text:    #FFFFFF;
+  --text2:   rgba(255,255,255,.45);
+  --gray:    rgba(255,255,255,.05);
+  --shadow:  0 0 28px rgba(0,255,204,.15);
+  --r:       6px;
+  --fh:      'Fredoka One', cursive;
+  --fb:      'Nunito', sans-serif;
 }
-
-/* ═══════════════════════════════════════════
-   RESET + BASE
-═══════════════════════════════════════════ */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 body{
-  font-family:var(--fb);
-  background:var(--bg);
-  color:var(--text);
-  min-height:100vh;
-  overflow-x:hidden;
-  -webkit-font-smoothing:antialiased;
+  font-family:var(--fb);background:var(--bg);color:var(--text);
+  min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased;
 }
 
 /* ═══════════════════════════════════════════
    HEADER
 ═══════════════════════════════════════════ */
 .hdr{
-  background:#FF2D95;
+  background:var(--panel);
   border-bottom:3px solid var(--border);
   min-height:96px;
   display:flex;align-items:center;
   position:relative;overflow:hidden;
 }
-/* Synthwave grid lines in header */
 .hdr-stars{
   position:absolute;inset:0;pointer-events:none;
   background-image:
-    radial-gradient(circle,rgba(0,255,204,.35) 1px,transparent 1px),
-    radial-gradient(circle,rgba(191,0,255,.3) 1px,transparent 1px);
+    radial-gradient(circle,rgba(0,255,204,.3) 1px,transparent 1px),
+    radial-gradient(circle,rgba(191,0,255,.25) 1px,transparent 1px);
   background-size:60px 38px,90px 52px;
   background-position:10px 8px,35px 20px;
-  opacity:.3;
+  opacity:.35;
 }
 .hdr-inner{
   position:relative;z-index:1;
-  width:100%;max-width:880px;margin:0 auto;
-  padding:0 18px;
+  width:100%;max-width:900px;margin:0 auto;
+  padding:0 24px;
   display:flex;align-items:center;justify-content:space-between;
 }
-.hdr-logo{height:84px;width:auto;display:block;}
-.hdr-right{display:flex;align-items:center;gap:8px;}
+.hdr-logo{
+  height:84px;width:auto;display:block;
+  transition:transform .35s cubic-bezier(.34,1.56,.64,1), filter .35s ease;
+  cursor:pointer;
+}
+.hdr-logo:hover{
+  transform:scale(1.1) translateY(-3px);
+  filter:drop-shadow(0 0 18px rgba(0,255,204,.7)) drop-shadow(0 0 6px rgba(191,0,255,.5));
+}
 
 /* ═══════════════════════════════════════════
    LANG PILLS
 ═══════════════════════════════════════════ */
 .pill-group{
-  display:inline-flex;
-  background:var(--gray);
-  border:2px solid var(--border);
-  border-radius:var(--radius);overflow:hidden;
+  display:inline-flex;background:var(--gray);
+  border:2px solid var(--border);border-radius:var(--r);overflow:hidden;
 }
 .pill-btn{
-  padding:5px 11px;
-  border:none;background:transparent;
-  color:var(--text2);
-  font-family:var(--fb);font-weight:800;font-size:11px;
+  padding:7px 14px;border:none;background:transparent;
+  color:var(--text2);font-family:var(--fb);font-weight:800;font-size:12px;
   cursor:pointer;text-transform:uppercase;letter-spacing:.5px;
   transition:background .15s,color .15s;
 }
@@ -89,161 +83,196 @@ body{
 .pill-btn.active{background:var(--border);color:var(--panel);}
 
 /* ═══════════════════════════════════════════
-   DECORATIONS
-═══════════════════════════════════════════ */
-.deco-wrap{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:0;}
-.deco{position:absolute;font-weight:900;line-height:1;user-select:none;}
-
-/* ═══════════════════════════════════════════
    SETUP BODY
 ═══════════════════════════════════════════ */
 .setup-body{
-  max-width:880px;margin:0 auto;
-  padding:0 14px 80px;
-  position:relative;z-index:1;
+  max-width:900px;margin:0 auto;
+  padding:0 16px 80px;
 }
 
 /* ═══════════════════════════════════════════
    PAGE TITLE
 ═══════════════════════════════════════════ */
 .page-title-wrap{
-  text-align:center;padding:22px 40px 18px;
-  display:flex;align-items:center;justify-content:center;gap:14px;
+  text-align:center;padding:28px 0 22px;
+  display:flex;align-items:center;justify-content:center;gap:16px;
 }
-.title-deco{font-size:22px;font-weight:900;color:var(--primary);opacity:.6;}
+.title-deco{font-size:24px;font-weight:900;color:var(--primary);opacity:.55;}
 .page-title{
   font-family:var(--fh);
-  font-size:clamp(24px,5.5vw,42px);
+  font-size:clamp(26px,5.5vw,44px);
   color:var(--primary);
-  text-shadow:0 0 20px rgba(0,255,204,.5);
+  text-shadow:0 0 24px rgba(0,255,204,.5);
+}
+
+/* ═══════════════════════════════════════════
+   MAIN CARD
+═══════════════════════════════════════════ */
+.card{
+  background:var(--panel);
+  border:2px solid var(--border);
+  border-radius:var(--r);
+  padding:22px 24px;
+  box-shadow:var(--shadow);
+  position:relative;
+}
+.card+.card{margin-top:10px;}
+
+/* Section label */
+.sec-label{
+  display:flex;align-items:center;gap:8px;
+  font-size:12px;font-weight:900;text-transform:uppercase;
+  letter-spacing:1.5px;color:var(--text2);
+  margin-bottom:16px;
+}
+.sec-label span{font-size:16px;}
+
+/* 2-col card row */
+.card-row{
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;
+}
+.card-row .card{margin-top:0;}
+
+/* ═══════════════════════════════════════════
+   TEAMS
+═══════════════════════════════════════════ */
+.team-count-row{
+  display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;
+}
+.tcnt{
+  flex:1;min-width:52px;
+  padding:11px 8px;
+  background:var(--gray);
+  border:2px solid rgba(255,255,255,.1);border-radius:var(--r);
+  color:var(--text2);font-family:var(--fb);font-weight:900;font-size:14px;
+  cursor:pointer;text-align:center;
+  transition:all .15s;
+}
+.tcnt:hover{border-color:var(--primary);color:var(--text);}
+.tcnt.active{
+  background:var(--primary);border-color:var(--primary);
+  color:var(--panel);box-shadow:0 0 12px rgba(0,255,204,.4);
+}
+
+.team-inputs-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(130px,1fr));
+  gap:8px;
+}
+.tinput{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 12px;
+  background:rgba(255,255,255,.04);
+  border:2px solid rgba(255,255,255,.08);
+  border-left:4px solid var(--tc,var(--primary));
+  border-radius:var(--r);overflow:hidden;
+}
+.tinput input{
+  flex:1;background:transparent;border:none;outline:none;
+  color:var(--text);font-family:var(--fb);font-weight:800;font-size:13px;
+  width:100%;
+}
+.tinput input::placeholder{color:var(--text2);}
+
+/* ═══════════════════════════════════════════
+   EXCEL GRID PICKER
+═══════════════════════════════════════════ */
+.gp-wrap{display:flex;flex-direction:column;align-items:flex-start;gap:10px;}
+.gp-grid{
+  display:grid;
+  grid-template-columns:repeat(8,1fr);
+  gap:4px;
+  cursor:crosshair;
+}
+.gp-cell{
+  width:36px;height:36px;
+  border:2px solid rgba(191,0,255,.2);
+  border-radius:4px;
+  background:transparent;
+  transition:background .08s,border-color .08s,transform .08s;
+}
+.gp-cell.hover{
+  background:rgba(0,255,204,.18);
+  border-color:rgba(0,255,204,.5);
+}
+.gp-cell.sel{
+  background:rgba(0,255,204,.28);
+  border-color:var(--primary);
+  box-shadow:inset 0 0 6px rgba(0,255,204,.2);
+}
+.gp-label{
+  font-family:var(--fh);font-size:16px;color:var(--primary);
   letter-spacing:.3px;
 }
+.gp-sublabel{font-size:12px;font-weight:800;color:var(--text2);margin-top:2px;}
 
 /* ═══════════════════════════════════════════
-   BENTO CONTAINER
+   DIFFICULTY CHIPS
 ═══════════════════════════════════════════ */
-.bento-container{
-  background:var(--panel);
-  border:3px solid var(--border);
-  border-radius:var(--radius);
-  padding:12px;
-  display:flex;flex-direction:column;gap:9px;
-  position:relative;z-index:1;
-  box-shadow:var(--shadow);
-}
-.bento-row{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
-
-/* ═══════════════════════════════════════════
-   BBOX
-═══════════════════════════════════════════ */
-.bbox{
-  background:var(--panel2);
-  border:2px solid var(--border);
-  border-radius:var(--radius);
-  padding:13px 15px;
-}
-.blabel{
-  display:flex;align-items:center;gap:6px;
-  font-size:13px;font-weight:900;color:var(--text);
-  margin-bottom:11px;padding-bottom:8px;
-  border-bottom:1px solid rgba(255,255,255,.08);
-}
-.bicon{font-size:15px;}
-
-/* ═══════════════════════════════════════════
-   TEAM BUTTONS
-═══════════════════════════════════════════ */
-.tbtn-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:9px;}
-.tbtn{
-  display:flex;align-items:center;gap:5px;
-  padding:7px 13px;
+.chip-row{display:flex;gap:8px;flex-wrap:wrap;}
+.chip{
+  flex:1;min-width:80px;
+  display:flex;flex-direction:column;align-items:center;gap:5px;
+  padding:13px 10px;
   background:var(--gray);
-  border:2px solid rgba(255,255,255,.12);
-  border-radius:var(--radius);
+  border:2px solid rgba(255,255,255,.1);border-radius:var(--r);
   color:var(--text);font-family:var(--fb);font-weight:800;font-size:13px;
-  cursor:pointer;transition:border-color .12s,background .12s;
+  cursor:pointer;transition:all .15s;text-align:center;
 }
-.tbtn:hover{border-color:var(--primary);}
-.tbtn.active{background:var(--primary);border-color:var(--primary);color:var(--panel);}
-.tinput-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:5px;}
-.tinput{
-  padding:6px 9px;
-  background:var(--gray);
-  border:2px solid rgba(255,255,255,.1);
-  border-left:3px solid var(--tc,var(--primary));
-  border-radius:var(--radius);
-  color:var(--text);font-family:var(--fb);font-weight:700;font-size:12px;
-  outline:none;width:100%;transition:border-color .12s;
+.chip .chip-icon{font-size:20px;display:block;}
+.chip:hover{border-color:var(--primary);}
+.chip.active{
+  background:rgba(0,255,204,.12);
+  border-color:var(--primary);color:var(--primary);
+  box-shadow:0 0 12px rgba(0,255,204,.2);
 }
-.tinput:focus{border-color:var(--primary);}
 
 /* ═══════════════════════════════════════════
-   DROPDOWN
+   QUESTION TYPE CHIPS
 ═══════════════════════════════════════════ */
-.dd-wrap{position:relative;}
-.dd-btn{
-  width:100%;display:flex;align-items:center;justify-content:space-between;
-  padding:9px 13px;
-  background:rgba(0,255,204,.05);
-  border:2px solid var(--primary);border-radius:var(--radius);
-  color:var(--text);font-family:var(--fb);font-size:13px;font-weight:800;
-  cursor:pointer;transition:background .12s;
-}
-.dd-btn:hover{background:rgba(0,255,204,.1);}
-.dd-arrow{color:var(--primary);font-size:11px;flex-shrink:0;}
-.dd-menu{
-  display:none;position:absolute;
-  top:calc(100% + 4px);left:0;right:0;
-  background:var(--panel);border:2px solid var(--primary);
-  border-radius:var(--radius);z-index:200;overflow:hidden;
-  box-shadow:var(--shadow);
-}
-.dd-menu.open{display:block;}
-.dd-opt{
-  padding:9px 13px;font-weight:800;font-size:13px;
-  cursor:pointer;color:var(--text);transition:background .1s;
-  border-bottom:1px solid rgba(255,255,255,.06);
-}
-.dd-opt:last-child{border-bottom:none;}
-.dd-opt:hover{background:rgba(0,255,204,.08);}
-.dd-opt.sel{color:var(--primary);}
-
-/* ═══════════════════════════════════════════
-   DIFFICULTY BUTTONS
-═══════════════════════════════════════════ */
-.diff-row{display:flex;gap:6px;flex-wrap:wrap;}
-.dbtn{
-  flex:1;min-width:60px;
-  padding:8px 6px;text-align:center;
+.qchip-row{display:flex;gap:8px;flex-wrap:wrap;}
+.qchip{
+  flex:1;min-width:80px;
+  display:flex;flex-direction:column;align-items:center;gap:5px;
+  padding:13px 10px;
   background:var(--gray);
-  border:2px solid rgba(255,255,255,.12);border-radius:var(--radius);
+  border:2px solid rgba(255,255,255,.1);border-radius:var(--r);
   color:var(--text);font-family:var(--fb);font-weight:800;font-size:12px;
-  cursor:pointer;transition:all .12s;
+  cursor:pointer;transition:all .15s;text-align:center;
 }
-.dbtn:hover{border-color:var(--primary);}
-.dbtn.active{background:var(--primary);border-color:var(--primary);color:var(--panel);}
+.qchip .qchip-icon{font-size:20px;display:block;}
+.qchip:hover{border-color:var(--accent);}
+.qchip.active{
+  background:rgba(255,0,187,.12);
+  border-color:var(--accent);color:var(--accent);
+  box-shadow:0 0 12px rgba(255,0,187,.2);
+}
 
 /* ═══════════════════════════════════════════
-   MODIFIERS (toggles)
+   MODIFIERS
 ═══════════════════════════════════════════ */
-.mod-row{display:flex;gap:7px;flex-wrap:wrap;}
-.tog-group{
-  display:flex;align-items:center;gap:7px;
-  background:var(--gray);border:2px solid rgba(255,255,255,.1);
-  border-radius:20px;padding:6px 11px;
+.mod-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.mod-item{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 16px;
+  background:var(--gray);
+  border:2px solid rgba(255,255,255,.08);border-radius:var(--r);
+  gap:12px;
 }
-.tog-label{font-size:12px;font-weight:800;color:var(--text);white-space:nowrap;}
+.mod-info{}
+.mod-name{font-weight:900;font-size:13px;color:var(--text);margin-bottom:2px;}
+.mod-desc{font-size:11px;color:var(--text2);}
 .tog{
-  width:40px;height:20px;
-  background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.18);
-  border-radius:10px;cursor:pointer;
-  position:relative;transition:all .2s;flex-shrink:0;
+  width:44px;height:24px;flex-shrink:0;
+  background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.15);
+  border-radius:12px;cursor:pointer;
+  position:relative;transition:all .2s;
 }
-.tog.on{background:var(--primary);border-color:var(--primary);}
+.tog.on{background:var(--primary);border-color:var(--primary);box-shadow:0 0 10px rgba(0,255,204,.35);}
 .tog::after{
   content:'';position:absolute;
-  top:1px;left:2px;
-  width:12px;height:12px;
+  top:2px;left:3px;
+  width:14px;height:14px;
   background:rgba(255,255,255,.5);border-radius:50%;
   transition:transform .2s;
 }
@@ -252,39 +281,33 @@ body{
 /* ═══════════════════════════════════════════
    PROMPT BOX
 ═══════════════════════════════════════════ */
-.prompt-box{
-  background:var(--panel2);
-  border:2px solid var(--border);
-  border-radius:var(--radius);
-  padding:13px 15px;
-}
 .prompt-ta{
-  width:100%;min-height:88px;
-  padding:11px 13px;
-  background:var(--gray);
-  border:2px solid rgba(255,255,255,.1);border-radius:var(--radius);
+  width:100%;min-height:90px;
+  padding:14px 16px;
+  background:rgba(255,255,255,.04);
+  border:2px solid rgba(255,255,255,.1);border-radius:var(--r);
   color:var(--text);font-family:var(--fb);font-size:14px;font-weight:700;
   resize:vertical;outline:none;
-  transition:border-color .15s;margin-bottom:11px;
+  transition:border-color .15s;margin-bottom:14px;
 }
-.prompt-ta:focus{border-color:var(--primary);}
+.prompt-ta:focus{border-color:var(--primary);box-shadow:0 0 12px rgba(0,255,204,.1);}
 .prompt-ta::placeholder{color:var(--text2);}
 
 /* ═══════════════════════════════════════════
    START BUTTON
 ═══════════════════════════════════════════ */
 .btn-start{
-  width:100%;padding:15px;
+  width:100%;padding:16px;
   background:var(--primary);
-  border:3px solid rgba(0,0,0,.3);border-radius:var(--radius);
+  border:3px solid rgba(0,0,0,.25);border-radius:var(--r);
   color:var(--panel);
-  font-family:var(--fh);font-size:19px;letter-spacing:.3px;
-  cursor:pointer;transition:filter .12s,transform .1s;
-  box-shadow:0 0 20px rgba(0,255,204,.3);
+  font-family:var(--fh);font-size:20px;letter-spacing:.5px;
+  cursor:pointer;transition:filter .15s,transform .12s,box-shadow .15s;
+  box-shadow:0 0 24px rgba(0,255,204,.35);
 }
-.btn-start:hover{filter:brightness(1.1);transform:translateY(-1px);}
+.btn-start:hover{filter:brightness(1.08);transform:translateY(-2px);box-shadow:0 0 36px rgba(0,255,204,.55);}
 .btn-start:active{transform:translateY(1px);}
-.btn-start:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+.btn-start:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none;}
 
 /* ═══════════════════════════════════════════
    LOADING
@@ -292,44 +315,44 @@ body{
 .loading-overlay{
   display:none;position:fixed;inset:0;
   background:var(--panel);z-index:9999;
-  flex-direction:column;align-items:center;justify-content:center;gap:18px;
+  flex-direction:column;align-items:center;justify-content:center;gap:20px;
 }
 .loading-overlay.active{display:flex;}
-.load-logo{height:108px;}
+.load-logo{height:108px;animation:logoPulse 2s ease-in-out infinite;}
+@keyframes logoPulse{0%,100%{filter:drop-shadow(0 0 10px rgba(0,255,204,.4))}50%{filter:drop-shadow(0 0 24px rgba(0,255,204,.8));}}
 .load-bar-wrap{
-  width:190px;height:5px;
-  background:rgba(255,255,255,.08);
-  border:2px solid var(--primary);border-radius:var(--radius);overflow:hidden;
+  width:200px;height:5px;
+  background:rgba(255,255,255,.07);
+  border:2px solid var(--primary);border-radius:3px;overflow:hidden;
 }
 .load-bar{height:100%;background:var(--primary);animation:sweep 1.2s linear infinite;}
 @keyframes sweep{0%{transform:translateX(-100%)}100%{transform:translateX(300%)}}
-.load-text{
-  font-family:var(--fh);font-size:12px;
-  color:var(--text2);letter-spacing:3px;text-transform:uppercase;
-}
+.load-text{font-family:var(--fh);font-size:12px;color:var(--text2);letter-spacing:3px;text-transform:uppercase;}
 
 /* ═══════════════════════════════════════════
-   GRID FLOOR (synthwave)
+   GRID FLOOR
 ═══════════════════════════════════════════ */
 .grid-floor{
   position:fixed;bottom:0;left:0;right:0;height:80px;
   pointer-events:none;z-index:0;
   background-image:
-    linear-gradient(rgba(0,255,204,.12) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(0,255,204,.12) 1px,transparent 1px);
+    linear-gradient(rgba(0,255,204,.1) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,255,204,.1) 1px,transparent 1px);
   background-size:40px 40px;
-  transform:perspective(300px) rotateX(55deg);
-  transform-origin:bottom;
-  opacity:.7;
+  transform:perspective(300px) rotateX(55deg);transform-origin:bottom;opacity:.6;
 }
 
 /* ═══════════════════════════════════════════
    RESPONSIVE
 ═══════════════════════════════════════════ */
-@media(max-width:560px){
-  .bento-row{grid-template-columns:1fr;}
-  .hdr-inner{padding:0 12px;}
+@media(max-width:620px){
+  .card-row{grid-template-columns:1fr;}
+  .mod-grid{grid-template-columns:1fr;}
   .hdr-logo{height:64px;}
+  .gp-cell{width:28px;height:28px;}
+}
+@media(max-width:400px){
+  .gp-cell{width:22px;height:22px;}
 }
 </style>
 </head>
@@ -357,10 +380,6 @@ body{
   </div>
 </header>
 
-<!-- DECORATIONS -->
-<div class="deco-wrap" id="deco-wrap"></div>
-
-<!-- MAIN -->
 <main class="setup-body">
 
   <div class="page-title-wrap">
@@ -369,108 +388,111 @@ body{
     <span class="title-deco">+</span>
   </div>
 
-  <div class="bento-container">
+  <!-- TEAMS -->
+  <div class="card">
+    <div class="sec-label"><span>👥</span><span data-i18n="teamsTitle">Teams</span></div>
+    <div class="team-count-row" id="team-count-row"></div>
+    <div class="team-inputs-grid" id="team-inputs"></div>
+  </div>
 
-    <!-- ROW 1: Teams + Board -->
-    <div class="bento-row">
-
-      <!-- TEAMS -->
-      <div class="bbox">
-        <div class="blabel"><span class="bicon">👥</span><span data-i18n="teamsTitle">Teams</span></div>
-        <div class="tbtn-row" id="team-btn-row"></div>
-        <div class="tinput-grid" id="team-inputs"></div>
+  <!-- BOARD SIZE (excel picker) -->
+  <div class="card">
+    <div class="sec-label"><span>⊞</span><span data-i18n="gridTitle">Board Size</span></div>
+    <div class="gp-wrap">
+      <div class="gp-grid" id="gp-grid"></div>
+      <div>
+        <div class="gp-label" id="gp-label">4 Categories × 3 Rows</div>
+        <div class="gp-sublabel" id="gp-sublabel">12 questions total</div>
       </div>
-
-      <!-- BOARD SIZE -->
-      <div class="bbox">
-        <div class="blabel"><span class="bicon">⊞</span><span data-i18n="gridTitle">Board</span></div>
-        <div class="dd-wrap" style="margin-bottom:9px;">
-          <button class="dd-btn" id="grid-btn" type="button" onclick="toggleDrop('grid-drop')">
-            <span id="grid-label">4 × 3</span>
-            <span class="dd-arrow">▾</span>
-          </button>
-          <div class="dd-menu" id="grid-drop">
-            <div class="dd-opt sel" onclick="pickGrid(4,3,this)">4 × 3 <small style="color:var(--text2)">(12 q)</small></div>
-            <div class="dd-opt" onclick="pickGrid(5,4,this)">5 × 4 <small style="color:var(--text2)">(20 q)</small></div>
-            <div class="dd-opt" onclick="pickGrid(5,5,this)">5 × 5 <small style="color:var(--text2)">(25 q)</small></div>
-            <div class="dd-opt" onclick="pickGrid(6,5,this)">6 × 5 <small style="color:var(--text2)">(30 q)</small></div>
-            <div class="dd-opt" onclick="pickGrid(6,6,this)">6 × 6 <small style="color:var(--text2)">(36 q)</small></div>
-          </div>
-        </div>
-        <p style="font-size:12px;font-weight:800;color:var(--text2);">
-          <span data-i18n="categoriesLabel">Categories</span> <strong id="grid-cols" style="color:var(--text)">4</strong>
-          <span style="margin:0 6px;opacity:.3">|</span>
-          <span data-i18n="rowsLabel">Rows</span> <strong id="grid-rows" style="color:var(--text)">3</strong>
-        </p>
-      </div>
-
     </div>
+  </div>
 
-    <!-- ROW 2: Difficulty + Q-Type -->
-    <div class="bento-row">
+  <!-- DIFFICULTY + QUESTION TYPE -->
+  <div class="card-row">
 
-      <!-- DIFFICULTY -->
-      <div class="bbox">
-        <div class="blabel"><span class="bicon">🎯</span><span data-i18n="diffTitle">Difficulty</span></div>
-        <div class="diff-row">
-          <button class="dbtn" data-val="easy" onclick="pickDiff(this)">🟢 <span data-i18n="easy">Easy</span></button>
-          <button class="dbtn active" data-val="medium" onclick="pickDiff(this)">🟡 <span data-i18n="medium">Med</span></button>
-          <button class="dbtn" data-val="hard" onclick="pickDiff(this)">🔴 <span data-i18n="hard">Hard</span></button>
-          <button class="dbtn" data-val="mixed" onclick="pickDiff(this)">🎲 <span data-i18n="mixed">Mix</span></button>
-        </div>
-      </div>
-
-      <!-- QUESTION TYPE -->
-      <div class="bbox">
-        <div class="blabel"><span class="bicon">💬</span><span data-i18n="qtypeTitle">Question Type</span></div>
-        <div class="dd-wrap">
-          <button class="dd-btn" id="qtype-btn" type="button" onclick="toggleDrop('qtype-drop')">
-            <span id="qtype-label">🅰️ Multiple Choice</span>
-            <span class="dd-arrow">▾</span>
-          </button>
-          <div class="dd-menu" id="qtype-drop">
-            <div class="dd-opt sel" onclick="pickQtype('multiple',this)">🅰️ <span data-i18n="mcLabel">Multiple Choice</span></div>
-            <div class="dd-opt" onclick="pickQtype('open',this)">💬 <span data-i18n="openLabel">Open Ended</span></div>
-            <div class="dd-opt" onclick="pickQtype('drawing',this)">✏️ <span data-i18n="drawLabel">Draw It!</span></div>
-            <div class="dd-opt" onclick="pickQtype('mixed',this)">🎲 <span data-i18n="mixedLabel">Mixed</span></div>
-          </div>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- ROW 3: Modifiers -->
-    <div class="bbox">
-      <div class="blabel"><span class="bicon">⚙️</span><span data-i18n="modTitle">Modifiers</span></div>
-      <div class="mod-row">
-        <div class="tog-group">
-          <span class="tog-label" data-i18n="timerLabel">Timer</span>
-          <div class="tog on" id="tog-timer" onclick="this.classList.toggle('on')"></div>
-        </div>
-        <div class="tog-group">
-          <span class="tog-label" data-i18n="bonusLabel">Bonus Round</span>
-          <div class="tog on" id="tog-bonus" onclick="this.classList.toggle('on')"></div>
-        </div>
-        <div class="tog-group">
-          <span class="tog-label" data-i18n="speedLabel">Speed Mode</span>
-          <div class="tog" id="tog-speed" onclick="this.classList.toggle('on')"></div>
-        </div>
+    <div class="card">
+      <div class="sec-label"><span>🎯</span><span data-i18n="diffTitle">Difficulty</span></div>
+      <div class="chip-row" id="diff-row">
+        <button class="chip" data-val="easy" onclick="pickDiff(this)">
+          <span class="chip-icon">🟢</span>
+          <span data-i18n="easy">Easy</span>
+        </button>
+        <button class="chip active" data-val="medium" onclick="pickDiff(this)">
+          <span class="chip-icon">🟡</span>
+          <span data-i18n="medium">Medium</span>
+        </button>
+        <button class="chip" data-val="hard" onclick="pickDiff(this)">
+          <span class="chip-icon">🔴</span>
+          <span data-i18n="hard">Hard</span>
+        </button>
+        <button class="chip" data-val="mixed" onclick="pickDiff(this)">
+          <span class="chip-icon">🎲</span>
+          <span data-i18n="mixed">Mixed</span>
+        </button>
       </div>
     </div>
 
-    <!-- PROMPT -->
-    <div class="prompt-box">
-      <div class="blabel" style="margin-bottom:9px;border-bottom:none;padding-bottom:0;">
-        <span class="bicon">🤖</span>
-        <span data-i18n="promptTitle">Describe your quiz...</span>
+    <div class="card">
+      <div class="sec-label"><span>💬</span><span data-i18n="qtypeTitle">Question Type</span></div>
+      <div class="qchip-row">
+        <button class="qchip active" data-val="multiple" onclick="pickQtype('multiple',this)">
+          <span class="qchip-icon">🅰️</span>
+          <span data-i18n="mcLabel">Multiple Choice</span>
+        </button>
+        <button class="qchip" data-val="open" onclick="pickQtype('open',this)">
+          <span class="qchip-icon">💬</span>
+          <span data-i18n="openLabel">Open Ended</span>
+        </button>
+        <button class="qchip" data-val="drawing" onclick="pickQtype('drawing',this)">
+          <span class="qchip-icon">✏️</span>
+          <span data-i18n="drawLabel">Draw It!</span>
+        </button>
+        <button class="qchip" data-val="mixed" onclick="pickQtype('mixed',this)">
+          <span class="qchip-icon">🎲</span>
+          <span data-i18n="mixedLabel">Mixed</span>
+        </button>
       </div>
-      <textarea class="prompt-ta" id="ai-prompt" placeholder="Create a quiz about the French Revolution for 9th grade students..."></textarea>
-      <button class="btn-start" id="gen-btn" onclick="startGame()">
-        <span data-i18n="startBtn">Start Mission →</span>
-      </button>
     </div>
 
-  </div><!-- /bento-container -->
+  </div><!-- /card-row -->
+
+  <!-- MODIFIERS -->
+  <div class="card">
+    <div class="sec-label"><span>⚙️</span><span data-i18n="modTitle">Modifiers</span></div>
+    <div class="mod-grid">
+      <div class="mod-item">
+        <div class="mod-info">
+          <div class="mod-name" data-i18n="timerLabel">Timer</div>
+          <div class="mod-desc" data-i18n="timerDesc">30s per question</div>
+        </div>
+        <div class="tog on" id="tog-timer" onclick="this.classList.toggle('on')"></div>
+      </div>
+      <div class="mod-item">
+        <div class="mod-info">
+          <div class="mod-name" data-i18n="bonusLabel">Bonus Round</div>
+          <div class="mod-desc" data-i18n="bonusDesc">Teams bet points</div>
+        </div>
+        <div class="tog on" id="tog-bonus" onclick="this.classList.toggle('on')"></div>
+      </div>
+      <div class="mod-item">
+        <div class="mod-info">
+          <div class="mod-name" data-i18n="speedLabel">Speed Mode</div>
+          <div class="mod-desc" data-i18n="speedDesc">15s, first buzzer wins</div>
+        </div>
+        <div class="tog" id="tog-speed" onclick="this.classList.toggle('on')"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROMPT + START -->
+  <div class="card">
+    <div class="sec-label"><span>🤖</span><span data-i18n="promptTitle">Describe your quiz</span></div>
+    <textarea class="prompt-ta" id="ai-prompt" placeholder="Create a quiz about the French Revolution for 9th grade students..."></textarea>
+    <button class="btn-start" id="gen-btn" onclick="startGame()">
+      <span data-i18n="startBtn">Start Mission →</span>
+    </button>
+  </div>
+
 </main>
 
 <div class="grid-floor"></div>
@@ -478,53 +500,59 @@ body{
 <script>
 /* ══════════ I18N ══════════ */
 const T = {
-  en: {
+  en:{
     pageTitle:'Create your challenge!',
-    teamsTitle:'Teams', gridTitle:'Board',
-    categoriesLabel:'Categories', rowsLabel:'Rows',
-    diffTitle:'Difficulty', easy:'Easy', medium:'Med', hard:'Hard', mixed:'Mix',
+    teamsTitle:'Teams', gridTitle:'Board Size',
+    diffTitle:'Difficulty', easy:'Easy', medium:'Medium', hard:'Hard', mixed:'Mixed',
     qtypeTitle:'Question Type',
-    mcLabel:'Multiple Choice', openLabel:'Open Ended',
-    drawLabel:'Draw It!', mixedLabel:'Mixed',
-    modTitle:'Modifiers', timerLabel:'Timer', bonusLabel:'Bonus Round', speedLabel:'Speed Mode',
-    promptTitle:'Describe your quiz...',
+    mcLabel:'Multiple Choice', openLabel:'Open Ended', drawLabel:'Draw It!', mixedLabel:'Mixed',
+    modTitle:'Modifiers',
+    timerLabel:'Timer', timerDesc:'30s per question',
+    bonusLabel:'Bonus Round', bonusDesc:'Teams bet points',
+    speedLabel:'Speed Mode', speedDesc:'15s, first buzzer wins',
+    promptTitle:'Describe your quiz',
     startBtn:'Start Mission →',
     promptPH:"Create a quiz about the French Revolution for 9th grade students...",
     noPrompt:'Please describe your quiz topic!',
     generating:'Generating your game...',
     teamDefaults:['Team 1','Team 2','Team 3','Team 4','Team 5','Team 6','Team 7','Team 8'],
+    categories:'Categories', rows:'Rows', questions:'questions total',
   },
-  pt: {
+  pt:{
     pageTitle:'Crie seu desafio!',
-    teamsTitle:'Times', gridTitle:'Tabuleiro',
-    categoriesLabel:'Categorias', rowsLabel:'Linhas',
+    teamsTitle:'Times', gridTitle:'Tamanho do Tabuleiro',
     diffTitle:'Dificuldade', easy:'Fácil', medium:'Médio', hard:'Difícil', mixed:'Misto',
     qtypeTitle:'Tipo de Pergunta',
-    mcLabel:'Múltipla Escolha', openLabel:'Aberta',
-    drawLabel:'Desenhe!', mixedLabel:'Mista',
-    modTitle:'Modificadores', timerLabel:'Cronômetro', bonusLabel:'Rodada Bônus', speedLabel:'Velocidade',
-    promptTitle:'Descreva seu quiz...',
+    mcLabel:'Múltipla Escolha', openLabel:'Aberta', drawLabel:'Desenhe!', mixedLabel:'Mista',
+    modTitle:'Modificadores',
+    timerLabel:'Cronômetro', timerDesc:'30s por pergunta',
+    bonusLabel:'Rodada Bônus', bonusDesc:'Times apostam pontos',
+    speedLabel:'Velocidade', speedDesc:'15s, primeiro a tocar vence',
+    promptTitle:'Descreva seu quiz',
     startBtn:'Iniciar Missão →',
     promptPH:"Crie um quiz sobre a Revolução Francesa para o 9º ano...",
     noPrompt:'Por favor, descreva o tema do quiz!',
     generating:'Gerando seu jogo...',
     teamDefaults:['Time 1','Time 2','Time 3','Time 4','Time 5','Time 6','Time 7','Time 8'],
+    categories:'Categorias', rows:'Linhas', questions:'perguntas no total',
   },
-  es: {
+  es:{
     pageTitle:'¡Crea tu desafío!',
-    teamsTitle:'Equipos', gridTitle:'Tablero',
-    categoriesLabel:'Categorías', rowsLabel:'Filas',
+    teamsTitle:'Equipos', gridTitle:'Tamaño del Tablero',
     diffTitle:'Dificultad', easy:'Fácil', medium:'Medio', hard:'Difícil', mixed:'Mixto',
     qtypeTitle:'Tipo de Pregunta',
-    mcLabel:'Opción Múltiple', openLabel:'Abierta',
-    drawLabel:'¡Dibuja!', mixedLabel:'Mixta',
-    modTitle:'Modificadores', timerLabel:'Temporizador', bonusLabel:'Ronda Bonus', speedLabel:'Velocidad',
-    promptTitle:'Describe tu quiz...',
+    mcLabel:'Opción Múltiple', openLabel:'Abierta', drawLabel:'¡Dibuja!', mixedLabel:'Mixta',
+    modTitle:'Modificadores',
+    timerLabel:'Temporizador', timerDesc:'30s por pregunta',
+    bonusLabel:'Ronda Bonus', bonusDesc:'Equipos apuestan puntos',
+    speedLabel:'Velocidad', speedDesc:'15s, primero en pulsar gana',
+    promptTitle:'Describe tu quiz',
     startBtn:'Iniciar Misión →',
     promptPH:"Crea un quiz sobre la Revolución Francesa para estudiantes de 9° grado...",
     noPrompt:'¡Por favor describe el tema de tu quiz!',
     generating:'Generando tu juego...',
     teamDefaults:['Equipo 1','Equipo 2','Equipo 3','Equipo 4','Equipo 5','Equipo 6','Equipo 7','Equipo 8'],
+    categories:'Categorías', rows:'Filas', questions:'preguntas en total',
   }
 };
 
@@ -540,21 +568,8 @@ let teams=[];
 function init() {
   teams = T[lang].teamDefaults.map((n,i)=>({name:n,color:TEAM_COLORS[i]}));
   renderTeamButtons();
-  renderDecos();
+  initGridPicker();
   applyI18n();
-}
-
-function renderDecos() {
-  const w=document.getElementById('deco-wrap');
-  const items=[
-    {t:'+',x:4,y:18,sz:26,col:'var(--primary)',op:.4},
-    {t:'✦',x:93,y:10,sz:16,col:'var(--accent)',op:.35},
-    {t:'+',x:7,y:65,sz:18,col:'var(--accent)',op:.3},
-    {t:'✦',x:96,y:60,sz:12,col:'var(--primary)',op:.25},
-    {t:'+',x:2,y:88,sz:22,col:'var(--primary)',op:.35},
-    {t:'+',x:91,y:85,sz:14,col:'var(--accent)',op:.25},
-  ];
-  w.innerHTML=items.map(d=>`<span class="deco" style="left:${d.x}%;top:${d.y}%;font-size:${d.sz}px;color:${d.col};opacity:${d.op}">${d.t}</span>`).join('');
 }
 
 /* ══════════ LANG ══════════ */
@@ -573,21 +588,18 @@ function applyI18n() {
     const k=el.getAttribute('data-i18n');
     if(d[k]!==undefined) el.textContent=d[k];
   });
-  const qtKeys=['mcLabel','openLabel','drawLabel','mixedLabel'];
-  const qtVals=['multiple','open','drawing','mixed'];
-  document.getElementById('qtype-label').textContent=
-    ['🅰️ ','💬 ','✏️ ','🎲 '][qtVals.indexOf(qType)]+d[qtKeys[qtVals.indexOf(qType)]];
+  updateGridLabel();
   renderTeamInputs();
 }
 
 /* ══════════ TEAMS ══════════ */
 function renderTeamButtons() {
-  const row=document.getElementById('team-btn-row');
+  const row=document.getElementById('team-count-row');
   row.innerHTML='';
   [2,3,4,5,6,8].forEach(n=>{
     const b=document.createElement('button');
-    b.className='tbtn'+(n===numTeams?' active':'');
-    b.innerHTML=`<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink:0"><circle cx="9" cy="7" r="4"/><path d="M2 21v-2a7 7 0 0 1 14 0v2"/><circle cx="19" cy="8" r="3"/><path d="M19 14c2.8.3 5 1.9 5 4v1"/></svg>${n}`;
+    b.className='tcnt'+(n===numTeams?' active':'');
+    b.innerHTML=`<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="display:inline;vertical-align:middle;margin-right:4px"><circle cx="9" cy="7" r="4"/><path d="M2 21v-2a7 7 0 0 1 14 0v2"/><circle cx="19" cy="8" r="3"/><path d="M19 14c2.8.3 5 1.9 5 4v1"/></svg>${n}`;
     b.onclick=()=>{numTeams=n;renderTeamButtons();};
     row.appendChild(b);
   });
@@ -600,49 +612,75 @@ function renderTeamInputs() {
   const defs=T[lang].teamDefaults;
   for(let i=0;i<numTeams;i++){
     if(!teams[i]) teams[i]={name:defs[i],color:TEAM_COLORS[i]};
+    const wrap=document.createElement('div');
+    wrap.className='tinput';
+    wrap.style.setProperty('--tc',TEAM_COLORS[i]);
     const inp=document.createElement('input');
-    inp.className='tinput';inp.type='text';inp.value=teams[i].name;
-    inp.style.setProperty('--tc',TEAM_COLORS[i]);
+    inp.type='text';inp.value=teams[i].name;
+    inp.placeholder=defs[i];
     inp.oninput=e=>teams[i].name=e.target.value;
-    g.appendChild(inp);
+    wrap.appendChild(inp);
+    g.appendChild(wrap);
   }
 }
 
-/* ══════════ GRID ══════════ */
-function toggleDrop(id) {
-  ['grid-drop','qtype-drop'].forEach(d=>{
-    if(d!==id) document.getElementById(d).classList.remove('open');
-  });
-  document.getElementById(id).classList.toggle('open');
+/* ══════════ EXCEL GRID PICKER ══════════ */
+const GP_COLS=8, GP_ROWS=6;
+
+function initGridPicker() {
+  const grid=document.getElementById('gp-grid');
+  grid.style.gridTemplateColumns=`repeat(${GP_COLS},1fr)`;
+  grid.innerHTML='';
+
+  for(let r=0;r<GP_ROWS;r++){
+    for(let c=0;c<GP_COLS;c++){
+      const cell=document.createElement('div');
+      cell.className='gp-cell';
+      cell.dataset.c=c;cell.dataset.r=r;
+      cell.addEventListener('mouseenter',()=>highlightGrid(c,r,false));
+      cell.addEventListener('click',()=>{numCols=c+1;numRows=r+1;highlightGrid(c,r,true);updateGridLabel();});
+      grid.appendChild(cell);
+    }
+  }
+
+  grid.addEventListener('mouseleave',()=>highlightGrid(numCols-1,numRows-1,true));
+  highlightGrid(numCols-1,numRows-1,true);
+  updateGridLabel();
 }
 
-function pickGrid(cols,rows,el) {
-  numCols=cols;numRows=rows;
-  document.getElementById('grid-label').textContent=`${cols} × ${rows}`;
-  document.getElementById('grid-cols').textContent=cols;
-  document.getElementById('grid-rows').textContent=rows;
-  document.querySelectorAll('#grid-drop .dd-opt').forEach(o=>o.classList.remove('sel'));
-  el.classList.add('sel');
-  document.getElementById('grid-drop').classList.remove('open');
+function highlightGrid(maxC,maxR,permanent) {
+  document.querySelectorAll('.gp-cell').forEach(cell=>{
+    const c=+cell.dataset.c, r=+cell.dataset.r;
+    const inside=c<=maxC&&r<=maxR;
+    cell.classList.toggle('hover',inside&&!permanent);
+    cell.classList.toggle('sel',inside&&permanent);
+  });
+  if(!permanent){
+    const d=T[lang];
+    document.getElementById('gp-label').textContent=`${maxC+1} ${d.categories} × ${maxR+1} ${d.rows}`;
+    document.getElementById('gp-sublabel').textContent=`${(maxC+1)*(maxR+1)} ${d.questions}`;
+  }
+}
+
+function updateGridLabel() {
+  const d=T[lang];
+  document.getElementById('gp-label').textContent=`${numCols} ${d.categories} × ${numRows} ${d.rows}`;
+  document.getElementById('gp-sublabel').textContent=`${numCols*numRows} ${d.questions}`;
+  highlightGrid(numCols-1,numRows-1,true);
 }
 
 /* ══════════ DIFFICULTY ══════════ */
 function pickDiff(btn) {
   difficulty=btn.dataset.val;
-  document.querySelectorAll('.dbtn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('#diff-row .chip').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
 }
 
 /* ══════════ Q TYPE ══════════ */
-function pickQtype(val,el) {
+function pickQtype(val,btn) {
   qType=val;
-  const keys=['mcLabel','openLabel','drawLabel','mixedLabel'];
-  const icons=['🅰️ ','💬 ','✏️ ','🎲 '];
-  const idx=['multiple','open','drawing','mixed'].indexOf(val);
-  document.getElementById('qtype-label').textContent=icons[idx]+T[lang][keys[idx]];
-  document.querySelectorAll('#qtype-drop .dd-opt').forEach(o=>o.classList.remove('sel'));
-  el.classList.add('sel');
-  document.getElementById('qtype-drop').classList.remove('open');
+  document.querySelectorAll('.qchip').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
 }
 
 /* ══════════ START ══════════ */
@@ -658,26 +696,15 @@ function startGame() {
   const config={
     numTeams,numRows,numCols,difficulty,qType,
     teams:teams.slice(0,numTeams),
-    lang,qLang,
-    timerOn,bonusOn,speedOn,
-    prompt
+    lang,qLang,timerOn,bonusOn,speedOn,prompt
   };
 
   document.getElementById('load-text').textContent=T[lang].generating;
   document.getElementById('loading').classList.add('active');
   document.getElementById('gen-btn').disabled=true;
-
   localStorage.setItem('jamboo_config',JSON.stringify(config));
   window.location.href='game.html';
 }
-
-/* ══════════ CLOSE DROPS ══════════ */
-document.addEventListener('click',e=>{
-  if(!e.target.closest('#grid-btn')&&!e.target.closest('#grid-drop'))
-    document.getElementById('grid-drop').classList.remove('open');
-  if(!e.target.closest('#qtype-btn')&&!e.target.closest('#qtype-drop'))
-    document.getElementById('qtype-drop').classList.remove('open');
-});
 
 init();
 </script>
