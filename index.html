@@ -131,23 +131,26 @@ body::before{
   margin-bottom:32px;
 }
 .config-row{
-  display:flex;align-items:center;gap:20px;
-  padding:18px 40px;
+  display:flex;flex-direction:column;align-items:center;
+  gap:16px;
+  padding:28px 40px;
   border-bottom:1px solid var(--row-border);
   transition:background .12s;
+  text-align:center;
 }
 .config-row:nth-child(odd){background:rgba(13,13,34,.55);}
 .config-row:nth-child(even){background:rgba(8,8,24,.55);}
 .config-row:hover{background:rgba(20,10,50,.7);}
 
 .config-row-lbl{
-  font-size:6px;letter-spacing:3px;text-transform:uppercase;
-  color:rgba(0,255,255,.65);
-  min-width:96px;flex-shrink:0;line-height:1.7;
+  font-size:12px;letter-spacing:3px;text-transform:uppercase;
+  color:rgba(0,255,255,.92);
+  text-shadow:0 0 16px var(--cyan),2px 2px 0 rgba(102,0,255,.55);
+  width:100%;text-align:center;line-height:1.6;
 }
 
 .config-btn-group{
-  flex:1;display:flex;gap:8px;
+  width:100%;display:flex;gap:8px;justify-content:center;
 }
 
 /* ─── pixel selection button ─── */
@@ -204,8 +207,8 @@ body::before{
 /* ═══════════════════════════════
    LED MATRIX GRID PICKER
 ═══════════════════════════════ */
-.config-row-grid{align-items:flex-start;padding-top:20px;padding-bottom:20px;}
-.grid-area{display:flex;align-items:center;gap:20px;flex-wrap:wrap;}
+.config-row-grid{padding-top:28px;padding-bottom:28px;}
+.grid-area{display:flex;align-items:center;gap:20px;flex-wrap:wrap;justify-content:center;}
 .led-matrix{display:grid;gap:4px;cursor:crosshair;user-select:none;}
 .led-cell{
   width:26px;height:26px;
@@ -389,8 +392,8 @@ body::before{
 @media(max-width:700px){
   .hdr-logo{height:150px;margin-bottom:-30px;}
   .synth-body{padding-top:44px;}
-  .config-row{padding:14px 16px;gap:12px;flex-wrap:wrap;}
-  .config-row-lbl{min-width:100%;margin-bottom:4px;}
+  .config-row{padding:20px 16px;gap:12px;}
+  .config-row-lbl{font-size:9px;}
   .content-area{padding:0 16px;}
 }
 @media(max-width:400px){
