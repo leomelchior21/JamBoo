@@ -500,41 +500,32 @@ body::before{
     </div>
 
 
-  </div><!-- /config-grid -->
-
-  <!-- ══ CONTENT AREA ══ -->
-  <div class="content-area">
-
-    <!-- TEAM NAMES -->
-    <div class="team-row-wrap">
-      <div class="team-row-label">
-        <span class="team-row-dot"></span>
-        <span data-i18n="teamNamesLabel">TEAM NAMES</span>
-      </div>
+    <!-- ROW: TEAM NAMES -->
+    <div class="config-row">
+      <div class="config-row-lbl" data-i18n="teamNamesLabel">TEAM NAMES</div>
       <div class="lcd-strips" id="team-inputs"></div>
     </div>
 
-    <!-- AI PROMPT -->
-    <div class="prompt-wrap">
-      <div class="prompt-label">
-        <span class="team-row-dot"></span>
+    <!-- ROW: AI PROMPT -->
+    <div class="config-row">
+      <div class="config-row-lbl">
         <span data-i18n="promptTitle">ENTER YOUR QUEST</span>
         <span class="lcd-cursor"></span>
       </div>
-      <div class="lcd-screen">
+      <div class="lcd-screen" style="width:100%">
         <textarea class="lcd-ta" id="ai-prompt" placeholder="> Describe your quiz..."></textarea>
       </div>
     </div>
 
-    <!-- LAUNCH -->
-    <div class="launch-wrap">
-      <div class="launch-label" data-i18n="launchLabel">◄ PRESS START ►</div>
-      <button class="btn-launch" id="gen-btn" onclick="startGame()">
-        ▶ &nbsp;<span data-i18n="startBtn">START GAME</span>
-      </button>
-    </div>
+  </div><!-- /config-grid -->
 
-  </div><!-- /content-area -->
+  <!-- LAUNCH -->
+  <div class="launch-wrap" style="padding:24px 80px 8px;">
+    <div class="launch-label" data-i18n="launchLabel">◄ PRESS START ►</div>
+    <button class="btn-launch" id="gen-btn" onclick="startGame()">
+      ▶ &nbsp;<span data-i18n="startBtn">START GAME</span>
+    </button>
+  </div>
 
 </div><!-- /synth-body -->
 
