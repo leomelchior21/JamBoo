@@ -5,52 +5,64 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>JamBoo — Quiz Generator 9000</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
-/* ═══════════════════════════════════════════
+/* ═══════════════════════════════
    BASE
-═══════════════════════════════════════════ */
+═══════════════════════════════ */
 :root{
   --bg:#07071A;
-  --panel:#0F0F24;
-  --module:#0A0A1E;
-  --border:#BF00FF;
-  --cyan:#00FFCC;
-  --pink:#FF2D95;
-  --amber:#F5C518;
+  --panel:#0D0D22;
+  --module:#101026;
+  --b1:#6600FF;
+  --b2:#AA00FF;
+  --cyan:#00FFFF;
+  --green:#00FF41;
+  --pink:#FF00FF;
+  --yellow:#FFD700;
+  --red:#FF2244;
   --text:#FFFFFF;
-  --text2:rgba(255,255,255,.38);
-  --fh:'Fredoka One',cursive;
-  --fb:'Nunito',sans-serif;
-  --fmono:'Courier New',monospace;
+  --dim:rgba(255,255,255,.38);
+  --fp:'Press Start 2P',monospace;
+  --fmono:'Press Start 2P',monospace;
 }
+
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+
 body{
-  font-family:var(--fb);
+  font-family:var(--fp);
   background:var(--bg);
   color:var(--text);
   min-height:100vh;
-  -webkit-font-smoothing:antialiased;
-  padding:0 0 60px;
+  padding:0 0 80px;
 }
 
-/* ═══════════════════════════════════════════
+/* Dot grid background */
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:radial-gradient(rgba(102,0,255,.12) 1px,transparent 1px);
+  background-size:24px 24px;
+}
+
+/* ═══════════════════════════════
    HEADER
-═══════════════════════════════════════════ */
+═══════════════════════════════ */
 .hdr{
   background:var(--panel);
-  border-bottom:3px solid var(--border);
-  min-height:140px;display:flex;align-items:center;
-  position:relative;overflow:hidden;
+  border-bottom:4px solid var(--b1);
+  box-shadow:0 4px 0 rgba(102,0,255,.35);
+  min-height:130px;display:flex;align-items:center;
+  position:relative;overflow:hidden;z-index:1;
 }
+/* star field */
 .hdr::before{
   content:'';position:absolute;inset:0;pointer-events:none;
   background-image:
-    radial-gradient(circle,rgba(0,255,204,.28) 1px,transparent 1px),
-    radial-gradient(circle,rgba(191,0,255,.22) 1px,transparent 1px);
-  background-size:55px 35px,88px 50px;
-  background-position:8px 6px,30px 18px;
-  opacity:.4;
+    radial-gradient(rgba(255,255,255,.8) 1px,transparent 1px),
+    radial-gradient(rgba(0,255,255,.6) 1px,transparent 1px),
+    radial-gradient(rgba(255,0,255,.5) 1px,transparent 1px);
+  background-size:55px 45px,100px 80px,140px 95px;
+  background-position:12px 10px,44px 26px,72px 9px;
 }
 .hdr-inner{
   position:relative;z-index:1;width:100%;
@@ -58,506 +70,433 @@ body{
   padding:0 24px;
 }
 .hdr-logo{
-  height:118px;width:auto;
-  transition:transform .4s cubic-bezier(.34,1.56,.64,1),filter .4s ease;
+  height:108px;width:auto;
+  transition:transform .1s steps(3),filter .1s;
   cursor:pointer;
+  image-rendering:pixelated;
 }
 .hdr-logo:hover{
-  transform:scale(1.08) translateY(-5px);
-  filter:drop-shadow(0 0 26px rgba(0,255,204,.8)) drop-shadow(0 0 10px rgba(191,0,255,.65));
+  transform:scale(1.07) translateY(-5px);
+  filter:drop-shadow(0 0 14px var(--cyan)) drop-shadow(4px 4px 0 var(--b1));
 }
 .hdr-right{
-  display:flex;align-items:center;gap:10px;
-  position:absolute;right:24px;
+  position:absolute;right:20px;
+  display:flex;gap:4px;
 }
-.pill-group{
-  display:inline-flex;background:rgba(255,255,255,.04);
-  border:2px solid var(--border);border-radius:6px;overflow:hidden;
-}
+
+/* ═══════════════════════════════
+   LANGUAGE BUTTONS
+═══════════════════════════════ */
+.pill-group{display:inline-flex;gap:4px;}
 .pill-btn{
-  padding:7px 13px;border:none;background:transparent;
-  color:var(--text2);font-family:var(--fb);font-weight:800;font-size:11px;
-  cursor:pointer;text-transform:uppercase;letter-spacing:.5px;
-  transition:background .15s,color .15s;
+  padding:7px 10px;
+  background:#14143A;
+  border:3px solid #2A2A55;
+  box-shadow:3px 3px 0 #000;
+  color:var(--dim);
+  font-family:var(--fp);font-size:6px;
+  cursor:pointer;text-transform:uppercase;
+  transition:all .08s;
 }
-.pill-btn+.pill-btn{border-left:2px solid var(--border);}
-.pill-btn.active{background:var(--border);color:#fff;}
+.pill-btn:hover{border-color:var(--cyan);color:var(--cyan);}
+.pill-btn.active{
+  background:var(--b1);border-color:var(--b2);
+  color:#fff;box-shadow:3px 3px 0 #000;
+}
 
-/* ═══════════════════════════════════════════
-   SYNTH BODY (outer wrap)
-═══════════════════════════════════════════ */
+/* ═══════════════════════════════
+   PAGE BODY
+═══════════════════════════════ */
 .synth-body{
-  max-width:980px;margin:0 auto;
-  padding:20px 16px 0;
+  position:relative;z-index:1;
+  max-width:960px;margin:0 auto;
+  padding:22px 16px 0;
 }
 
-/* PAGE TITLE */
 .synth-title{
-  font-family:var(--fh);
-  font-size:clamp(22px,4.5vw,36px);
+  text-align:center;padding:10px 0 16px;
+}
+.synth-title span{
+  display:block;
+  font-size:clamp(10px,2.4vw,17px);
   color:var(--cyan);
-  text-shadow:0 0 20px rgba(0,255,204,.5);
-  text-align:center;
-  padding:18px 0 14px;
-  letter-spacing:.5px;
+  text-shadow:0 0 20px var(--cyan),3px 3px 0 var(--b1);
+  letter-spacing:2px;
 }
 .synth-title small{
-  font-family:var(--fmono);
-  font-size:10px;letter-spacing:4px;text-transform:uppercase;
-  color:var(--text2);display:block;margin-top:4px;
+  display:block;font-size:6px;
+  color:var(--dim);letter-spacing:4px;margin-top:10px;
 }
 
-/* ═══════════════════════════════════════════
-   SYNTH PANEL SHELL
-═══════════════════════════════════════════ */
+/* ═══════════════════════════════
+   PIXEL PANEL SHELL
+═══════════════════════════════ */
 .synth-panel{
-  background:linear-gradient(170deg,#141430 0%,#0D0D22 55%,#121228 100%);
-  border:3px solid var(--border);
-  border-radius:14px;
-  padding:18px;
-  position:relative;
+  background:var(--panel);
+  border:4px solid var(--b1);
   box-shadow:
-    0 0 0 1px rgba(191,0,255,.2),
-    0 0 60px rgba(191,0,255,.18),
-    inset 0 0 50px rgba(0,0,0,.35);
-}
-/* Panel grid texture */
-.synth-panel::before{
-  content:'';position:absolute;inset:0;border-radius:14px;pointer-events:none;
-  background-image:
-    linear-gradient(rgba(255,255,255,.012) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(255,255,255,.012) 1px,transparent 1px);
-  background-size:22px 22px;
-}
-/* Screw heads */
-.screw{
-  position:absolute;width:12px;height:12px;border-radius:50%;
-  background:radial-gradient(circle at 38% 38%,#2A2A48,#141428);
-  border:1px solid rgba(255,255,255,.08);
-  box-shadow:inset 0 0 3px rgba(0,0,0,.6);
-  z-index:2;
-}
-.screw::after{/* cross slot */
-  content:'';position:absolute;inset:0;
-  background:
-    linear-gradient(rgba(0,0,0,.5) 45%,transparent 45%,transparent 55%,rgba(0,0,0,.5) 55%),
-    linear-gradient(90deg,rgba(0,0,0,.5) 45%,transparent 45%,transparent 55%,rgba(0,0,0,.5) 55%);
-  border-radius:50%;
-}
-.screw-tl{top:10px;left:10px;}
-.screw-tr{top:10px;right:10px;}
-.screw-bl{bottom:10px;left:10px;}
-.screw-br{bottom:10px;right:10px;}
-
-/* ═══════════════════════════════════════════
-   MODULE (rack unit)
-═══════════════════════════════════════════ */
-.module{
-  background:linear-gradient(145deg,#111128 0%,#0A0A1C 100%);
-  border:1px solid rgba(191,0,255,.22);
-  border-radius:8px;
-  padding:16px;
+    8px 8px 0 #000,
+    0 0 0 8px #000,
+    0 0 0 10px var(--b1);
+  padding:20px;
   position:relative;
+  margin-bottom:20px;
 }
-.mod-tag{
-  font-family:var(--fmono);
-  font-size:9px;font-weight:bold;letter-spacing:3px;text-transform:uppercase;
-  color:rgba(191,0,255,.7);
-  padding-bottom:11px;margin-bottom:14px;
-  border-bottom:1px solid rgba(191,0,255,.14);
-  display:flex;align-items:center;gap:8px;
+
+/* Pixel corner screws */
+.screw{
+  position:absolute;width:10px;height:10px;
+  background:var(--b2);border:2px solid #000;z-index:2;
 }
-.mod-tag-dot{
-  width:7px;height:7px;border-radius:50%;
-  background:var(--border);
-  box-shadow:0 0 6px rgba(191,0,255,.8);
-  flex-shrink:0;
-}
+.screw::after{display:none;}
+.screw-tl{top:-2px;left:-2px;}
+.screw-tr{top:-2px;right:-2px;}
+.screw-bl{bottom:-2px;left:-2px;}
+.screw-br{bottom:-2px;right:-2px;}
 
 /* Layout rows */
-.rack-row{display:grid;gap:10px;margin-bottom:10px;}
-.rack-row-2{grid-template-columns:1fr 1fr;}
-.rack-row-teams-board{grid-template-columns:1.15fr 1fr;}
+.rack-row{display:grid;gap:12px;margin-bottom:12px;}
+.rack-row-teams-board{grid-template-columns:1.2fr 1fr;}
 .rack-row-controls{grid-template-columns:1fr 1fr;}
 
-/* ═══════════════════════════════════════════
-   STEP SEQUENCER (team count)
-═══════════════════════════════════════════ */
-.sequencer{display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap;}
-.step-btn{
-  flex:1;min-width:50px;
-  height:44px;
-  border-radius:7px;
-  background:linear-gradient(160deg,#1C1C38,#12122A);
-  border:1px solid rgba(255,255,255,.07);
-  box-shadow:
-    inset 0 2px 6px rgba(0,0,0,.65),
-    inset 0 1px 0 rgba(255,255,255,.04),
-    0 1px 0 rgba(255,255,255,.03);
-  cursor:pointer;
-  color:var(--text2);
-  font-family:var(--fmono);font-weight:bold;font-size:14px;
-  display:flex;align-items:center;justify-content:center;gap:5px;
-  transition:all .12s;
+/* ═══════════════════════════════
+   MODULE (section box)
+═══════════════════════════════ */
+.module{
+  background:var(--module);
+  border:3px solid #2A1166;
+  padding:14px;
+  position:relative;
 }
-.step-btn:hover{border-color:rgba(0,255,204,.3);color:rgba(255,255,255,.7);}
-.step-btn.active{
-  background:linear-gradient(160deg,#00FFDD,#00BF99);
-  border-color:var(--cyan);color:#000;font-weight:900;
-  box-shadow:
-    0 0 14px rgba(0,255,204,.65),
-    0 0 28px rgba(0,255,204,.25),
-    inset 0 1px 0 rgba(255,255,255,.35),
-    inset 0 0 10px rgba(255,255,255,.1);
+/* top accent bar */
+.module::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:var(--b1);
 }
 
-/* ═══════════════════════════════════════════
-   LCD TEAM STRIPS
-═══════════════════════════════════════════ */
+.mod-tag{
+  font-size:7px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--b2);
+  padding-bottom:10px;margin-bottom:12px;
+  border-bottom:2px solid #1A0844;
+  display:flex;align-items:center;gap:7px;
+}
+.mod-tag-dot{
+  width:6px;height:6px;
+  background:var(--cyan);
+  box-shadow:0 0 6px var(--cyan);
+  flex-shrink:0;
+  animation:blink .8s step-end infinite;
+}
+
+/* ═══════════════════════════════
+   STEP BUTTONS (team count)
+═══════════════════════════════ */
+.sequencer{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;}
+.step-btn{
+  flex:1;min-width:44px;height:42px;
+  background:#121230;
+  border:3px solid #2A2A55;
+  box-shadow:3px 3px 0 #000;
+  color:var(--dim);
+  font-family:var(--fp);font-size:11px;
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:4px;
+  transition:all .08s;
+}
+.step-btn:hover{border-color:var(--cyan);color:var(--cyan);}
+.step-btn.active{
+  background:#003333;border-color:var(--cyan);color:var(--cyan);
+  box-shadow:3px 3px 0 #004444;
+  text-shadow:0 0 8px var(--cyan);
+}
+
+/* ═══════════════════════════════
+   LCD TEAM INPUTS
+═══════════════════════════════ */
 .lcd-strips{
   display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(120px,1fr));
-  gap:6px;
+  grid-template-columns:repeat(auto-fill,minmax(110px,1fr));
+  gap:5px;
 }
 .lcd-strip{
-  display:flex;align-items:center;gap:7px;
-  padding:7px 10px;
-  background:#04080A;
-  border:1px solid rgba(0,255,68,.18);
-  border-left:3px solid var(--tc,var(--cyan));
-  border-radius:4px;
-  box-shadow:inset 0 0 8px rgba(0,50,20,.5);
+  display:flex;align-items:center;gap:6px;
+  padding:6px 8px;
+  background:#020902;
+  border:2px solid rgba(0,255,65,.18);
+  border-left:4px solid var(--tc,var(--green));
 }
 .lcd-strip input{
   flex:1;background:transparent;border:none;outline:none;
-  color:#00FF44;font-family:var(--fmono);font-size:12px;font-weight:bold;
-  width:100%;caret-color:#00FF44;min-width:0;
+  color:var(--green);font-family:var(--fp);font-size:7px;
+  width:100%;caret-color:var(--green);min-width:0;
 }
-.lcd-strip input::placeholder{color:rgba(0,255,68,.3);}
+.lcd-strip input::placeholder{color:rgba(0,255,65,.22);}
 
-/* ═══════════════════════════════════════════
-   LED MATRIX (board size picker)
-═══════════════════════════════════════════ */
+/* ═══════════════════════════════
+   PIXEL GRID PICKER
+═══════════════════════════════ */
 .led-matrix-wrap{display:flex;flex-direction:column;align-items:flex-start;gap:10px;}
 .led-matrix{
-  display:grid;
-  gap:4px;
-  cursor:crosshair;
-  user-select:none;
+  display:grid;gap:3px;
+  cursor:crosshair;user-select:none;
 }
 .led-cell{
-  width:32px;height:32px;
-  border-radius:4px;
-  background:#070715;
-  border:1px solid rgba(191,0,255,.14);
-  transition:background .07s,border-color .07s,box-shadow .07s;
+  width:28px;height:28px;
+  background:#090920;
+  border:2px solid #1A1144;
+  transition:background .05s,border-color .05s;
 }
 .led-cell.hover{
-  background:rgba(0,255,204,.2);
-  border-color:rgba(0,255,204,.55);
+  background:rgba(0,255,255,.2);
+  border-color:var(--cyan);
 }
 .led-cell.sel{
-  background:rgba(0,255,204,.28);
+  background:rgba(0,255,255,.28);
   border-color:var(--cyan);
-  box-shadow:0 0 5px rgba(0,255,204,.45),inset 0 0 5px rgba(0,255,204,.18);
+  box-shadow:inset 0 0 4px rgba(0,255,255,.35);
 }
-.matrix-readout{margin-top:2px;}
+.matrix-readout{margin-top:4px;}
 .matrix-main{
-  font-family:var(--fh);font-size:18px;
-  color:var(--cyan);text-shadow:0 0 10px rgba(0,255,204,.4);
+  font-size:13px;color:var(--cyan);
+  text-shadow:3px 3px 0 var(--b1);
+  margin-bottom:6px;
 }
-.matrix-sub{font-family:var(--fmono);font-size:10px;color:var(--text2);letter-spacing:1px;}
+.matrix-sub{font-size:7px;color:var(--dim);letter-spacing:1px;}
 
-/* ═══════════════════════════════════════════
-   DRUM PADS (difficulty + q-type)
-═══════════════════════════════════════════ */
+/* ═══════════════════════════════
+   PAD BUTTONS (difficulty / qtype)
+═══════════════════════════════ */
 .pad-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
 .pad-btn{
   aspect-ratio:1;
-  border-radius:9px;
-  background:linear-gradient(145deg,#1C1C38,#12122A);
-  border:1px solid rgba(255,255,255,.07);
-  box-shadow:
-    inset 0 3px 8px rgba(0,0,0,.7),
-    inset 0 1px 0 rgba(255,255,255,.04),
-    0 1px 0 rgba(255,255,255,.03);
+  background:#0E0E28;
+  border:3px solid #252550;
+  box-shadow:4px 4px 0 #000;
   cursor:pointer;
-  transition:all .12s;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:7px;
-  color:var(--text2);
-  font-family:var(--fmono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;
-  position:relative;overflow:hidden;
-  padding:10px 6px;
+  gap:6px;
+  color:var(--dim);
+  font-family:var(--fp);font-size:6px;letter-spacing:1px;text-transform:uppercase;
+  position:relative;padding:8px 4px;
+  transition:all .08s;
 }
-/* LED dot in top-right corner */
 .pad-btn::before{
-  content:'';position:absolute;top:7px;right:7px;
-  width:6px;height:6px;border-radius:50%;
-  background:rgba(255,255,255,.1);
-  transition:all .12s;
+  content:'';position:absolute;top:5px;right:5px;
+  width:5px;height:5px;background:rgba(255,255,255,.1);
 }
-.pad-btn .pad-icon{font-size:22px;transition:transform .12s;}
-.pad-btn:hover{border-color:rgba(255,255,255,.18);}
-.pad-btn:hover .pad-icon{transform:scale(1.15);}
+.pad-btn .pad-icon{font-size:20px;}
+.pad-btn:hover{
+  border-color:rgba(255,255,255,.3);
+  transform:translate(-1px,-1px);
+  box-shadow:5px 5px 0 #000;
+}
+.pad-btn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 #000;}
 
-/* Cyan active (difficulty) */
+/* cyan active — difficulty */
 .pad-btn.active{
-  background:linear-gradient(145deg,rgba(0,255,204,.12),rgba(0,255,204,.04));
-  border-color:var(--cyan);color:var(--cyan);
-  box-shadow:
-    0 0 18px rgba(0,255,204,.35),
-    inset 0 0 14px rgba(0,255,204,.07),
-    inset 0 2px 5px rgba(0,0,0,.4);
+  background:#001A1A;border-color:var(--cyan);color:var(--cyan);
+  box-shadow:4px 4px 0 #003333;
+  text-shadow:0 0 8px var(--cyan);
 }
-.pad-btn.active::before{background:var(--cyan);box-shadow:0 0 8px rgba(0,255,204,.9);}
+.pad-btn.active::before{background:var(--cyan);box-shadow:0 0 6px var(--cyan);}
 
-/* Magenta active (q-type) */
+/* magenta active — q-type */
 .pad-btn.active-accent{
-  background:linear-gradient(145deg,rgba(255,0,187,.12),rgba(255,0,187,.04));
-  border-color:var(--pink);color:var(--pink);
-  box-shadow:
-    0 0 18px rgba(255,45,149,.35),
-    inset 0 0 14px rgba(255,45,149,.07),
-    inset 0 2px 5px rgba(0,0,0,.4);
+  background:#1A001A;border-color:var(--pink);color:var(--pink);
+  box-shadow:4px 4px 0 #330033;
+  text-shadow:0 0 8px var(--pink);
 }
-.pad-btn.active-accent::before{background:var(--pink);box-shadow:0 0 8px rgba(255,45,149,.9);}
+.pad-btn.active-accent::before{background:var(--pink);box-shadow:0 0 6px var(--pink);}
 .pad-btn.active-accent::after{content:'';position:absolute;inset:0;background:transparent;}
 
-/* ═══════════════════════════════════════════
-   FX CHAIN (modifiers — vertical lever switches)
-═══════════════════════════════════════════ */
+/* ═══════════════════════════════
+   FX CHAIN — PIXEL TOGGLES
+═══════════════════════════════ */
 .fx-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
 .fx-unit{
-  display:flex;flex-direction:column;align-items:center;gap:10px;
-  padding:18px 12px 16px;
-  background:linear-gradient(145deg,#111128,#0A0A1C);
-  border:1px solid rgba(191,0,255,.18);
-  border-radius:8px;
-  transition:border-color .2s;
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  padding:14px 10px 12px;
+  background:#0C0C22;border:3px solid #1A1144;
+  transition:border-color .1s;
 }
-.fx-unit.on{border-color:rgba(0,255,204,.4);}
+.fx-unit.on{border-color:var(--cyan);}
 
-/* LED indicator */
 .fx-led{
-  width:11px;height:11px;border-radius:50%;
-  background:rgba(255,255,255,.1);
-  border:1px solid rgba(255,255,255,.08);
-  box-shadow:inset 0 0 3px rgba(0,0,0,.5);
-  transition:all .2s;flex-shrink:0;
+  width:10px;height:10px;
+  background:#0A0A0A;border:2px solid #222;
 }
 .fx-led.on{
-  background:var(--cyan);
-  box-shadow:0 0 10px rgba(0,255,204,.9),0 0 20px rgba(0,255,204,.45);
-  border-color:rgba(255,255,255,.3);
+  background:var(--cyan);border-color:var(--cyan);
+  box-shadow:0 0 8px var(--cyan),0 0 16px rgba(0,255,255,.35);
 }
 
-/* Vertical lever toggle */
+/* Pixel toggle switch */
 .lever-track{
-  width:46px;height:76px;
-  background:linear-gradient(180deg,#0A0A1C,#121228);
-  border:2px solid rgba(255,255,255,.09);
-  border-radius:23px;
-  position:relative;
-  box-shadow:inset 0 3px 10px rgba(0,0,0,.7),inset 0 0 0 1px rgba(0,0,0,.3);
-  cursor:pointer;
-  transition:border-color .2s;
-  flex-shrink:0;
+  width:54px;height:28px;
+  background:#080818;border:3px solid #1E1E44;
+  position:relative;cursor:pointer;
+  transition:border-color .1s;
 }
-.lever-track.on{border-color:rgba(0,255,204,.35);}
+.lever-track.on{border-color:var(--cyan);}
 .lever-knob{
   position:absolute;
-  width:34px;height:26px;
-  left:4px;
-  bottom:4px; /* OFF = bottom */
-  border-radius:17px;
-  background:linear-gradient(180deg,#2A2A48,#181830);
-  border:1px solid rgba(255,255,255,.13);
-  box-shadow:0 2px 6px rgba(0,0,0,.6),0 1px 0 rgba(255,255,255,.08);
-  transition:bottom .22s cubic-bezier(.34,1.4,.64,1),background .22s,box-shadow .22s;
+  width:20px;height:20px;top:1px;left:1px;
+  background:#252550;border:2px solid #444488;
+  transition:left .1s steps(4),background .1s,border-color .1s;
 }
 .lever-track.on .lever-knob{
-  bottom:42px; /* ON = top */
-  background:linear-gradient(180deg,#00FFDD,#00BF99);
-  box-shadow:0 0 14px rgba(0,255,204,.6),0 2px 4px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.3);
+  left:27px;
+  background:var(--cyan);border-color:var(--cyan);
 }
-/* Notch marks */
-.lever-track::before,.lever-track::after{
-  content:'';position:absolute;
-  right:-8px;width:5px;height:2px;
-  background:rgba(255,255,255,.12);border-radius:1px;
-}
-.lever-track::before{top:18px;}
-.lever-track::after{bottom:18px;}
 
 .fx-labels{text-align:center;}
 .fx-name{
-  font-family:var(--fmono);font-size:9px;font-weight:bold;
-  letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.65);
-  margin-bottom:3px;
+  font-size:7px;letter-spacing:2px;text-transform:uppercase;
+  color:rgba(255,255,255,.65);margin-bottom:4px;
 }
-.fx-desc{font-size:9px;color:var(--text2);letter-spacing:.5px;}
+.fx-desc{font-size:6px;color:var(--dim);letter-spacing:.5px;line-height:1.8;}
 
-/* ═══════════════════════════════════════════
-   LCD SIGNAL INPUT (prompt)
-═══════════════════════════════════════════ */
+/* ═══════════════════════════════
+   LCD SCREEN (AI prompt)
+═══════════════════════════════ */
 .lcd-screen{
   position:relative;
-  background:#030C03;
-  border:2px solid rgba(0,255,68,.22);
-  border-radius:6px;
-  overflow:hidden;
-  margin-bottom:14px;
-  box-shadow:
-    inset 0 0 24px rgba(0,80,20,.45),
-    0 0 0 1px rgba(0,255,68,.08);
+  background:#020C02;
+  border:3px solid rgba(0,255,65,.22);
+  margin-bottom:14px;overflow:hidden;
 }
-.lcd-screen::after{/* scanlines */
+.lcd-screen::after{
   content:'';position:absolute;inset:0;pointer-events:none;z-index:2;
   background:repeating-linear-gradient(
-    0deg,rgba(0,0,0,.13) 0px,rgba(0,0,0,.13) 1px,
+    0deg,rgba(0,0,0,.14) 0px,rgba(0,0,0,.14) 1px,
     transparent 1px,transparent 3px
   );
 }
 .lcd-ta{
   display:block;width:100%;min-height:80px;
-  padding:14px 16px;
+  padding:12px 14px;
   background:transparent;border:none;outline:none;
-  color:#00FF44;font-family:var(--fmono);font-size:13px;line-height:1.7;
-  resize:vertical;caret-color:#00FF44;
+  color:var(--green);font-family:var(--fp);font-size:9px;line-height:2;
+  resize:vertical;caret-color:var(--green);
   position:relative;z-index:1;
 }
-.lcd-ta::placeholder{color:rgba(0,255,68,.32);}
-.lcd-cursor{/* blinking cursor effect on label */
-  display:inline-block;width:8px;height:12px;
-  background:#00FF44;margin-left:4px;vertical-align:middle;
+.lcd-ta::placeholder{color:rgba(0,255,65,.25);}
+.lcd-cursor{
+  display:inline-block;width:8px;height:10px;
+  background:var(--green);margin-left:4px;vertical-align:middle;
   animation:blink .9s step-end infinite;
 }
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
 
-/* ═══════════════════════════════════════════
+/* ═══════════════════════════════
    LAUNCH BUTTON
-═══════════════════════════════════════════ */
+═══════════════════════════════ */
 .launch-wrap{
   display:flex;flex-direction:column;align-items:center;gap:10px;
-  padding:4px 0 6px;
+  padding:4px 0;
 }
 .launch-label{
-  font-family:var(--fmono);font-size:9px;letter-spacing:4px;
-  text-transform:uppercase;color:var(--text2);
+  font-size:7px;letter-spacing:4px;text-transform:uppercase;
+  color:var(--dim);
+  animation:blink 1.2s step-end infinite;
 }
 .btn-launch{
   width:100%;padding:18px 24px;
-  background:linear-gradient(180deg,#FF2D95 0%,#CC1070 100%);
-  border:none;
-  border-top:2px solid rgba(255,255,255,.22);
-  border-bottom:4px solid rgba(0,0,0,.45);
-  border-radius:8px;
+  background:var(--red);
+  border:4px solid #FF6677;
+  border-bottom:4px solid #880011;
+  box-shadow:6px 6px 0 #000, 0 0 20px rgba(255,34,68,.35);
   color:#fff;
-  font-family:var(--fmono);font-size:15px;font-weight:bold;letter-spacing:5px;
+  font-family:var(--fp);font-size:12px;letter-spacing:4px;
   text-transform:uppercase;cursor:pointer;
-  transition:all .14s;
-  box-shadow:
-    0 0 30px rgba(255,45,149,.4),
-    0 0 60px rgba(255,45,149,.18);
-  position:relative;overflow:hidden;
+  transition:all .08s;
 }
-.btn-launch::before{/* shimmer stripe */
-  content:'';position:absolute;top:0;left:-100%;
-  width:60%;height:100%;
-  background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent);
-  transition:left .6s ease;
-}
-.btn-launch:hover::before{left:140%;}
 .btn-launch:hover{
-  filter:brightness(1.12);transform:translateY(-3px);
-  box-shadow:0 0 45px rgba(255,45,149,.65),0 0 80px rgba(255,45,149,.28),
-             0 6px 16px rgba(0,0,0,.4);
+  transform:translate(-2px,-2px);
+  box-shadow:8px 8px 0 #000, 0 0 30px rgba(255,34,68,.55);
+  text-shadow:0 0 12px #fff;
 }
 .btn-launch:active{
-  transform:translateY(2px);
-  border-top-width:4px;border-bottom-width:2px;
-  box-shadow:0 0 20px rgba(255,45,149,.4);
+  transform:translate(5px,5px);
+  box-shadow:1px 1px 0 #000;
 }
-.btn-launch:disabled{opacity:.45;cursor:not-allowed;transform:none;}
+.btn-launch:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:6px 6px 0 #000;}
 
-/* ═══════════════════════════════════════════
-   SPLASH SCREEN
-═══════════════════════════════════════════ */
+/* ═══════════════════════════════
+   SPLASH
+═══════════════════════════════ */
 #splash{
   position:fixed;inset:0;z-index:99999;
   background:var(--bg);
   display:flex;align-items:center;justify-content:center;
   pointer-events:none;
 }
-#splash.hide{
-  animation:splashOut .55s cubic-bezier(.4,0,.2,1) forwards;
-}
-@keyframes splashOut{
-  0%  {opacity:1;transform:translateY(0);}
-  100%{opacity:0;transform:translateY(-18px);}
-}
+#splash.hide{animation:splashOut .4s steps(6) forwards;}
+@keyframes splashOut{0%{opacity:1;}100%{opacity:0;}}
 .splash-logo{
   height:130px;width:auto;
   animation:splashFloat 1.8s ease-in-out forwards;
-  filter:drop-shadow(0 0 22px rgba(0,255,204,.5)) drop-shadow(0 0 8px rgba(191,0,255,.4));
+  image-rendering:pixelated;
+  filter:drop-shadow(0 0 18px var(--cyan)) drop-shadow(4px 4px 0 var(--b1));
 }
 @keyframes splashFloat{
-  0%  {transform:translateY(0)    scale(1)    rotate(-1deg);}
+  0%  {transform:translateY(0)     scale(1)    rotate(-1deg);}
   20% {transform:translateY(-10px) scale(1.04) rotate(1deg);}
-  40% {transform:translateY(4px)  scale(.98)  rotate(-.5deg);}
-  60% {transform:translateY(-6px) scale(1.02) rotate(.8deg);}
-  80% {transform:translateY(2px)  scale(1)    rotate(0deg);}
-  100%{transform:translateY(0)    scale(1)    rotate(0deg);}
+  40% {transform:translateY(4px)   scale(.98)  rotate(-.5deg);}
+  60% {transform:translateY(-6px)  scale(1.02) rotate(.8deg);}
+  80% {transform:translateY(2px)   scale(1)    rotate(0deg);}
+  100%{transform:translateY(0)     scale(1)    rotate(0deg);}
 }
 
-/* ═══════════════════════════════════════════
+/* ═══════════════════════════════
    LOADING
-═══════════════════════════════════════════ */
+═══════════════════════════════ */
 .loading-overlay{
   display:none;position:fixed;inset:0;
   background:rgba(7,7,26,.97);z-index:9999;
   flex-direction:column;align-items:center;justify-content:center;gap:20px;
 }
 .loading-overlay.active{display:flex;}
-.load-logo{height:110px;animation:logoPulse 2s ease-in-out infinite;}
+.load-logo{height:100px;animation:logoPulse 1s step-end infinite;}
 @keyframes logoPulse{
-  0%,100%{filter:drop-shadow(0 0 12px rgba(0,255,204,.4));}
-  50%{filter:drop-shadow(0 0 28px rgba(0,255,204,.85)) drop-shadow(0 0 10px rgba(191,0,255,.6));}
+  0%,100%{filter:drop-shadow(0 0 8px var(--cyan));}
+  50%{filter:drop-shadow(0 0 20px var(--cyan)) drop-shadow(4px 4px 0 var(--b1));}
 }
 .load-bar-wrap{
-  width:210px;height:4px;
-  background:rgba(255,255,255,.06);
-  border:1px solid var(--cyan);border-radius:2px;overflow:hidden;
+  width:200px;height:6px;background:#111;
+  border:2px solid var(--cyan);
 }
-.load-bar{height:100%;background:var(--cyan);animation:sweep 1.2s linear infinite;}
+.load-bar{height:100%;background:var(--cyan);animation:sweep 1s linear infinite;}
 @keyframes sweep{0%{transform:translateX(-100%)}100%{transform:translateX(300%)}}
-.load-text{font-family:var(--fmono);font-size:11px;color:var(--text2);letter-spacing:4px;text-transform:uppercase;}
+.load-text{font-size:7px;color:var(--dim);letter-spacing:3px;text-transform:uppercase;}
 
-/* Synthwave floor */
+/* ═══════════════════════════════
+   PIXEL FLOOR GRID
+═══════════════════════════════ */
 .grid-floor{
-  position:fixed;bottom:0;left:0;right:0;height:70px;
+  position:fixed;bottom:0;left:0;right:0;height:64px;
   pointer-events:none;z-index:0;
   background-image:
-    linear-gradient(rgba(0,255,204,.09) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(0,255,204,.09) 1px,transparent 1px);
-  background-size:40px 40px;
-  transform:perspective(260px) rotateX(58deg);transform-origin:bottom;opacity:.5;
+    linear-gradient(rgba(102,0,255,.1) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(102,0,255,.1) 1px,transparent 1px);
+  background-size:20px 20px;
+  transform:perspective(200px) rotateX(62deg);transform-origin:bottom;
+  opacity:.5;
 }
 
-/* ═══════════════════════════════════════════
+/* ═══════════════════════════════
    RESPONSIVE
-═══════════════════════════════════════════ */
+═══════════════════════════════ */
 @media(max-width:680px){
   .rack-row-teams-board,.rack-row-controls{grid-template-columns:1fr;}
   .fx-row{grid-template-columns:1fr;}
   .hdr-logo{height:80px;}
   .hdr-right{position:absolute;right:12px;}
-  .led-cell{width:24px;height:24px;}
+  .led-cell{width:22px;height:22px;}
 }
 @media(max-width:400px){
-  .led-cell{width:19px;height:19px;}
-  .pad-grid{grid-template-columns:1fr 1fr;}
+  .led-cell{width:18px;height:18px;}
 }
 </style>
 </head>
@@ -592,30 +531,30 @@ body{
 <div class="synth-body">
 
   <div class="synth-title">
-    <span id="page-title">Create your challenge!</span>
-    <small>JAMBOO QUIZ GENERATOR 9000</small>
+    <span id="page-title">CREATE YOUR CHALLENGE!</span>
+    <small>★ JAMBOO QUIZ GENERATOR 9000 ★</small>
   </div>
 
-  <!-- ══════ SYNTH PANEL ══════ -->
+  <!-- ══════ PIXEL PANEL ══════ -->
   <div class="synth-panel">
     <div class="screw screw-tl"></div>
     <div class="screw screw-tr"></div>
     <div class="screw screw-bl"></div>
     <div class="screw screw-br"></div>
 
-    <!-- ROW 1: Player Bank + Board Matrix -->
-    <div class="rack-row rack-row-teams-board" style="margin-bottom:10px;">
+    <!-- ROW 1: Players + Board -->
+    <div class="rack-row rack-row-teams-board" style="margin-bottom:12px;">
 
-      <!-- PLAYER BANK -->
+      <!-- PLAYER SELECT -->
       <div class="module">
-        <div class="mod-tag"><span class="mod-tag-dot"></span><span data-i18n="teamsTitle">PLAYER BANK</span></div>
+        <div class="mod-tag"><span class="mod-tag-dot"></span><span data-i18n="teamsTitle">SELECT PLAYERS</span></div>
         <div class="sequencer" id="team-count-row"></div>
         <div class="lcd-strips" id="team-inputs"></div>
       </div>
 
-      <!-- BOARD MATRIX -->
+      <!-- BOARD SIZE -->
       <div class="module">
-        <div class="mod-tag"><span class="mod-tag-dot"></span><span data-i18n="gridTitle">BOARD MATRIX</span></div>
+        <div class="mod-tag"><span class="mod-tag-dot"></span><span data-i18n="gridTitle">BOARD SIZE</span></div>
         <div class="led-matrix-wrap">
           <div class="led-matrix" id="gp-grid"></div>
           <div class="matrix-readout">
@@ -625,14 +564,14 @@ body{
         </div>
       </div>
 
-    </div><!-- /row 1 -->
+    </div>
 
-    <!-- ROW 2: Difficulty + Voice Select -->
-    <div class="rack-row rack-row-controls" style="margin-bottom:10px;">
+    <!-- ROW 2: Difficulty + Q-Type -->
+    <div class="rack-row rack-row-controls" style="margin-bottom:12px;">
 
-      <!-- DIFFICULTY PADS -->
+      <!-- DIFFICULTY -->
       <div class="module">
-        <div class="mod-tag"><span class="mod-tag-dot"></span><span data-i18n="diffTitle">DIFFICULTY LEVEL</span></div>
+        <div class="mod-tag"><span class="mod-tag-dot"></span><span data-i18n="diffTitle">DIFFICULTY</span></div>
         <div class="pad-grid" id="diff-pads">
           <button class="pad-btn active" data-val="easy" onclick="pickDiff(this)">
             <span class="pad-icon">🟢</span><span data-i18n="easy">EASY</span>
@@ -649,9 +588,9 @@ body{
         </div>
       </div>
 
-      <!-- VOICE SELECT (Q-Type) -->
+      <!-- Q-TYPE -->
       <div class="module">
-        <div class="mod-tag"><span class="mod-tag-dot"></span><span data-i18n="qtypeTitle">VOICE SELECT</span></div>
+        <div class="mod-tag"><span class="mod-tag-dot"></span><span data-i18n="qtypeTitle">QUESTION TYPE</span></div>
         <div class="pad-grid" id="qtype-pads">
           <button class="pad-btn active-accent" data-val="multiple" onclick="pickQtype('multiple',this)">
             <span class="pad-icon">🅰️</span><span data-i18n="mcLabel">M.CHOICE</span>
@@ -668,11 +607,11 @@ body{
         </div>
       </div>
 
-    </div><!-- /row 2 -->
+    </div>
 
-    <!-- ROW 3: FX Chain (Modifiers) -->
-    <div class="module" style="margin-bottom:10px;">
-      <div class="mod-tag"><span class="mod-tag-dot"></span><span data-i18n="modTitle">FX CHAIN — MODIFIERS</span></div>
+    <!-- ROW 3: Game Options (toggles) -->
+    <div class="module" style="margin-bottom:12px;">
+      <div class="mod-tag"><span class="mod-tag-dot"></span><span data-i18n="modTitle">GAME OPTIONS</span></div>
       <div class="fx-row">
 
         <div class="fx-unit on" id="fx-timer">
@@ -709,13 +648,13 @@ body{
         </div>
 
       </div>
-    </div><!-- /row 3 -->
+    </div>
 
-    <!-- ROW 4: Signal Input (AI Prompt) -->
+    <!-- ROW 4: AI Prompt -->
     <div class="module" style="margin-bottom:14px;">
       <div class="mod-tag">
         <span class="mod-tag-dot"></span>
-        <span data-i18n="promptTitle">SIGNAL INPUT</span>
+        <span data-i18n="promptTitle">ENTER YOUR QUEST</span>
         <span class="lcd-cursor"></span>
       </div>
       <div class="lcd-screen">
@@ -725,9 +664,9 @@ body{
 
     <!-- LAUNCH -->
     <div class="launch-wrap">
-      <div class="launch-label" data-i18n="launchLabel">— INITIATE SEQUENCE —</div>
+      <div class="launch-label" data-i18n="launchLabel">◄ PRESS START ►</div>
       <button class="btn-launch" id="gen-btn" onclick="startGame()">
-        ▶ &nbsp;<span data-i18n="startBtn">LAUNCH MISSION</span>
+        ▶ &nbsp;<span data-i18n="startBtn">START GAME</span>
       </button>
     </div>
 
@@ -740,19 +679,19 @@ body{
 /* ══════════ I18N ══════════ */
 const T = {
   en:{
-    pageTitle:'Create your challenge!',
-    teamsTitle:'PLAYER BANK', gridTitle:'BOARD MATRIX',
-    diffTitle:'DIFFICULTY LEVEL',
+    pageTitle:'CREATE YOUR CHALLENGE!',
+    teamsTitle:'SELECT PLAYERS', gridTitle:'BOARD SIZE',
+    diffTitle:'DIFFICULTY',
     easy:'EASY', medium:'MED', hard:'HARD', mixed:'MIX',
-    qtypeTitle:'VOICE SELECT',
+    qtypeTitle:'QUESTION TYPE',
     mcLabel:'M.CHOICE', openLabel:'OPEN', drawLabel:'DRAW', mixedLabel:'MIXED',
-    modTitle:'FX CHAIN — MODIFIERS',
+    modTitle:'GAME OPTIONS',
     timerLabel:'TIMER', timerDesc:'30s per question',
     bonusLabel:'BONUS', bonusDesc:'Teams bet points',
     speedLabel:'SPEED', speedDesc:'15s, first buzzer wins',
-    promptTitle:'SIGNAL INPUT',
-    launchLabel:'— INITIATE SEQUENCE —',
-    startBtn:'LAUNCH MISSION',
+    promptTitle:'ENTER YOUR QUEST',
+    launchLabel:'◄ PRESS START ►',
+    startBtn:'START GAME',
     promptPH:'> Describe your quiz... e.g. French Revolution for 9th grade students',
     noPrompt:'Please describe your quiz topic!',
     generating:'Generating your game...',
@@ -760,19 +699,19 @@ const T = {
     categories:'CAT', rows:'ROW', questions:'questions',
   },
   pt:{
-    pageTitle:'Crie seu desafio!',
-    teamsTitle:'JOGADORES', gridTitle:'MATRIZ DO JOGO',
-    diffTitle:'NÍVEL DE DIFICULDADE',
+    pageTitle:'CRIE SEU DESAFIO!',
+    teamsTitle:'JOGADORES', gridTitle:'TAMANHO DO JOGO',
+    diffTitle:'DIFICULDADE',
     easy:'FÁCIL', medium:'MÉDIO', hard:'DIFÍCIL', mixed:'MISTO',
-    qtypeTitle:'TIPO DE VOZ',
+    qtypeTitle:'TIPO DE QUESTÃO',
     mcLabel:'M.ESCOLHA', openLabel:'ABERTA', drawLabel:'DRAW', mixedLabel:'MISTA',
-    modTitle:'CADEIA DE EFEITOS',
+    modTitle:'OPÇÕES DO JOGO',
     timerLabel:'TIMER', timerDesc:'30s por pergunta',
     bonusLabel:'BÔNUS', bonusDesc:'Times apostam pontos',
     speedLabel:'SPEED', speedDesc:'15s, primeiro a tocar',
-    promptTitle:'ENTRADA DE SINAL',
-    launchLabel:'— INICIAR SEQUÊNCIA —',
-    startBtn:'LANÇAR MISSÃO',
+    promptTitle:'SUA MISSÃO',
+    launchLabel:'◄ PRESSIONE START ►',
+    startBtn:'INICIAR JOGO',
     promptPH:'> Descreva seu quiz... ex: Revolução Francesa para o 9º ano',
     noPrompt:'Por favor, descreva o tema do quiz!',
     generating:'Gerando seu jogo...',
@@ -780,19 +719,19 @@ const T = {
     categories:'CAT', rows:'LIN', questions:'perguntas',
   },
   es:{
-    pageTitle:'¡Crea tu desafío!',
-    teamsTitle:'JUGADORES', gridTitle:'MATRIZ DEL TABLERO',
-    diffTitle:'NIVEL DE DIFICULTAD',
+    pageTitle:'¡CREA TU DESAFÍO!',
+    teamsTitle:'JUGADORES', gridTitle:'TAMAÑO DEL TABLERO',
+    diffTitle:'DIFICULTAD',
     easy:'FÁCIL', medium:'MEDIO', hard:'DIFÍCIL', mixed:'MIXTO',
-    qtypeTitle:'SELECCIÓN DE VOZ',
+    qtypeTitle:'TIPO DE PREGUNTA',
     mcLabel:'M.OPCIÓN', openLabel:'ABIERTA', drawLabel:'DIBUJO', mixedLabel:'MIXTA',
-    modTitle:'CADENA DE FX',
+    modTitle:'OPCIONES DEL JUEGO',
     timerLabel:'TIMER', timerDesc:'30s por pregunta',
     bonusLabel:'BONUS', bonusDesc:'Equipos apuestan puntos',
     speedLabel:'SPEED', speedDesc:'15s, primero en pulsar',
-    promptTitle:'ENTRADA DE SEÑAL',
-    launchLabel:'— INICIAR SECUENCIA —',
-    startBtn:'LANZAR MISIÓN',
+    promptTitle:'TU MISIÓN',
+    launchLabel:'◄ PRESIONA START ►',
+    startBtn:'INICIAR JUEGO',
     promptPH:'> Describe tu quiz... ej: Revolución Francesa para 9° grado',
     noPrompt:'¡Por favor describe el tema de tu quiz!',
     generating:'Generando tu juego...',
@@ -845,7 +784,7 @@ function renderTeamButtons(){
   [2,3,4,5,6,8].forEach(n=>{
     const b=document.createElement('button');
     b.className='step-btn'+(n===numTeams?' active':'');
-    b.innerHTML=`<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="7" r="4"/><path d="M2 21v-2a7 7 0 0 1 14 0v2"/><circle cx="19" cy="8" r="3"/><path d="M19 14c2.8.3 5 1.9 5 4v1"/></svg>${n}`;
+    b.innerHTML=`<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="7" r="4"/><path d="M2 21v-2a7 7 0 0 1 14 0v2"/><circle cx="19" cy="8" r="3"/><path d="M19 14c2.8.3 5 1.9 5 4v1"/></svg>${n}`;
     b.onclick=()=>{numTeams=n;renderTeamButtons();};
     row.appendChild(b);
   });
@@ -870,7 +809,7 @@ function renderTeamInputs(){
   }
 }
 
-/* ══════════ EXCEL GRID PICKER ══════════ */
+/* ══════════ GRID PICKER ══════════ */
 const GP_COLS=8, GP_ROWS=6;
 
 function initGridPicker(){
@@ -913,21 +852,21 @@ function updateGridLabel(){
   highlightGrid(numCols-1,numRows-1,true);
 }
 
-/* ══════════ DIFFICULTY PADS ══════════ */
+/* ══════════ DIFFICULTY ══════════ */
 function pickDiff(btn){
   difficulty=btn.dataset.val;
   document.querySelectorAll('#diff-pads .pad-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
 }
 
-/* ══════════ QTYPE PADS ══════════ */
+/* ══════════ Q-TYPE ══════════ */
 function pickQtype(val,btn){
   qType=val;
   document.querySelectorAll('#qtype-pads .pad-btn').forEach(b=>b.classList.remove('active-accent'));
   btn.classList.add('active-accent');
 }
 
-/* ══════════ FX LEVERS ══════════ */
+/* ══════════ FX TOGGLES ══════════ */
 function toggleFX(name){
   fxState[name]=!fxState[name];
   const on=fxState[name];
@@ -957,15 +896,15 @@ function startGame(){
 
 init();
 
-// Splash: wobble for 1.8s then fade out
+// Splash: wobble then fade
 (function(){
-  const splash = document.getElementById('splash');
+  const splash=document.getElementById('splash');
   setTimeout(function(){
     splash.classList.add('hide');
-    splash.addEventListener('animationend', function(){
-      splash.style.display = 'none';
-    }, {once:true});
-  }, 1900);
+    splash.addEventListener('animationend',function(){
+      splash.style.display='none';
+    },{once:true});
+  },1900);
 })();
 </script>
 </body>
