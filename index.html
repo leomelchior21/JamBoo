@@ -47,13 +47,13 @@ body::before{
   background:var(--panel);
   border-bottom:4px solid var(--b1);
   box-shadow:0 4px 0 rgba(102,0,255,.3);
-  min-height:110px;
+  height:110px;
   display:flex;align-items:center;
   position:sticky;top:0;overflow:visible;z-index:100;
-  transition:min-height .35s ease;
+  transition:height .35s ease;
 }
 .hdr.hdr-scrolled{
-  min-height:77px;
+  height:77px;
 }
 .hdr::before{
   content:'';position:absolute;inset:0;pointer-events:none;overflow:hidden;
