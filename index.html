@@ -365,23 +365,50 @@ body::before{
 }
 .launch-label{
   font-size:7px;letter-spacing:4px;text-transform:uppercase;
-  color:var(--dim);animation:blink 1.2s step-end infinite;
+  color:rgba(255,120,255,.6);animation:blink 1.2s step-end infinite;
+  text-shadow:0 0 10px rgba(255,0,255,.4);
 }
 .btn-launch{
-  width:100%;padding:20px 24px;
-  background:var(--red);
-  border:4px solid #FF6677;border-bottom:4px solid #880011;
-  box-shadow:6px 6px 0 #000,0 0 24px rgba(255,34,68,.35);
+  position:relative;overflow:hidden;
+  width:100%;padding:22px 24px;
+  background:linear-gradient(135deg,
+    rgba(20,5,30,.92) 0%, rgba(95,0,68,.82) 35%,
+    rgba(14,5,34,.92) 65%, rgba(105,0,82,.76) 100%
+  );
+  background-size:320% 320%;
+  animation:hdrMorph 9s ease-in-out infinite;
+  backdrop-filter:blur(14px) saturate(1.5);
+  border:2px solid rgba(255,0,255,.55);
+  border-bottom:3px solid rgba(255,0,255,.85);
+  box-shadow:0 0 32px rgba(255,0,255,.22), 0 6px 20px rgba(255,0,255,.28), inset 0 1px 0 rgba(255,255,255,.08);
   color:#fff;font-family:var(--fp);font-size:12px;letter-spacing:4px;
-  text-transform:uppercase;cursor:pointer;transition:all .08s;
+  text-shadow:0 0 18px rgba(255,120,255,.9), 0 0 4px #fff;
+  text-transform:uppercase;cursor:pointer;
+  transition:box-shadow .15s ease, transform .08s ease;
+}
+.btn-launch::before{
+  content:'';
+  position:absolute;top:0;bottom:0;
+  left:50%;width:6px;
+  transform:translateX(-50%);
+  background:radial-gradient(ellipse at center, rgba(255,180,255,.95) 0%, rgba(255,0,255,.5) 45%, transparent 100%);
+  filter:blur(10px);
+  animation:btnPulse 2.4s ease-in-out infinite;
+  pointer-events:none;
+}
+@keyframes btnPulse{
+  0%,100%{ width:6px;   opacity:0; }
+  15%    { width:6px;   opacity:1; }
+  55%    { width:130%;  opacity:.55; }
+  88%    { width:140%;  opacity:0; }
 }
 .btn-launch:hover{
-  transform:translate(-2px,-2px);
-  box-shadow:8px 8px 0 #000,0 0 34px rgba(255,34,68,.55);
-  text-shadow:0 0 14px #fff;
+  transform:translateY(-3px);
+  box-shadow:0 0 55px rgba(255,0,255,.5), 0 10px 26px rgba(255,0,255,.4), inset 0 1px 0 rgba(255,255,255,.12);
+  text-shadow:0 0 24px rgba(255,180,255,1), 0 0 8px #fff;
 }
-.btn-launch:active{transform:translate(5px,5px);box-shadow:1px 1px 0 #000;}
-.btn-launch:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:6px 6px 0 #000;}
+.btn-launch:active{transform:translateY(1px);box-shadow:0 0 20px rgba(255,0,255,.3), inset 0 2px 8px rgba(0,0,0,.3);}
+.btn-launch:disabled{opacity:.4;cursor:not-allowed;transform:none;}
 
 /* ═══════════════════════════════
    SPLASH
