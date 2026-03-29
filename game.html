@@ -53,18 +53,20 @@ body{
 }
 #loading.hidden{display:none;}
 
-/* logo: 500% zoom-in → settles at 200% of original, then gentle wobble */
+/* logo: blasts in from scale(15) → settles, then gentle wobble */
 .load-logo{
-  height:216px; /* 200% of original 108px */
+  height:216px;
   image-rendering:pixelated;
   filter:drop-shadow(0 0 24px #BF00FF) drop-shadow(0 0 8px #FF00BB);
   animation:
-    logoZoomIn 1.6s cubic-bezier(0.16, 1, 0.3, 1) forwards,
-    logoWobble 3.2s ease-in-out 1.6s infinite;
+    logoZoomIn 2.4s cubic-bezier(0.12, 0.9, 0.2, 1.04) forwards,
+    logoWobble 3.2s ease-in-out 2.4s infinite;
 }
 @keyframes logoZoomIn{
-  from{ transform:scale(5); opacity:.6; filter:blur(4px); }
-  to  { transform:scale(1); opacity:1;  filter:blur(0);   }
+  0%  { transform:scale(15);   opacity:0;   filter:blur(20px); }
+  65% { transform:scale(0.92); opacity:1;   filter:blur(0);    }
+  80% { transform:scale(1.06); opacity:1;   filter:blur(0);    }
+  100%{ transform:scale(1);    opacity:1;   filter:blur(0);    }
 }
 @keyframes logoWobble{
   0%  { transform:rotate(0deg)    translateY(0);    }
@@ -334,7 +336,6 @@ body{
 .cell-pts{font-size:calc(clamp(18px,3vw,28px) * var(--bz));color:var(--accent);line-height:1;}
 .q-cell.used .cell-pts{color:var(--cell-used-text);}
 .cell-check{font-size:calc(18px * var(--bz));opacity:.4;}
-.bonus-star{font-size:13px;position:absolute;top:4px;right:6px;}
 
 /* ═══════════════════════════════════════════
    MODAL
@@ -434,21 +435,6 @@ body{
   cursor:pointer;transition:all .12s;text-align:center;
 }
 .award-btn:hover{filter:brightness(1.2);}
-
-/* Bonus */
-.bonus-section{
-  background:rgba(255,0,187,.07);border:2px solid var(--accent);
-  border-radius:var(--radius);padding:12px 14px;margin-bottom:12px;
-}
-.bonus-title{font-family:var(--fh);font-size:15px;color:var(--accent);margin-bottom:10px;}
-.bonus-bets{display:flex;flex-direction:column;gap:6px;margin-bottom:10px;}
-.bonus-bet-row{display:flex;align-items:center;gap:8px;}
-.bonus-team-name{font-weight:800;font-size:13px;min-width:80px;}
-.bonus-bet-input{
-  width:80px;padding:5px 8px;
-  background:var(--gray);border:2px solid rgba(255,255,255,.15);border-radius:var(--radius);
-  color:var(--text);font-family:var(--fb);font-weight:800;font-size:13px;outline:none;
-}
 
 /* Action buttons */
 .action-row{display:flex;gap:8px;flex-wrap:wrap;}
@@ -675,13 +661,6 @@ body{
         <div class="modal-timer-fill" id="timer-fill"></div>
       </div>
       <p class="q-text" id="modal-question"></p>
-      <div class="bonus-section" id="bonus-section" style="display:none;">
-        <div class="bonus-title">⭐ <span id="lbl-bonus-title">Bonus Round — Place your bets!</span></div>
-        <div class="bonus-bets" id="bonus-bets"></div>
-        <button class="btn-reveal" id="bonus-reveal-btn" onclick="revealBonusAnswer()">
-          <span id="lbl-reveal-bonus">Reveal Question →</span>
-        </button>
-      </div>
       <div class="mc-grid" id="mc-grid" style="display:none;"></div>
       <div class="drawing-section" id="drawing-section" style="display:none;">
         <div class="canvas-wrap">
@@ -722,7 +701,6 @@ const GT = {
   en:{
     back:'Setup', end:'🏆 End', reveal:'Reveal Answer', done:'Done ✓',
     answer:'Answer', award:'Who answered?', correct:'✓ Correct', wrong:'✗ Wrong',
-    bonusTitle:'Bonus Round — Place your bets!', revealBonus:'Reveal Question →',
     clear:'🗑 Clear', winner:'🏆 Winner!', playAgain:'▶ Play Again',
     sameTeams:'↺ Same Teams, New Game', home:'⌂ Home',
     pts:'pts', generating:'Generating your game...',
@@ -732,7 +710,6 @@ const GT = {
   pt:{
     back:'Início', end:'🏆 Fim', reveal:'Revelar Resposta', done:'Feito ✓',
     answer:'Resposta', award:'Quem respondeu?', correct:'✓ Correto', wrong:'✗ Errado',
-    bonusTitle:'Rodada Bônus — Façam suas apostas!', revealBonus:'Revelar Pergunta →',
     clear:'🗑 Limpar', winner:'🏆 Vencedor!', playAgain:'▶ Jogar Novamente',
     sameTeams:'↺ Mesmos Times, Novo Jogo', home:'⌂ Início',
     pts:'pontos', generating:'Gerando seu jogo...',
@@ -742,7 +719,6 @@ const GT = {
   es:{
     back:'Inicio', end:'🏆 Fin', reveal:'Revelar Respuesta', done:'Listo ✓',
     answer:'Respuesta', award:'¿Quién respondió?', correct:'✓ Correcto', wrong:'✗ Incorrecto',
-    bonusTitle:'Ronda Bonus — ¡Hagan sus apuestas!', revealBonus:'Revelar Pregunta →',
     clear:'🗑 Limpiar', winner:'🏆 ¡Ganador!', playAgain:'▶ Jugar de Nuevo',
     sameTeams:'↺ Mismos Equipos, Nuevo Juego', home:'⌂ Inicio',
     pts:'puntos', generating:'Generando tu juego...',
@@ -754,7 +730,6 @@ const GT = {
 let cfg={}, gameData=null, teams=[], lang='en';
 let currentCell=null, timerInterval=null;
 let drawCtx=null, isDrawing=false, drawColor='#000000';
-let bonusPhase=false;
 let mcAnswered=null;
 let openOutcome=null;
 
@@ -792,15 +767,12 @@ async function boot() {
 }
 
 function buildPayload() {
-  const {numCols,numRows,difficulty,qType,qLang,prompt,bonusOn}=cfg;
+  const {numCols,numRows,difficulty,qType,qLang,prompt}=cfg;
   const pts=Array.from({length:numRows},(_,i)=>(i+1)*100);
   const mcNote=(qType==='multiple'||qType==='mixed')
     ?'Multiple choice MUST have "options":["A","B","C","D"] (exactly 4) and "correctIndex":0–3.':'';
   const drawNote=(qType==='drawing'||qType==='mixed')
     ?'Drawing questions: set "isDrawing":true, omit options/correctIndex.':'';
-  const bonusNote=bonusOn
-    ?'Exactly ONE question per category must have "isBonus":true.'
-    :'"isBonus" should always be false.';
 
   const diffMap={easy:'very easy',medium:'medium',hard:'hard',mixed:'varies by row'};
   const rowDiff=Array.from({length:numRows},(_,i)=>{
@@ -811,7 +783,7 @@ function buildPayload() {
   const sys=`You are a quiz game generator for educators. Create a Jeopardy-style quiz as JSON.
 
 SCHEMA:
-{"categories":["Cat1",...],"questions":[[{"question":"...","answer":"...","type":"${qType}","options":[],"correctIndex":0,"isBonus":false,"isDrawing":false},...(${numRows} items)],...(${numCols} arrays)]}
+{"categories":["Cat1",...],"questions":[[{"question":"...","answer":"...","type":"${qType}","options":[],"correctIndex":0,"isDrawing":false},...(${numRows} items)],...(${numCols} arrays)]}
 
 RULES:
 - Exactly ${numCols} categories, ${numRows} questions each
@@ -820,7 +792,7 @@ RULES:
 - ${mcNote}
 - IMPORTANT for MC: distribute correctIndex values across 0,1,2,3 — do NOT always use 0. Each value should appear roughly equally across the whole game.
 - ${drawNote}
-- ${bonusNote}
+- Write questions that feel specific and surprising — avoid the most obvious, predictable question about a topic. Favor angles that reward genuine understanding over trivia recall.
 - Return ONLY raw JSON — no explanation, no markdown.`;
 
   return {messages:[
@@ -837,8 +809,6 @@ function applyLabels() {
   document.getElementById('lbl-done').textContent=G.done;
   document.getElementById('lbl-answer').textContent=G.answer;
   document.getElementById('lbl-award').textContent=G.award;
-  document.getElementById('lbl-bonus-title').textContent=G.bonusTitle;
-  document.getElementById('lbl-reveal-bonus').textContent=G.revealBonus;
   document.getElementById('lbl-clear').textContent=G.clear;
   document.getElementById('lbl-again').textContent=G.playAgain;
   document.getElementById('lbl-same-teams').textContent=G.sameTeams;
@@ -866,7 +836,6 @@ function buildBoard() {
       cell.className='board-cell q-cell';
       cell.dataset.col=c;cell.dataset.row=r;cell.dataset.pts=pts[r];
       cell.innerHTML=`<div class="cell-pts">${pts[r]}</div>`;
-      if(q.isBonus) cell.innerHTML+=`<div class="bonus-star">⭐</div>`;
       cell.onclick=()=>openQuestion(c,r,pts[r],cell);
       board.appendChild(cell);
     }
@@ -896,25 +865,19 @@ function openQuestion(col,row,pts,cell) {
   document.getElementById('modal-question').textContent=q.question;
   document.getElementById('mc-grid').style.display='none';
   document.getElementById('drawing-section').style.display='none';
-  document.getElementById('bonus-section').style.display='none';
   document.getElementById('answer-box').classList.remove('shown');
   document.getElementById('award-section').classList.remove('shown');
   document.getElementById('reveal-btn').style.display='';
   document.getElementById('reveal-btn').disabled=false;
   document.getElementById('done-btn').style.display='none';
   document.getElementById('answer-text').textContent=q.answer;
-  bonusPhase=false;mcAnswered=null;openOutcome=null;
+  mcAnswered=null;openOutcome=null;
 
-  if(q.isBonus&&cfg.bonusOn){
-    document.getElementById('bonus-section').style.display='block';
-    document.getElementById('reveal-btn').style.display='none';
-    renderBonusBets();
-  }
-  if(q.options&&q.options.length&&!q.isBonus) buildMC(q);
+  if(q.options&&q.options.length) buildMC(q);
   if(q.isDrawing){document.getElementById('drawing-section').style.display='block';setTimeout(initCanvas,60);}
 
   clearTimerBar();
-  if(cfg.timerOn&&!q.isBonus) startTimerBar(cfg.speedOn?15:30);
+  if(cfg.timerOn) startTimerBar(cfg.speedOn?15:30);
   document.getElementById('q-modal').classList.add('active');
 }
 
@@ -978,26 +941,6 @@ function showVerdictFlash(correct){
   setTimeout(()=>{el.className='';},950);
 }
 
-function renderBonusBets() {
-  const d=document.getElementById('bonus-bets');d.innerHTML='';
-  teams.forEach((t,i)=>{
-    const row=document.createElement('div');row.className='bonus-bet-row';
-    row.innerHTML=`<span class="bonus-team-name" style="color:${t.color}">${t.name}</span>
-      <input class="bonus-bet-input" type="number" min="0" max="${Math.max(t.score,100)}" value="0" id="bet-${i}">`;
-    d.appendChild(row);
-  });
-}
-
-function revealBonusAnswer() {
-  if(!bonusPhase){
-    bonusPhase=true;
-    const q=gameData.questions[currentCell.col][currentCell.row];
-    document.getElementById('bonus-reveal-btn').style.display='none';
-    if(q.options&&q.options.length) buildMC(q);
-    document.getElementById('reveal-btn').style.display='';
-    if(cfg.timerOn) startTimerBar(cfg.speedOn?15:30);
-  }
-}
 
 function revealAnswer() {
   clearTimerBar();
@@ -1011,7 +954,7 @@ function revealAnswer() {
 function buildAwardButtons(){
   const pts=currentCell?.pts||0;
   const q=gameData.questions[currentCell.col][currentCell.row];
-  const isMC=!!(q.options&&q.options.length&&!q.isDrawing&&!q.isBonus);
+  const isMC=!!(q.options&&q.options.length&&!q.isDrawing);
   const toggle=document.getElementById('outcome-toggle');
   if(isMC){
     toggle.style.display='none';
