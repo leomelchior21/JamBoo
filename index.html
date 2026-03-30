@@ -873,7 +873,7 @@ function startGame(){
   document.getElementById('loading').classList.add('active');
   document.getElementById('gen-btn').disabled=true;
   localStorage.setItem('jamboo_config',JSON.stringify(config));
-  if(isArduino){setTimeout(()=>{window.location.href='game.html';},900);}
+  if(isArduino){setTimeout(()=>{window.location.href='game.html';},400);}
   else{window.location.href='game.html';}
 }
 
@@ -946,7 +946,7 @@ init();
   setTimeout(function(){
     splash.classList.add('hide');
     splash.addEventListener('animationend',function(){splash.style.display='none';},{once:true});
-  },1900);
+  },800);
 })();
 </script>
 </body>
