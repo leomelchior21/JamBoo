@@ -1234,10 +1234,6 @@ function closeScoreEdit(){
   scoreEditIdx=null;
 }
 
-document.getElementById('score-edit-overlay').addEventListener('click',function(e){
-  if(e.target===this) closeScoreEdit();
-});
-
 document.addEventListener('keydown',function(e){
   if(!document.getElementById('score-edit-overlay').classList.contains('active')) return;
   if(e.key==='Enter') confirmScoreEdit();
@@ -1256,7 +1252,7 @@ function zoomBoard(dir){
 </script>
 
 <!-- SCORE EDIT OVERLAY -->
-<div class="score-edit-overlay" id="score-edit-overlay">
+<div class="score-edit-overlay" id="score-edit-overlay" onclick="if(event.target===this)closeScoreEdit()">
   <div class="score-edit-box" id="score-edit-box">
     <div class="score-edit-lbl">ADJUST SCORE</div>
     <div class="score-edit-name" id="score-edit-name"></div>
