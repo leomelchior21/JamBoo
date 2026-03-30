@@ -713,6 +713,28 @@ function init(){
   initGridPicker();
   renderConfigBtns();
   applyI18n();
+  // Restore previous game settings when "Same Teams, New Game" was pressed
+  const raw=localStorage.getItem('jamboo_config');
+  if(raw){
+    const c=JSON.parse(raw);
+    if(c._keepTeams){
+      if(c.lang){lang=c.lang;['en','pt','es'].forEach(x=>document.getElementById('lang-'+x).classList.toggle('active',x===lang));}
+      soloMode=!!c.soloMode;
+      numTeams=c.numTeams||numTeams;
+      numRows=c.numRows||numRows;
+      numCols=c.numCols||numCols;
+      difficulty=c.difficulty||difficulty;
+      qType=c.qType||qType;
+      if(c.teams) teams=c.teams.map((t,i)=>({name:t.name,color:TEAM_COLORS[i]}));
+      renderTeamInputs();
+      renderConfigBtns();
+      updateGridLabel();
+      const el=document.getElementById('ai-prompt');
+      if(el&&c.prompt) el.value=c.prompt;
+      c._keepTeams=false;
+      localStorage.setItem('jamboo_config',JSON.stringify(c));
+    }
+  }
 }
 
 /* ══════════ LANG ══════════ */

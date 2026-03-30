@@ -506,6 +506,33 @@ body{
 .btn-winner-ghost:hover{border-color:rgba(255,255,255,.5);color:#fff;transform:translate(-1px,-1px);}
 .btn-winner:active{transform:translate(3px,3px);box-shadow:1px 1px 0 #000 !important;}
 
+/* ═══════════════════════════════════════════
+   MYSTERY SCREEN
+═══════════════════════════════════════════ */
+#mystery-screen{
+  display:none;position:fixed;inset:0;background:var(--bg);
+  z-index:950;flex-direction:column;align-items:center;justify-content:center;gap:20px;
+}
+#mystery-screen.active{display:flex;}
+.myst-q{
+  font-family:var(--fp);font-size:clamp(80px,20vw,140px);line-height:1;
+  color:var(--accent);text-shadow:0 0 40px rgba(255,0,187,.7),4px 4px 0 #000;
+  animation:mystQ .5s steps(2) infinite;
+}
+@keyframes mystQ{
+  0%,100%{color:var(--accent);transform:scale(1);}
+  50%{color:var(--primary);transform:scale(1.1);}
+}
+.myst-label{
+  font-family:var(--fp);font-size:9px;letter-spacing:4px;color:var(--text2);
+  animation:mystBlink .7s steps(1) infinite;
+}
+@keyframes mystBlink{0%,100%{opacity:1;}50%{opacity:0;}}
+.myst-count{
+  font-family:var(--fp);font-size:clamp(50px,12vw,90px);line-height:1;
+  color:var(--primary);text-shadow:0 0 30px rgba(0,255,204,.6),3px 3px 0 #000;
+}
+
 /* Confetti */
 .confetti-piece{
   position:fixed;border-radius:2px;pointer-events:none;z-index:9998;
@@ -692,6 +719,13 @@ body{
   </div>
 </div>
 
+<!-- MYSTERY SCREEN -->
+<div id="mystery-screen">
+  <div class="myst-q">?</div>
+  <div class="myst-label" id="myst-label">CALCULATING...</div>
+  <div class="myst-count" id="myst-count">3</div>
+</div>
+
 <!-- QUESTION MODAL -->
 <div class="modal-overlay" id="q-modal">
   <div class="modal">
@@ -752,6 +786,7 @@ const GT = {
     pts:'pts', generating:'Generating your game...',
     errorGen:'Error generating game. Please go back and try again.',
     noConfig:'No game config found. Please go back to setup.',
+    calculating:'CALCULATING...',
   },
   pt:{
     back:'Início', end:'🏆 Fim', reveal:'Revelar Resposta', done:'Feito ✓',
@@ -761,6 +796,7 @@ const GT = {
     pts:'pontos', generating:'Gerando seu jogo...',
     errorGen:'Erro ao gerar o jogo. Volte e tente novamente.',
     noConfig:'Configuração não encontrada. Volte ao início.',
+    calculating:'CALCULANDO...',
   },
   es:{
     back:'Inicio', end:'🏆 Fin', reveal:'Revelar Respuesta', done:'Listo ✓',
@@ -770,6 +806,7 @@ const GT = {
     pts:'puntos', generating:'Generando tu juego...',
     errorGen:'Error al generar el juego. Vuelve e intenta de nuevo.',
     noConfig:'Configuración no encontrada. Vuelve al inicio.',
+    calculating:'CALCULANDO...',
   }
 };
 
@@ -1133,6 +1170,7 @@ function endGame() {
   const G=GT[lang];
   const sorted=[...teams].sort((a,b)=>b.score-a.score);
   const winner=sorted[0];
+  // Pre-build winner screen content
   document.getElementById('winner-title').textContent=G.winner;
   document.getElementById('winner-name').textContent=winner.name;
   document.getElementById('winner-name').style.color=winner.color;
@@ -1147,9 +1185,20 @@ function endGame() {
     fc.appendChild(c);
   });
   document.getElementById('game-wrap').style.display='none';
-  document.getElementById('winner-screen').classList.add('active');
-  document.getElementById('winner-screen').style.display='flex';
-  launchConfetti();
+  // 3-second mystery countdown
+  const ms=document.getElementById('mystery-screen');
+  document.getElementById('myst-label').textContent=G.calculating;
+  const cnt=document.getElementById('myst-count');
+  cnt.textContent='3';
+  ms.classList.add('active');
+  setTimeout(()=>{cnt.textContent='2';},1000);
+  setTimeout(()=>{cnt.textContent='1';},2000);
+  setTimeout(()=>{
+    ms.classList.remove('active');
+    document.getElementById('winner-screen').classList.add('active');
+    document.getElementById('winner-screen').style.display='flex';
+    launchConfetti();
+  },3000);
 }
 
 /* Same Teams → go back to setup with teams pre-filled */
