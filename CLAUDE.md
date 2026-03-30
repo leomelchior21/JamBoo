@@ -17,7 +17,7 @@
 - Fonts: `Press Start 2P` (pixel labels/headers), `Fredoka One` + `Nunito` (game UI)
 - Core palette: `--bg:#07071A`, `--b1:#6600FF`, `--b2:#AA00FF`, `--cyan:#00FFFF`, `--pink:#FF00FF`, `--yellow:#FFD700`
 - Retro pixel aesthetic: hard `box-shadow: Npx Npx 0 #000`, pixel borders, LED/CRT effects, `image-rendering:pixelated`
-- Use `steps()` timing functions on animations for pixel-art feel
+- Use `steps()` for pixel-art UI animations; use `linear` or `ease-in`/`ease-out` for physically realistic motion (pendulums, spinning vortex, etc.)
 
 ## i18n
 - All user-facing strings live in `T` (index.html) and `GT` (game.html) objects
@@ -34,6 +34,18 @@
 ## Same Teams, New Game
 - Pressing "Same Teams, New Game" on the winner screen sets `_keepTeams: true` in `jamboo_config` and redirects to `index.html`
 - `init()` in `index.html` detects `_keepTeams`, restores all previous settings (team names, grid size, difficulty, question type, language, topic prompt), then clears the flag
+
+## Scorebar
+- Each team is rendered as a `.score-chip` (horizontal pill): team name in Nunito Bold (team color) + `(score)` in Press Start 2P
+- Chips split left/right of the centered logo; IDs `sc-{i}` (chip) and `sv-{i}` (score span) are used by `applyScore()` and `confirmScoreEdit()`
+- Score gain triggers: `💥 +N` burst (fixed, spawned at chip position) + `.bounce-anim` on chip
+- Score loss triggers: `💢 -N` slam burst + `.shake-anim` on chip
+
+## Loading Screen
+- Three animations selected randomly at the start of `boot()`: Rube Goldberg machine (`anim-rgb`), Newton's Cradle (`anim-cradle`), Vortex (`anim-vortex`)
+- Only one is shown at a time (`display:block`/`display:none`); the other two default to `display:none` in HTML
+- Newton's Cradle physics: `linear` overall with per-keyframe `ease-in` (swinging down) and `ease-out` (swinging up); symmetric 25/50/75% cycle
+- Vortex: `linear` rotation (not `steps()`) for smooth hypnotic spin; alternating `reverse` on even rings
 
 ## Adding Features
 1. Add CSS to the `<style>` block at top of the relevant file
