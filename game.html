@@ -237,7 +237,7 @@ body{
 ═══════════════════════════════════════════ */
 .scorebar-left,.scorebar-right{
   display:flex;align-items:center;gap:6px;flex:1;
-  overflow:hidden;padding:2px 0;
+  overflow:visible;padding:2px 0;
 }
 .scorebar-left{justify-content:flex-end;}
 .scorebar-right{justify-content:flex-start;}
@@ -246,37 +246,50 @@ body{
   width:150px;flex-shrink:0;
 }
 
-.score-card{
-  display:flex;flex-direction:column;align-items:center;
-  padding:5px 10px;min-width:80px;
-  background:#0A0A1E;
-  border:3px solid #2A1166;
+/* ── SCORE CHIP: horizontal "NAME (SCORE)" pill ── */
+.score-chip{
+  display:flex;align-items:center;gap:0;
+  background:#070718;
+  border:2px solid rgba(255,255,255,.08);
+  border-left:4px solid var(--tc,#00FFCC);
   box-shadow:3px 3px 0 #000;
-  position:relative;overflow:hidden;flex-shrink:0;
-  transition:border-color .2s;
+  position:relative;overflow:visible;flex-shrink:0;
+  transition:border-color .2s,box-shadow .2s;
 }
-.score-card::before{
-  content:'';position:absolute;top:0;left:0;right:0;height:2px;
-  background:var(--tc,#00FFCC);
-  box-shadow:0 0 8px var(--tc,#00FFCC);
+/* top glow line */
+.score-chip::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:var(--tc,#00FFCC);opacity:.55;
+  box-shadow:0 0 6px var(--tc,#00FFCC);
 }
-.score-card.active-team{animation:scoreFlash .4s steps(4);}
+.score-chip.active-team{animation:scoreFlash .4s steps(4);}
 @keyframes scoreFlash{
   0%,100%{transform:scale(1);}
   50%{transform:scale(1.07);box-shadow:3px 3px 0 #000,0 0 14px var(--tc,#00FFCC);}
 }
-.score-name{
-  font-family:var(--fp);font-size:6px;
+/* team name — Nunito for legibility */
+.chip-name{
+  font-family:var(--fb);font-weight:900;font-size:12px;
   text-transform:uppercase;letter-spacing:.5px;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80px;
-  color:var(--tc,#00FFCC);
-  text-shadow:0 0 8px var(--tc,#00FFCC);
-  margin-bottom:3px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:88px;
+  color:var(--tc,#00FFCC);text-shadow:0 0 6px var(--tc,#00FFCC);
+  padding:6px 4px 6px 9px;
 }
-.score-val{
-  font-family:var(--fp);font-size:16px;line-height:1;
+/* (score) section */
+.chip-score-wrap{
+  display:flex;align-items:center;gap:1px;
+  padding:6px 9px 6px 4px;
+}
+.chip-paren{
+  font-family:var(--fp);font-size:8px;
+  color:rgba(255,255,255,.3);line-height:1;
+}
+.chip-score{
+  font-family:var(--fp);font-size:14px;line-height:1;
   color:#fff;text-shadow:2px 2px 0 #000;
+  cursor:pointer;transition:color .12s,text-shadow .12s;
 }
+.chip-score:hover{color:var(--primary);text-shadow:0 0 10px var(--primary);}
 .score-popup{
   position:absolute;top:0;left:50%;transform:translateX(-50%);
   font-family:var(--fp);font-size:9px;font-weight:900;
@@ -604,9 +617,9 @@ body{
 @media(max-width:480px){
   .mc-grid{grid-template-columns:1fr;}
   .award-grid{grid-template-columns:1fr 1fr;}
-  .score-card{min-width:64px;padding:4px 7px;}
-  .score-name{font-size:5px;}
-  .score-val{font-size:13px;}
+  .chip-name{font-size:10px;max-width:60px;padding:5px 3px 5px 7px;}
+  .chip-score{font-size:11px;}
+  .chip-score-wrap{padding:5px 7px 5px 3px;}
   .ghdr-logo{height:96px;top:calc(50% - 48px);}
   .board-toolbar{margin-top:52px;}
 }
@@ -654,8 +667,7 @@ body{
 .score-edit-btn-ok:hover{filter:brightness(1.1);}
 .score-edit-btn-cancel{background:transparent;border-color:rgba(255,255,255,.25);color:var(--text2);}
 .score-edit-btn-cancel:hover{border-color:rgba(255,255,255,.5);color:#fff;}
-.score-val{cursor:pointer;transition:color .12s,text-shadow .12s;}
-.score-val:hover{color:var(--primary);text-shadow:0 0 10px var(--primary);}
+
 </style>
 </head>
 <body>
@@ -932,9 +944,9 @@ function renderScorebar() {
   const half=Math.ceil(teams.length/2);
   teams.forEach((t,i)=>{
     const c=document.createElement('div');
-    c.className='score-card';c.id=`sc-${i}`;
+    c.className='score-chip';c.id=`sc-${i}`;
     c.style.setProperty('--tc',t.color);
-    c.innerHTML=`<div class="score-name">${t.name}</div><div class="score-val" id="sv-${i}" onclick="editScore(${i})" title="Tap to adjust score">0</div>`;
+    c.innerHTML=`<div class="chip-name">${t.name}</div><div class="chip-score-wrap"><span class="chip-paren">(</span><span class="chip-score" id="sv-${i}" onclick="editScore(${i})" title="Tap to adjust score">0</span><span class="chip-paren">)</span></div>`;
     (i<half?left:right).appendChild(c);
   });
 }
