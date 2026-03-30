@@ -29,7 +29,11 @@
 2. Config saved to `localStorage` as `jamboo_config`
 3. Redirects to `game.html`
 4. `game.html` reads config, POSTs to `/api/generate`, renders board
-5. Winner screen shown when all cells answered or teacher clicks End
+5. When all cells answered or teacher clicks End, a 3-second mystery countdown screen appears (`#mystery-screen`), then the winner screen is revealed with confetti
+
+## Same Teams, New Game
+- Pressing "Same Teams, New Game" on the winner screen sets `_keepTeams: true` in `jamboo_config` and redirects to `index.html`
+- `init()` in `index.html` detects `_keepTeams`, restores all previous settings (team names, grid size, difficulty, question type, language, topic prompt), then clears the flag
 
 ## Adding Features
 1. Add CSS to the `<style>` block at top of the relevant file
