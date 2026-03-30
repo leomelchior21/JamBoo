@@ -175,23 +175,25 @@ body{
   width:18px;height:18px;border:2px solid #000;
   background:var(--bc,#FFD700);box-shadow:0 0 9px var(--bc,#FFD700);
 }
-.ca-1{left:64px; --bc:#FF00BB;animation:pendulumLeft  2.2s ease-in-out infinite;}
+.ca-1{left:64px; --bc:#FF00BB;animation:pendulumLeft  2s linear infinite;}
 .ca-2{left:96px; --bc:#BF00FF;}
 .ca-3{left:128px;--bc:#00FFCC;}
 .ca-4{left:160px;--bc:#FFD700;}
-.ca-5{left:192px;--bc:#6600FF;animation:pendulumRight 2.2s ease-in-out infinite;}
+.ca-5{left:192px;--bc:#6600FF;animation:pendulumRight 2s linear infinite;}
+/* Per-keyframe timing: ease-in swinging DOWN (apex→center), ease-out swinging UP (center→apex).
+   Linear overall so the per-keyframe functions take full effect.
+   Symmetric 25/50/75 split: left hits at 25%, right returns at 75%. */
 @keyframes pendulumLeft{
-  0%  {transform:rotate(-42deg);}
-  22% {transform:rotate(0deg);}
-  55% {transform:rotate(0deg);}
-  78% {transform:rotate(0deg);}
+  0%  {transform:rotate(-42deg);animation-timing-function:ease-in;}
+  25% {transform:rotate(0deg);  animation-timing-function:linear;}
+  75% {transform:rotate(0deg);  animation-timing-function:ease-out;}
   100%{transform:rotate(-42deg);}
 }
 @keyframes pendulumRight{
-  0%  {transform:rotate(0deg);}
-  22% {transform:rotate(0deg);}
-  44% {transform:rotate(42deg);}
-  66% {transform:rotate(0deg);}
+  0%  {transform:rotate(0deg);  animation-timing-function:linear;}
+  25% {transform:rotate(0deg);  animation-timing-function:ease-out;}
+  50% {transform:rotate(42deg); animation-timing-function:ease-in;}
+  75% {transform:rotate(0deg);  animation-timing-function:linear;}
   100%{transform:rotate(0deg);}
 }
 
@@ -206,11 +208,11 @@ body{
   box-shadow:0 0 7px var(--vc,#00FFCC);
   transform:translate(-50%,-50%);
 }
-.vx-1{width:22px; height:22px; --vc:#FF00BB;animation:vxSpin  .6s steps(4) infinite;}
-.vx-2{width:46px; height:46px; --vc:#BF00FF;animation:vxSpin 1.1s steps(8) reverse infinite;animation-delay:-.25s;}
-.vx-3{width:72px; height:72px; --vc:#6600FF;animation:vxSpin 1.7s steps(12) infinite;animation-delay:-.5s;}
-.vx-4{width:98px; height:98px; --vc:#00FFCC;animation:vxSpin 2.5s steps(18) reverse infinite;animation-delay:-.8s;}
-.vx-5{width:124px;height:124px;--vc:#FF2D95;animation:vxSpin 3.6s steps(26) infinite;animation-delay:-1.2s;}
+.vx-1{width:22px; height:22px; --vc:#FF00BB;animation:vxSpin  .6s linear infinite;}
+.vx-2{width:46px; height:46px; --vc:#BF00FF;animation:vxSpin 1.1s linear reverse infinite;animation-delay:-.25s;}
+.vx-3{width:72px; height:72px; --vc:#6600FF;animation:vxSpin 1.7s linear infinite;animation-delay:-.5s;}
+.vx-4{width:98px; height:98px; --vc:#00FFCC;animation:vxSpin 2.5s linear reverse infinite;animation-delay:-.8s;}
+.vx-5{width:124px;height:124px;--vc:#FF2D95;animation:vxSpin 3.6s linear infinite;animation-delay:-1.2s;}
 @keyframes vxSpin{
   from{transform:translate(-50%,-50%) rotate(0deg);}
   to  {transform:translate(-50%,-50%) rotate(360deg);}
