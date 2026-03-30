@@ -157,6 +157,76 @@ body{
 @keyframes sweep{0%{transform:translateX(-100%)}100%{transform:translateX(300%)}}
 .load-text{font-family:var(--fp);font-size:7px;color:var(--text2);letter-spacing:3px;text-transform:uppercase;}
 
+/* ── NEWTON'S CRADLE ── */
+.cradle-wrap{position:relative;width:240px;height:106px;margin:6px auto;flex-shrink:0;}
+.cradle-bar{
+  position:absolute;top:0;left:28px;right:28px;height:5px;
+  background:linear-gradient(90deg,var(--primary),var(--accent),var(--primary));
+  box-shadow:0 0 8px var(--primary);
+}
+.c-arm{
+  position:absolute;top:5px;width:3px;height:62px;
+  background:rgba(255,255,255,.22);
+  transform-origin:top center;
+}
+.c-arm::after{
+  content:'';position:absolute;bottom:-16px;left:50%;
+  transform:translateX(-50%);
+  width:18px;height:18px;border:2px solid #000;
+  background:var(--bc,#FFD700);box-shadow:0 0 9px var(--bc,#FFD700);
+}
+.ca-1{left:64px; --bc:#FF00BB;animation:pendulumLeft  2.2s ease-in-out infinite;}
+.ca-2{left:96px; --bc:#BF00FF;}
+.ca-3{left:128px;--bc:#00FFCC;}
+.ca-4{left:160px;--bc:#FFD700;}
+.ca-5{left:192px;--bc:#6600FF;animation:pendulumRight 2.2s ease-in-out infinite;}
+@keyframes pendulumLeft{
+  0%  {transform:rotate(-42deg);}
+  22% {transform:rotate(0deg);}
+  55% {transform:rotate(0deg);}
+  78% {transform:rotate(0deg);}
+  100%{transform:rotate(-42deg);}
+}
+@keyframes pendulumRight{
+  0%  {transform:rotate(0deg);}
+  22% {transform:rotate(0deg);}
+  44% {transform:rotate(42deg);}
+  66% {transform:rotate(0deg);}
+  100%{transform:rotate(0deg);}
+}
+
+/* ── VORTEX ── */
+.vortex-wrap{
+  position:relative;width:140px;height:140px;
+  margin:6px auto;flex-shrink:0;
+}
+.vx-ring{
+  position:absolute;top:50%;left:50%;
+  border:3px solid var(--vc,#00FFCC);
+  box-shadow:0 0 7px var(--vc,#00FFCC);
+  transform:translate(-50%,-50%);
+}
+.vx-1{width:22px; height:22px; --vc:#FF00BB;animation:vxSpin  .6s steps(4) infinite;}
+.vx-2{width:46px; height:46px; --vc:#BF00FF;animation:vxSpin 1.1s steps(8) reverse infinite;animation-delay:-.25s;}
+.vx-3{width:72px; height:72px; --vc:#6600FF;animation:vxSpin 1.7s steps(12) infinite;animation-delay:-.5s;}
+.vx-4{width:98px; height:98px; --vc:#00FFCC;animation:vxSpin 2.5s steps(18) reverse infinite;animation-delay:-.8s;}
+.vx-5{width:124px;height:124px;--vc:#FF2D95;animation:vxSpin 3.6s steps(26) infinite;animation-delay:-1.2s;}
+@keyframes vxSpin{
+  from{transform:translate(-50%,-50%) rotate(0deg);}
+  to  {transform:translate(-50%,-50%) rotate(360deg);}
+}
+.vx-core{
+  position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  width:10px;height:10px;
+  background:#FFD700;box-shadow:0 0 12px #FFD700,0 0 24px #FFD700;
+  animation:vxPulse .5s steps(2) infinite;
+}
+@keyframes vxPulse{
+  0%,100%{transform:translate(-50%,-50%) scale(1);}
+  50%{transform:translate(-50%,-50%) scale(1.6);}
+}
+
 /* ═══════════════════════════════════════════
    GAME WRAPPER
 ═══════════════════════════════════════════ */
@@ -174,7 +244,7 @@ body{
   display:flex;align-items:center;justify-content:space-between;gap:10px;
   position:sticky;top:0;z-index:100;
   overflow:visible;
-  min-height:54px;
+  min-height:76px;
 }
 
 /* pixel scanline on header */
@@ -297,12 +367,62 @@ body{
 }
 @keyframes popUp{0%{opacity:1;transform:translateX(-50%) translateY(0)}100%{opacity:0;transform:translateX(-50%) translateY(-28px)}}
 
+/* ── SCORE IMPACT ANIMATIONS ── */
+.score-burst{
+  position:fixed;font-family:var(--fp);
+  font-size:clamp(20px,4vw,36px);line-height:1.2;
+  pointer-events:none;z-index:9100;white-space:nowrap;text-align:center;
+}
+.score-burst-gain{
+  color:#00FFCC;text-shadow:0 0 16px #00FFCC,3px 3px 0 #000;
+  animation:burstGain .85s cubic-bezier(.15,.9,.3,1) forwards;
+}
+.score-burst-lose{
+  color:#FF4444;text-shadow:0 0 16px #FF4444,3px 3px 0 #000;
+  animation:burstLose .85s cubic-bezier(.15,.9,.3,1) forwards;
+}
+@keyframes burstGain{
+  0%  {opacity:1;transform:translate(-50%,-50%) scale(.15) rotate(-12deg);}
+  45% {opacity:1;transform:translate(-50%,-70%) scale(1.2) rotate(6deg);}
+  70% {opacity:.9;transform:translate(-50%,-80%) scale(1.1) rotate(-2deg);}
+  100%{opacity:0;transform:translate(-50%,-110%) scale(1.3) rotate(0deg);}
+}
+@keyframes burstLose{
+  0%  {opacity:0;transform:translate(-50%,-130%) scale(1.5);}
+  28% {opacity:1;transform:translate(-50%,-50%) scale(.8);}
+  55% {opacity:1;transform:translate(-50%,-50%) scale(1.05);}
+  80% {opacity:.7;transform:translate(-50%,-50%) scale(.95);}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(.9);}
+}
+.score-chip.bounce-anim{animation:chipBounce .7s ease-out forwards !important;}
+.score-chip.shake-anim {animation:chipShake  .6s ease-out forwards !important;}
+@keyframes chipBounce{
+  0%  {transform:translateY(0) scale(1);}
+  18% {transform:translateY(-14px) scale(1.12);}
+  38% {transform:translateY(3px) scale(.95);}
+  55% {transform:translateY(-6px) scale(1.05);}
+  72% {transform:translateY(1px) scale(.99);}
+  100%{transform:translateY(0) scale(1);}
+}
+@keyframes chipShake{
+  0%,100%{transform:translateX(0) scale(1);}
+  8%  {transform:translateX(-9px) scale(.96);}
+  18% {transform:translateX(9px)  scale(.96);}
+  28% {transform:translateX(-7px);}
+  38% {transform:translateX(7px);}
+  48% {transform:translateX(-5px);}
+  58% {transform:translateX(5px);}
+  68% {transform:translateX(-3px);}
+  80% {transform:translateX(3px);}
+}
+
 /* ═══════════════════════════════════════════
    BOARD
 ═══════════════════════════════════════════ */
 .board-toolbar{
   display:flex;align-items:center;justify-content:flex-end;gap:8px;
   padding:6px 16px;
+  margin-top:22px;
   background:var(--panel2);
   border-bottom:1px solid rgba(255,255,255,.06);
   margin-top:66px; /* space for logo overhang */
@@ -676,23 +796,56 @@ body{
 <div id="loading">
   <img class="load-logo" src="Jamboo-logo-png.png" alt="JamBoo">
 
-  <!-- RUBE GOLDBERG MACHINE -->
-  <div class="rgb-machine">
-    <div class="rgb-plat plat-a"></div>
-    <div class="rgb-plat plat-b"></div>
-    <div class="rgb-plat plat-c"></div>
-    <div class="rgb-plat plat-d"></div>
-    <div class="rgb-lever"></div>
-    <div class="rgb-ball"></div>
-    <div class="rgb-gear">⚙</div>
-    <div class="rgb-spark spark-1">★</div>
-    <div class="rgb-spark spark-2">✦</div>
-    <div class="rgb-spark spark-3">★</div>
+  <!-- LOADING ANIMATION (one shown randomly via JS) -->
+  <div id="anim-rgb">
+    <div class="rgb-machine">
+      <div class="rgb-plat plat-a"></div>
+      <div class="rgb-plat plat-b"></div>
+      <div class="rgb-plat plat-c"></div>
+      <div class="rgb-plat plat-d"></div>
+      <div class="rgb-lever"></div>
+      <div class="rgb-ball"></div>
+      <div class="rgb-gear">⚙</div>
+      <div class="rgb-spark spark-1">★</div>
+      <div class="rgb-spark spark-2">✦</div>
+      <div class="rgb-spark spark-3">★</div>
+    </div>
+  </div>
+
+  <!-- NEWTON'S CRADLE -->
+  <div id="anim-cradle" style="display:none">
+    <div class="cradle-wrap">
+      <div class="cradle-bar"></div>
+      <div class="c-arm ca-1"></div>
+      <div class="c-arm ca-2"></div>
+      <div class="c-arm ca-3"></div>
+      <div class="c-arm ca-4"></div>
+      <div class="c-arm ca-5"></div>
+    </div>
+  </div>
+
+  <!-- VORTEX -->
+  <div id="anim-vortex" style="display:none">
+    <div class="vortex-wrap">
+      <div class="vx-ring vx-5"></div>
+      <div class="vx-ring vx-4"></div>
+      <div class="vx-ring vx-3"></div>
+      <div class="vx-ring vx-2"></div>
+      <div class="vx-ring vx-1"></div>
+      <div class="vx-core"></div>
+    </div>
   </div>
 
   <div class="load-bar-wrap"><div class="load-bar"></div></div>
   <p class="load-text" id="load-text">Generating your game...</p>
 </div>
+<script>
+(function(){
+  var a=['anim-rgb','anim-cradle','anim-vortex'];
+  var p=a[Math.floor(Math.random()*a.length)];
+  a.forEach(function(id){document.getElementById(id).style.display=id===p?'block':'none';});
+})();
+</script>
 
 <!-- GAME WRAPPER -->
 <div id="game-wrap">
@@ -1100,13 +1253,26 @@ function applyScore(idx,delta,label) {
   if(val) val.textContent=teams[idx].score;
   const card=document.getElementById(`sc-${idx}`);
   if(card){
+    // Small floating popup
     const pop=document.createElement('div');
     pop.className='score-popup';pop.textContent=label;
     pop.style.color=delta>0?'var(--primary)':'var(--danger)';
     card.appendChild(pop);
     setTimeout(()=>pop.remove(),1600);
-    card.classList.add('active-team');
-    setTimeout(()=>card.classList.remove('active-team'),600);
+    // Big impact burst at chip position
+    const rect=card.getBoundingClientRect();
+    const burst=document.createElement('div');
+    burst.className='score-burst '+(delta>0?'score-burst-gain':'score-burst-lose');
+    burst.textContent=delta>0?`💥 ${label}`:`💢 ${label}`;
+    burst.style.left=(rect.left+rect.width/2)+'px';
+    burst.style.top=(rect.top+rect.height/2)+'px';
+    document.body.appendChild(burst);
+    setTimeout(()=>burst.remove(),900);
+    // Chip animation
+    card.classList.remove('bounce-anim','shake-anim','active-team');
+    void card.offsetWidth;
+    card.classList.add(delta>0?'bounce-anim':'shake-anim');
+    setTimeout(()=>card.classList.remove('bounce-anim','shake-anim'),750);
   }
 }
 
