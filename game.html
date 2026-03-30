@@ -583,6 +583,52 @@ body{
   .ghdr-logo{height:96px;top:calc(50% - 48px);}
   .board-toolbar{margin-top:52px;}
 }
+
+/* ═══════════════════════════════════════════
+   SCORE EDIT
+═══════════════════════════════════════════ */
+.score-edit-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.78);z-index:700;
+  align-items:center;justify-content:center;
+}
+.score-edit-overlay.active{display:flex;}
+.score-edit-box{
+  background:var(--panel2);
+  border:3px solid var(--border);
+  box-shadow:6px 6px 0 #000,0 0 28px rgba(191,0,255,.25);
+  padding:22px 28px;
+  display:flex;flex-direction:column;align-items:center;gap:14px;
+  min-width:210px;
+  animation:modalIn .18s ease;
+}
+.score-edit-lbl{
+  font-family:var(--fp);font-size:7px;color:var(--text2);
+  letter-spacing:2px;text-transform:uppercase;
+}
+.score-edit-name{
+  font-family:var(--fp);font-size:9px;text-transform:uppercase;letter-spacing:1px;
+}
+.score-edit-input{
+  background:#0A0A1F;border:3px solid var(--border);
+  color:#fff;font-family:var(--fp);font-size:26px;
+  width:130px;text-align:center;padding:8px 4px;outline:none;
+}
+.score-edit-input::-webkit-inner-spin-button,.score-edit-input::-webkit-outer-spin-button{display:none;}
+.score-edit-input[type=number]{-moz-appearance:textfield;}
+.score-edit-btns{display:flex;gap:10px;}
+.score-edit-btn{
+  padding:9px 18px;font-family:var(--fp);font-size:8px;
+  cursor:pointer;border:3px solid;letter-spacing:1px;
+  box-shadow:3px 3px 0 #000;transition:transform .07s,box-shadow .07s;
+}
+.score-edit-btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 #000;}
+.score-edit-btn-ok{background:var(--primary);border-color:#00CCAA;color:#000;}
+.score-edit-btn-ok:hover{filter:brightness(1.1);}
+.score-edit-btn-cancel{background:transparent;border-color:rgba(255,255,255,.25);color:var(--text2);}
+.score-edit-btn-cancel:hover{border-color:rgba(255,255,255,.5);color:#fff;}
+.score-val{cursor:pointer;transition:color .12s,text-shadow .12s;}
+.score-val:hover{color:var(--primary);text-shadow:0 0 10px var(--primary);}
 </style>
 </head>
 <body>
@@ -851,7 +897,7 @@ function renderScorebar() {
     const c=document.createElement('div');
     c.className='score-card';c.id=`sc-${i}`;
     c.style.setProperty('--tc',t.color);
-    c.innerHTML=`<div class="score-name">${t.name}</div><div class="score-val" id="sv-${i}">0</div>`;
+    c.innerHTML=`<div class="score-name">${t.name}</div><div class="score-val" id="sv-${i}" onclick="editScore(${i})" title="Tap to adjust score">0</div>`;
     (i<half?left:right).appendChild(c);
   });
 }
@@ -1141,6 +1187,63 @@ document.getElementById('q-modal').addEventListener('click',e=>{
   if(e.target===document.getElementById('q-modal')) closeModal();
 });
 
+/* ══════════ SCORE EDIT ══════════ */
+let scoreEditIdx=null;
+
+function editScore(idx){
+  scoreEditIdx=idx;
+  const t=teams[idx];
+  const nm=document.getElementById('score-edit-name');
+  const inp=document.getElementById('score-edit-input');
+  nm.textContent=t.name;
+  nm.style.color=t.color;
+  nm.style.textShadow=`0 0 8px ${t.color}`;
+  inp.style.borderColor=t.color;
+  inp.value=t.score;
+  document.getElementById('score-edit-overlay').classList.add('active');
+  setTimeout(()=>{inp.focus();inp.select();},60);
+}
+
+function confirmScoreEdit(){
+  if(scoreEditIdx===null) return;
+  const inp=document.getElementById('score-edit-input');
+  const val=parseInt(inp.value,10);
+  if(!isNaN(val)){
+    const old=teams[scoreEditIdx].score;
+    teams[scoreEditIdx].score=val;
+    const el=document.getElementById(`sv-${scoreEditIdx}`);
+    if(el) el.textContent=val;
+    const delta=val-old;
+    if(delta!==0){
+      const card=document.getElementById(`sc-${scoreEditIdx}`);
+      if(card){
+        const pop=document.createElement('div');
+        pop.className='score-popup';
+        pop.textContent=(delta>0?'+':'')+delta;
+        pop.style.color=delta>0?'var(--primary)':'var(--danger)';
+        card.appendChild(pop);
+        setTimeout(()=>pop.remove(),1600);
+      }
+    }
+  }
+  closeScoreEdit();
+}
+
+function closeScoreEdit(){
+  document.getElementById('score-edit-overlay').classList.remove('active');
+  scoreEditIdx=null;
+}
+
+document.getElementById('score-edit-overlay').addEventListener('click',function(e){
+  if(e.target===this) closeScoreEdit();
+});
+
+document.addEventListener('keydown',function(e){
+  if(!document.getElementById('score-edit-overlay').classList.contains('active')) return;
+  if(e.key==='Enter') confirmScoreEdit();
+  if(e.key==='Escape') closeScoreEdit();
+});
+
 boot();
 
 /* ══════════ BOARD ZOOM ══════════ */
@@ -1151,6 +1254,19 @@ function zoomBoard(dir){
   document.getElementById('zoom-lbl').textContent=Math.round(bz*100)+'%';
 }
 </script>
+
+<!-- SCORE EDIT OVERLAY -->
+<div class="score-edit-overlay" id="score-edit-overlay">
+  <div class="score-edit-box" id="score-edit-box">
+    <div class="score-edit-lbl">ADJUST SCORE</div>
+    <div class="score-edit-name" id="score-edit-name"></div>
+    <input class="score-edit-input" id="score-edit-input" type="number" step="1">
+    <div class="score-edit-btns">
+      <button class="score-edit-btn score-edit-btn-ok" onclick="confirmScoreEdit()">✓ OK</button>
+      <button class="score-edit-btn score-edit-btn-cancel" onclick="closeScoreEdit()">✕</button>
+    </div>
+  </div>
+</div>
 <div id="verdict-flash">
   <span class="verdict-icon" id="verdict-icon"></span>
 </div>

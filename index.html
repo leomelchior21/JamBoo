@@ -665,6 +665,34 @@ const T={
 };
 
 const TEAM_COLORS=['#00FFCC','#FF00BB','#BF00FF','#F5C518','#00D1FF','#FB923C','#34D399','#F472B6'];
+
+/* ══════════ ARDUINO SECRET MODE ══════════ */
+const ARDUINO_PROMPT=`Arduino & Physical Computing — introductory quiz for a technology or STEM class. Cover ALL of these topics distributed across the quiz categories:
+1. Basic electric components: resistor, LED, breadboard, jumper wire, capacitor — what each one does
+2. Basic electric concepts: voltage (V), current (A), resistance (Ohm), Ohm Law (V=IR), series vs parallel circuit, open vs closed circuit
+3. Analog vs Digital: difference between analog and digital signals, real-world examples of each, what ADC does, what PWM (marked with ~) does
+4. Input vs Output in electronics: what each means, examples — button and sensor are inputs, LED and servo and buzzer are outputs
+5. What is Arduino: open-source microcontroller board, runs C++ sketches, connects to real electronic components
+6. Arduino pins — digital pins 0 to 13 (on/off signals); PWM pins marked with tilde (3, 5, 6, 9, 10, 11) for variable signals; Analog pins A0 to A5 reading 0-1023; Power pins: 5V, 3.3V, VIN, GND and what each does
+7. Tinkercad Circuits: free online circuit simulator, block-based programming, switching from Blocks to Text view to see C++ code, copying that code to Arduino IDE
+8. Arduino IDE: software used to write and upload sketches to the Arduino board, what a sketch is
+9. Arduino components and their functions: LED (emit light), Push Button (detect press), Servo Motor (controlled rotation angle), Buzzer (emit sound), Photoresistor/LDR (sense light), difference between sensors (inputs) and actuators (outputs)
+Make all questions appropriate for a beginner or introductory level student, ages 11-14.`;
+
+function levenshtein(a,b){
+  const m=a.length,n=b.length;
+  const dp=[];
+  for(let i=0;i<=m;i++){dp[i]=[];dp[i][0]=i;}
+  for(let j=0;j<=n;j++) dp[0][j]=j;
+  for(let i=1;i<=m;i++)
+    for(let j=1;j<=n;j++)
+      dp[i][j]=a[i-1]===b[j-1]?dp[i-1][j-1]:1+Math.min(dp[i-1][j-1],dp[i-1][j],dp[i][j-1]);
+  return dp[m][n];
+}
+function detectArduino(text){
+  const words=text.toLowerCase().replace(/[^a-z0-9]/g,' ').split(/\s+/).filter(w=>w.length>=4);
+  return words.some(w=>levenshtein(w,'arduino')<=2);
+}
 const TEAMS_OPTS=[
   {val:'solo',labelKey:'solo'},
   {val:2,label:'2'},{val:3,label:'3'},{val:4,label:'4'},
@@ -829,6 +857,8 @@ function renderTeamInputs(){
 function startGame(){
   const prompt=document.getElementById('ai-prompt').value.trim();
   if(!prompt){alert(T[lang].noPrompt);return;}
+  const isArduino=detectArduino(prompt);
+  const finalPrompt=isArduino?ARDUINO_PROMPT:prompt;
   const qLang={en:'English',pt:'Portuguese',es:'Spanish'}[lang];
   const count=soloMode?1:numTeams;
   const config={
@@ -836,13 +866,15 @@ function startGame(){
     teams:teams.slice(0,count),
     lang,qLang,
     timerOn:true,speedOn:false,
-    soloMode,prompt
+    soloMode,prompt:finalPrompt
   };
-  document.getElementById('load-text').textContent=T[lang].generating;
+  const loadEl=document.getElementById('load-text');
+  loadEl.textContent=isArduino?'⚡ ARDUINO MODE ⚡':T[lang].generating;
   document.getElementById('loading').classList.add('active');
   document.getElementById('gen-btn').disabled=true;
   localStorage.setItem('jamboo_config',JSON.stringify(config));
-  window.location.href='game.html';
+  if(isArduino){setTimeout(()=>{window.location.href='game.html';},900);}
+  else{window.location.href='game.html';}
 }
 
 init();
