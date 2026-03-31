@@ -975,6 +975,120 @@ let drawCtx=null, isDrawing=false, drawColor='#000000';
 let mcAnswered=null;
 let openOutcome=null;
 
+function cleanText(value){
+  return String(value ?? '').trim();
+}
+
+function normalizeAnswerKey(value){
+  return cleanText(value)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g,'')
+    .toLowerCase()
+    .replace(/["'`]/g,'')
+    .replace(/[.,;:!?]/g,'')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+
+function findCorrectOptionIndex(options, answer, correctIndex){
+  const answerKey=normalizeAnswerKey(answer);
+  const matchedIndex=options.findIndex(opt=>{
+    const optionKey=normalizeAnswerKey(opt);
+    return optionKey===answerKey || optionKey.includes(answerKey) || answerKey.includes(optionKey);
+  });
+  if(matchedIndex>=0) return matchedIndex;
+  if(Number.isInteger(correctIndex) && correctIndex>=0 && correctIndex<options.length) return correctIndex;
+  return -1;
+}
+
+function sanitizeQuestion(rawQuestion, colIndex, rowIndex){
+  if(!rawQuestion || typeof rawQuestion!=='object'){
+    throw new Error(`Invalid question object at ${colIndex}:${rowIndex}`);
+  }
+
+  const question=cleanText(rawQuestion.question);
+  const answer=cleanText(rawQuestion.answer);
+  if(!question || !answer){
+    throw new Error(`Missing question text at ${colIndex}:${rowIndex}`);
+  }
+
+  const isDrawing=!!rawQuestion.isDrawing;
+  const rawOptions=Array.isArray(rawQuestion.options)
+    ? rawQuestion.options.map(cleanText).filter(Boolean).slice(0,4)
+    : [];
+  const parsedCorrectIndex=Number.isInteger(rawQuestion.correctIndex)
+    ? rawQuestion.correctIndex
+    : Number.parseInt(rawQuestion.correctIndex,10);
+
+  if(isDrawing){
+    return {question,answer,type:'drawing',options:[],correctIndex:0,isDrawing:true};
+  }
+
+  if(rawOptions.length===4){
+    const correctIndex=findCorrectOptionIndex(rawOptions,answer,parsedCorrectIndex);
+    if(correctIndex>=0){
+      return {question,answer,type:'multiple',options:rawOptions,correctIndex,isDrawing:false};
+    }
+  }
+
+  return {question,answer,type:'open',options:[],correctIndex:0,isDrawing:false};
+}
+
+function rebalanceMultipleChoiceAnswers(game){
+  const multipleQuestions=[];
+  game.questions.forEach(col=>{
+    col.forEach(question=>{
+      if(Array.isArray(question.options) && question.options.length===4){
+        multipleQuestions.push(question);
+      }
+    });
+  });
+
+  if(!multipleQuestions.length) return game;
+
+  const offset=multipleQuestions.length===1 ? 1+Math.floor(Math.random()*3) : Math.floor(Math.random()*4);
+  multipleQuestions.forEach((question,index)=>{
+    const targetIndex=(index+offset)%4;
+    if(question.correctIndex===targetIndex) return;
+    const correctOption=question.options[question.correctIndex];
+    const otherOptions=question.options.filter((_,optionIndex)=>optionIndex!==question.correctIndex);
+    question.options=[
+      ...otherOptions.slice(0,targetIndex),
+      correctOption,
+      ...otherOptions.slice(targetIndex)
+    ];
+    question.correctIndex=targetIndex;
+  });
+
+  return game;
+}
+
+function sanitizeGameData(rawGame){
+  const expectedCols=cfg.numCols;
+  const expectedRows=cfg.numRows;
+
+  if(!rawGame || !Array.isArray(rawGame.categories) || !Array.isArray(rawGame.questions)){
+    throw new Error('Invalid game schema');
+  }
+  if(rawGame.categories.length!==expectedCols || rawGame.questions.length!==expectedCols){
+    throw new Error('Unexpected game dimensions');
+  }
+
+  const categories=rawGame.categories.map((category,index)=>{
+    const label=cleanText(category);
+    return label || `Category ${index+1}`;
+  });
+
+  const questions=rawGame.questions.map((column,colIndex)=>{
+    if(!Array.isArray(column) || column.length!==expectedRows){
+      throw new Error(`Unexpected question column size at ${colIndex}`);
+    }
+    return column.map((question,rowIndex)=>sanitizeQuestion(question,colIndex,rowIndex));
+  });
+
+  return rebalanceMultipleChoiceAnswers({categories,questions});
+}
+
 async function boot() {
   // Pick a random loading animation
   const anims=['anim-rgb','anim-cradle','anim-vortex'];
@@ -999,7 +1113,7 @@ async function boot() {
     const data=await res.json();
     const text=data.choices?.[0]?.message?.content;
     if(!text) throw new Error('Empty response');
-    gameData=JSON.parse(text.replace(/```json|```/g,'').trim());
+    gameData=sanitizeGameData(JSON.parse(text.replace(/```json|```/g,'').trim()));
   } catch(e) {
     console.error(e);
     alert(GT[lang].errorGen);
@@ -1013,7 +1127,7 @@ async function boot() {
   document.getElementById('game-wrap').classList.add('ready');
 }
 
-function buildPayload() {
+function legacyBuildPromptPayload() {
   const {numCols,numRows,difficulty,qType,qLang,prompt}=cfg;
   const pts=Array.from({length:numRows},(_,i)=>(i+1)*100);
   const mcNote=(qType==='multiple'||qType==='mixed')
@@ -1041,6 +1155,41 @@ RULES:
 - ${drawNote}
 - Write questions that feel specific and surprising — avoid the most obvious, predictable question about a topic. Favor angles that reward genuine understanding over trivia recall.
 - Return ONLY raw JSON — no explanation, no markdown.`;
+
+  return {messages:[
+    {role:'system',content:sys},
+    {role:'user',content:`Topic: ${prompt}\n\nReturn ONLY valid JSON.`}
+  ]};
+}
+
+function buildPayload() {
+  const {numCols,numRows,difficulty,qType,qLang,prompt}=cfg;
+  const pts=Array.from({length:numRows},(_,i)=>(i+1)*100);
+  const mcNote=(qType==='multiple'||qType==='mixed')
+    ?'Multiple choice MUST have "options":["option 1","option 2","option 3","option 4"] (exactly 4 full answer choices, never just letters) and "correctIndex":0-3. The text in "answer" must match the option at correctIndex.':'';
+  const drawNote=(qType==='drawing'||qType==='mixed')
+    ?'Drawing questions: set "isDrawing":true, omit options/correctIndex.':'';
+
+  const diffMap={easy:'very easy',medium:'medium',hard:'hard',mixed:'varies by row'};
+  const rowDiff=Array.from({length:numRows},(_,i)=>{
+    const labels=['trivial','easy','medium','hard','very hard'];
+    return `row ${i+1} (${pts[i]}pts): ${labels[Math.min(i,labels.length-1)]}`;
+  }).join(', ');
+
+  const sys=`You are a quiz game generator for educators. Create a Jeopardy-style quiz as JSON.
+
+SCHEMA:
+{"categories":["Cat1",...],"questions":[[{"question":"...","answer":"...","type":"${qType}","options":[],"correctIndex":0,"isDrawing":false},...(${numRows} items)],...(${numCols} arrays)]}
+
+RULES:
+- Exactly ${numCols} categories, ${numRows} questions each
+- Point values and difficulty: ${rowDiff}
+- All content in ${qLang}. Overall difficulty: ${diffMap[difficulty]||difficulty}. Type: ${qType}
+- ${mcNote}
+- IMPORTANT for MC: distribute correctIndex values across 0,1,2,3. Do NOT always use 0. Never make every correct answer land on A. Each value should appear roughly equally across the whole game.
+- ${drawNote}
+- Write questions that feel specific and surprising - avoid the most obvious, predictable question about a topic. Favor angles that reward genuine understanding over trivia recall.
+- Return ONLY raw JSON - no explanation, no markdown.`;
 
   return {messages:[
     {role:'system',content:sys},
