@@ -1395,6 +1395,7 @@ let mcAnswered=null;
 let openOutcome=null;
 let loadingSceneTimer=null;
 let activeLoadingSceneIndex=0;
+const MAX_GENERATION_ATTEMPTS=3;
 
 function cleanText(value){
   return String(value ?? '').trim();
@@ -1484,6 +1485,91 @@ function rebalanceMultipleChoiceAnswers(game){
   return game;
 }
 
+function extractJsonObject(text){
+  const source=cleanText(String(text ?? '').replace(/```json|```/gi,''));
+  const start=source.indexOf('{');
+  if(start<0) throw new Error('No JSON object found in response');
+
+  let depth=0;
+  let inString=false;
+  let isEscaped=false;
+
+  for(let i=start;i<source.length;i++){
+    const char=source[i];
+
+    if(inString){
+      if(isEscaped){
+        isEscaped=false;
+      }else if(char==='\\'){
+        isEscaped=true;
+      }else if(char==='"'){
+        inString=false;
+      }
+      continue;
+    }
+
+    if(char==='"'){
+      inString=true;
+      continue;
+    }
+    if(char==='{'){
+      depth++;
+      continue;
+    }
+    if(char==='}'){
+      depth--;
+      if(depth===0) return source.slice(start,i+1);
+    }
+  }
+
+  throw new Error('Incomplete JSON object in response');
+}
+
+function transposeQuestionGrid(grid){
+  return Array.from({length:grid[0].length},(_,colIndex)=>{
+    return grid.map(row=>row[colIndex]);
+  });
+}
+
+function normalizeQuestionColumns(rawQuestions, expectedCols, expectedRows){
+  if(!Array.isArray(rawQuestions)){
+    throw new Error('Invalid game schema');
+  }
+
+  const hasColumnShape=rawQuestions.length>=expectedCols
+    && rawQuestions.slice(0,expectedCols).every(column=>Array.isArray(column) && column.length>=expectedRows);
+  if(hasColumnShape){
+    return rawQuestions.slice(0,expectedCols).map(column=>column.slice(0,expectedRows));
+  }
+
+  const hasRowShape=rawQuestions.length>=expectedRows
+    && rawQuestions.slice(0,expectedRows).every(row=>Array.isArray(row) && row.length>=expectedCols);
+  if(hasRowShape){
+    const trimmedRows=rawQuestions.slice(0,expectedRows).map(row=>row.slice(0,expectedCols));
+    return transposeQuestionGrid(trimmedRows);
+  }
+
+  const hasFlatShape=rawQuestions.length>=expectedCols*expectedRows
+    && rawQuestions.slice(0,expectedCols*expectedRows).every(item=>item && typeof item==='object' && !Array.isArray(item));
+  if(hasFlatShape){
+    return Array.from({length:expectedCols},(_,colIndex)=>{
+      const start=colIndex*expectedRows;
+      return rawQuestions.slice(start,start+expectedRows);
+    });
+  }
+
+  throw new Error('Unexpected game dimensions');
+}
+
+function buildRetryPayload(errorMessage){
+  const payload=buildPayload();
+  payload.messages.push({
+    role:'user',
+    content:`The previous answer could not be used: ${errorMessage}. Return ONLY raw JSON. Double-check that "categories" has exactly ${cfg.numCols} items and "questions" is an array of exactly ${cfg.numCols} category columns with exactly ${cfg.numRows} questions in each column.`
+  });
+  return payload;
+}
+
 function sanitizeGameData(rawGame){
   const expectedCols=cfg.numCols;
   const expectedRows=cfg.numRows;
@@ -1491,23 +1577,57 @@ function sanitizeGameData(rawGame){
   if(!rawGame || !Array.isArray(rawGame.categories) || !Array.isArray(rawGame.questions)){
     throw new Error('Invalid game schema');
   }
-  if(rawGame.categories.length!==expectedCols || rawGame.questions.length!==expectedCols){
-    throw new Error('Unexpected game dimensions');
-  }
 
-  const categories=rawGame.categories.map((category,index)=>{
+  const categories=rawGame.categories.slice(0,expectedCols).map((category,index)=>{
     const label=cleanText(category);
     return label || `Category ${index+1}`;
   });
+  while(categories.length<expectedCols){
+    categories.push(`Category ${categories.length+1}`);
+  }
 
-  const questions=rawGame.questions.map((column,colIndex)=>{
-    if(!Array.isArray(column) || column.length!==expectedRows){
+  const normalizedColumns=normalizeQuestionColumns(rawGame.questions,expectedCols,expectedRows);
+  const questions=normalizedColumns.map((column,colIndex)=>{
+    if(!Array.isArray(column) || column.length<expectedRows){
       throw new Error(`Unexpected question column size at ${colIndex}`);
     }
-    return column.map((question,rowIndex)=>sanitizeQuestion(question,colIndex,rowIndex));
+    return column.slice(0,expectedRows).map((question,rowIndex)=>sanitizeQuestion(question,colIndex,rowIndex));
   });
 
   return rebalanceMultipleChoiceAnswers({categories,questions});
+}
+
+async function requestGeneratedGame(){
+  let lastError=null;
+
+  for(let attempt=1;attempt<=MAX_GENERATION_ATTEMPTS;attempt++){
+    try{
+      const loadText=document.getElementById('load-text');
+      if(loadText){
+        loadText.textContent=attempt===1
+          ? GT[lang].generating
+          : `${GT[lang].generating} (${attempt}/${MAX_GENERATION_ATTEMPTS})`;
+      }
+
+      const res=await fetch('/api/generate',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(attempt===1 ? buildPayload() : buildRetryPayload(lastError?.message || 'Schema mismatch'))
+      });
+      if(!res.ok) throw new Error('API '+res.status);
+
+      const data=await res.json();
+      const text=data.choices?.[0]?.message?.content;
+      if(!text) throw new Error('Empty response');
+
+      return sanitizeGameData(JSON.parse(extractJsonObject(text)));
+    }catch(error){
+      lastError=error;
+      console.warn(`Game generation attempt ${attempt} failed`, error);
+    }
+  }
+
+  throw lastError || new Error('Unable to generate game');
 }
 
 function setActiveLoadingScene(index) {
@@ -1551,16 +1671,7 @@ async function boot() {
   document.getElementById('load-text').textContent=GT[lang].generating;
 
   try {
-    const res=await fetch('/api/generate',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(buildPayload())
-    });
-    if(!res.ok) throw new Error('API '+res.status);
-    const data=await res.json();
-    const text=data.choices?.[0]?.message?.content;
-    if(!text) throw new Error('Empty response');
-    gameData=sanitizeGameData(JSON.parse(text.replace(/```json|```/g,'').trim()));
+    gameData=await requestGeneratedGame();
   } catch(e) {
     console.error(e);
     stopLoadingSceneCycle();
@@ -1597,6 +1708,7 @@ SCHEMA:
 
 RULES:
 - Exactly ${numCols} categories, ${numRows} questions each
+- "questions" must be column-based: one inner array per category, not one inner array per row
 - Point values and difficulty: ${rowDiff}
 - All content in ${qLang}. Overall difficulty: ${diffMap[difficulty]||difficulty}. Type: ${qType}
 - ${mcNote}
@@ -1632,6 +1744,7 @@ SCHEMA:
 
 RULES:
 - Exactly ${numCols} categories, ${numRows} questions each
+- "questions" must be column-based: one inner array per category, not one inner array per row
 - Point values and difficulty: ${rowDiff}
 - All content in ${qLang}. Overall difficulty: ${diffMap[difficulty]||difficulty}. Type: ${qType}
 - ${mcNote}
