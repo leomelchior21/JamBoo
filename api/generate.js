@@ -7,12 +7,12 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const apiKey = process.env.GROQ_API_KEY;
-  const model = process.env.GROQ_MODEL || 'llama-3.1-8b-instant';
-  const maxTokens = Number(process.env.GROQ_MAX_TOKENS || 3000);
+  const apiKey = process.env.DEEPSEEK_API_KEY;
+  const model = process.env.DEEPSEEK_MODEL || 'deepseek-v4-flash';
+  const maxTokens = Number(process.env.DEEPSEEK_MAX_TOKENS || 3000);
 
   if (!apiKey) {
-    return res.status(500).json({ error: 'GROQ_API_KEY is not configured in environment variables.' });
+    return res.status(500).json({ error: 'DEEPSEEK_API_KEY is not configured in environment variables.' });
   }
 
   const { messages } = req.body;
@@ -21,7 +21,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const upstream = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    const upstream = await fetch('https://api.deepseek.com/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -31,6 +31,7 @@ export default async function handler(req, res) {
         model,
         max_tokens: maxTokens,
         temperature: 0.7,
+        thinking: { type: 'disabled' },
         messages,
       }),
     });
@@ -41,7 +42,7 @@ export default async function handler(req, res) {
       const message =
         data?.error?.message ||
         data?.message ||
-        (typeof data?.error === 'string' ? data.error : 'Groq API error');
+        (typeof data?.error === 'string' ? data.error : 'DeepSeek API error');
 
       return res.status(upstream.status).json({
         error: message,
