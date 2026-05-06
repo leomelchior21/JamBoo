@@ -1614,7 +1614,17 @@ async function requestGeneratedGame(){
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify(attempt===1 ? buildPayload() : buildRetryPayload(lastError?.message || 'Schema mismatch'))
       });
-      if(!res.ok) throw new Error('API '+res.status);
+      if(!res.ok){
+        let apiError=`API ${res.status}`;
+        try{
+          const errorData=await res.json();
+          const message=errorData?.error?.message || errorData?.error || errorData?.message;
+          if(message) apiError=`${message} (API ${res.status})`;
+        }catch(_){
+          // Keep the status-only error when the API did not return JSON.
+        }
+        throw new Error(apiError);
+      }
 
       const data=await res.json();
       const text=data.choices?.[0]?.message?.content;
