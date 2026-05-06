@@ -9,6 +9,7 @@ export default async function handler(req, res) {
 
   const apiKey = process.env.GROQ_API_KEY;
   const model = process.env.GROQ_MODEL || 'llama-3.1-8b-instant';
+  const maxTokens = Number(process.env.GROQ_MAX_TOKENS || 3000);
 
   if (!apiKey) {
     return res.status(500).json({ error: 'GROQ_API_KEY is not configured in environment variables.' });
@@ -28,7 +29,7 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model,
-        max_tokens: 4096,
+        max_tokens: maxTokens,
         temperature: 0.7,
         messages,
       }),
@@ -45,6 +46,7 @@ export default async function handler(req, res) {
       return res.status(upstream.status).json({
         error: message,
         status: upstream.status,
+        retryAfter: upstream.headers.get('retry-after'),
       });
     }
 

@@ -1623,7 +1623,9 @@ async function requestGeneratedGame(){
         }catch(_){
           // Keep the status-only error when the API did not return JSON.
         }
-        throw new Error(apiError);
+        const error=new Error(apiError);
+        error.noRetry=res.status===429;
+        throw error;
       }
 
       const data=await res.json();
@@ -1634,6 +1636,7 @@ async function requestGeneratedGame(){
     }catch(error){
       lastError=error;
       console.warn(`Game generation attempt ${attempt} failed`, error);
+      if(error.noRetry) break;
     }
   }
 
