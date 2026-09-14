@@ -665,6 +665,12 @@ body{
   transform:translate(-1px,-1px);
 }
 .ghdr-btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 #000;}
+.ghdr-btn:disabled{
+  opacity:.32;cursor:not-allowed;transform:none;
+  border-color:#2A1166;color:rgba(255,255,255,.45);
+  box-shadow:2px 2px 0 #000;
+}
+.ghdr-btn-redo{border-color:#075B59;}
 .ghdr-btn-end{border-color:#550022;}
 .ghdr-btn-end:hover{border-color:var(--danger);color:var(--danger);box-shadow:3px 3px 0 #000,0 0 8px rgba(255,68,68,.25);}
 
@@ -1113,6 +1119,8 @@ body{
   .chip-score{font-size:11px;}
   .chip-score-wrap{padding:5px 7px 5px 3px;}
   .ghdr-logo{height:96px;top:calc(50% - 48px);}
+  .ghdr-btn-redo{padding:6px 8px;}
+  .ghdr-btn-redo #lbl-redo{display:none;}
   .board-toolbar{margin-top:52px;}
 }
 
@@ -1265,6 +1273,7 @@ body{
 
   <header class="ghdr">
     <a class="ghdr-btn" href="index.html">← <span id="lbl-back">Setup</span></a>
+    <button class="ghdr-btn ghdr-btn-redo" id="redo-btn" onclick="redoLastQuestion()" disabled title="Redo last question" aria-label="Redo last question">↶ <span id="lbl-redo">Redo</span></button>
     <div class="scorebar-left" id="scorebar-left"></div>
     <div class="logo-spacer"></div>
     <div class="scorebar-right" id="scorebar-right"></div>
@@ -1357,7 +1366,7 @@ body{
 <script>
 const GT = {
   en:{
-    back:'Setup', end:'🏆 End', reveal:'Reveal Answer', done:'Done ✓',
+    back:'Setup', redo:'Redo', redoTitle:'Redo last question', end:'🏆 End', reveal:'Reveal Answer', done:'Done ✓',
     answer:'Answer', award:'Who answered?', correct:'✓ Correct', wrong:'✗ Wrong',
     clear:'🗑 Clear', winner:'🏆 Winner!', playAgain:'▶ Play Again',
     sameTeams:'↺ Same Teams, New Game', home:'⌂ Home',
@@ -1367,7 +1376,7 @@ const GT = {
     calculating:'CALCULATING...',
   },
   pt:{
-    back:'Início', end:'🏆 Fim', reveal:'Revelar Resposta', done:'Feito ✓',
+    back:'Início', redo:'Refazer', redoTitle:'Refazer última pergunta', end:'🏆 Fim', reveal:'Revelar Resposta', done:'Feito ✓',
     answer:'Resposta', award:'Quem respondeu?', correct:'✓ Correto', wrong:'✗ Errado',
     clear:'🗑 Limpar', winner:'🏆 Vencedor!', playAgain:'▶ Jogar Novamente',
     sameTeams:'↺ Mesmos Times, Novo Jogo', home:'⌂ Início',
@@ -1377,7 +1386,7 @@ const GT = {
     calculating:'CALCULANDO...',
   },
   es:{
-    back:'Inicio', end:'🏆 Fin', reveal:'Revelar Respuesta', done:'Listo ✓',
+    back:'Inicio', redo:'Rehacer', redoTitle:'Rehacer última pregunta', end:'🏆 Fin', reveal:'Revelar Respuesta', done:'Listo ✓',
     answer:'Respuesta', award:'¿Quién respondió?', correct:'✓ Correcto', wrong:'✗ Incorrecto',
     clear:'🗑 Limpiar', winner:'🏆 ¡Ganador!', playAgain:'▶ Jugar de Nuevo',
     sameTeams:'↺ Mismos Equipos, Nuevo Juego', home:'⌂ Inicio',
@@ -1390,12 +1399,14 @@ const GT = {
 
 let cfg={}, gameData=null, teams=[], lang='en';
 let currentCell=null, timerInterval=null;
+let currentQuestionAward=null, lastClosedQuestion=null, boardCompletionTimer=null;
 let drawCtx=null, isDrawing=false, drawColor='#000000';
 let mcAnswered=null;
 let openOutcome=null;
 let loadingSceneTimer=null;
 let activeLoadingSceneIndex=0;
 const MAX_GENERATION_ATTEMPTS=3;
+const GAME_CACHE_KEY='jamboo_game_cache_v1';
 
 function cleanText(value){
   return String(value ?? '').trim();
@@ -1428,19 +1439,30 @@ function sanitizeQuestion(rawQuestion, colIndex, rowIndex){
     throw new Error(`Invalid question object at ${colIndex}:${rowIndex}`);
   }
 
-  const question=cleanText(rawQuestion.question);
-  const answer=cleanText(rawQuestion.answer);
-  if(!question || !answer){
+  const question=cleanText(rawQuestion.q ?? rawQuestion.question);
+  let answer=cleanText(rawQuestion.a ?? rawQuestion.answer);
+  if(!question){
     throw new Error(`Missing question text at ${colIndex}:${rowIndex}`);
   }
 
-  const isDrawing=!!rawQuestion.isDrawing;
-  const rawOptions=Array.isArray(rawQuestion.options)
-    ? rawQuestion.options.map(cleanText).filter(Boolean).slice(0,4)
+  const isDrawing=rawQuestion.d===1 || rawQuestion.d===true || !!rawQuestion.isDrawing;
+  const sourceOptions=rawQuestion.o ?? rawQuestion.options;
+  const rawOptions=Array.isArray(sourceOptions)
+    ? sourceOptions.map(cleanText).filter(Boolean).slice(0,4)
     : [];
-  const parsedCorrectIndex=Number.isInteger(rawQuestion.correctIndex)
-    ? rawQuestion.correctIndex
-    : Number.parseInt(rawQuestion.correctIndex,10);
+  const sourceCorrectIndex=rawQuestion.i ?? rawQuestion.correctIndex;
+  const parsedCorrectIndex=Number.isInteger(sourceCorrectIndex)
+    ? sourceCorrectIndex
+    : Number.parseInt(sourceCorrectIndex,10);
+
+  // Compact multiple-choice responses do not repeat the correct option as a
+  // separate answer string. Expand it here into the UI's existing shape.
+  if(!answer && rawOptions.length===4 && parsedCorrectIndex>=0 && parsedCorrectIndex<4){
+    answer=rawOptions[parsedCorrectIndex];
+  }
+  if(!answer){
+    throw new Error(`Missing answer text at ${colIndex}:${rowIndex}`);
+  }
 
   if(isDrawing){
     return {question,answer,type:'drawing',options:[],correctIndex:0,isDrawing:true};
@@ -1565,20 +1587,22 @@ function buildRetryPayload(errorMessage){
   const payload=buildPayload();
   payload.messages.push({
     role:'user',
-    content:`The previous answer could not be used: ${errorMessage}. Return ONLY raw JSON. Double-check that "categories" has exactly ${cfg.numCols} items and "questions" is an array of exactly ${cfg.numCols} category columns with exactly ${cfg.numRows} questions in each column.`
+    content:`Previous JSON was invalid: ${errorMessage}. Return only the requested compact JSON. "c" needs ${cfg.numCols} names; "qs" needs ${cfg.numCols} columns of ${cfg.numRows} items.`
   });
   return payload;
 }
 
-function sanitizeGameData(rawGame){
+function sanitizeGameData(rawGame,{rebalance=true}={}){
   const expectedCols=cfg.numCols;
   const expectedRows=cfg.numRows;
+  const rawCategories=rawGame?.c ?? rawGame?.categories;
+  const rawQuestions=rawGame?.qs ?? rawGame?.questions;
 
-  if(!rawGame || !Array.isArray(rawGame.categories) || !Array.isArray(rawGame.questions)){
+  if(!rawGame || !Array.isArray(rawCategories) || !Array.isArray(rawQuestions)){
     throw new Error('Invalid game schema');
   }
 
-  const categories=rawGame.categories.slice(0,expectedCols).map((category,index)=>{
+  const categories=rawCategories.slice(0,expectedCols).map((category,index)=>{
     const label=cleanText(category);
     return label || `Category ${index+1}`;
   });
@@ -1586,7 +1610,7 @@ function sanitizeGameData(rawGame){
     categories.push(`Category ${categories.length+1}`);
   }
 
-  const normalizedColumns=normalizeQuestionColumns(rawGame.questions,expectedCols,expectedRows);
+  const normalizedColumns=normalizeQuestionColumns(rawQuestions,expectedCols,expectedRows);
   const questions=normalizedColumns.map((column,colIndex)=>{
     if(!Array.isArray(column) || column.length<expectedRows){
       throw new Error(`Unexpected question column size at ${colIndex}`);
@@ -1594,7 +1618,38 @@ function sanitizeGameData(rawGame){
     return column.slice(0,expectedRows).map((question,rowIndex)=>sanitizeQuestion(question,colIndex,rowIndex));
   });
 
-  return rebalanceMultipleChoiceAnswers({categories,questions});
+  const game={categories,questions};
+  return rebalance ? rebalanceMultipleChoiceAnswers(game) : game;
+}
+
+function gameCacheFingerprint(){
+  return JSON.stringify([
+    cfg.prompt,cfg.numCols,cfg.numRows,cfg.difficulty,cfg.qType,cfg.qLang
+  ]);
+}
+
+function readCachedGame(){
+  try{
+    const cached=JSON.parse(sessionStorage.getItem(GAME_CACHE_KEY)||'null');
+    if(!cached || cached.fingerprint!==gameCacheFingerprint()) return null;
+    return sanitizeGameData(cached.game,{rebalance:false});
+  }catch(error){
+    console.warn('Ignoring invalid cached game',error);
+    sessionStorage.removeItem(GAME_CACHE_KEY);
+    return null;
+  }
+}
+
+function cacheGame(game){
+  try{
+    sessionStorage.setItem(GAME_CACHE_KEY,JSON.stringify({
+      fingerprint:gameCacheFingerprint(),
+      game
+    }));
+  }catch(error){
+    // Storage may be unavailable in private browsing; gameplay still works.
+    console.warn('Unable to cache generated game',error);
+  }
 }
 
 async function requestGeneratedGame(){
@@ -1683,14 +1738,18 @@ async function boot() {
   applyLabels();
   document.getElementById('load-text').textContent=GT[lang].generating;
 
-  try {
-    gameData=await requestGeneratedGame();
-  } catch(e) {
-    console.error(e);
-    stopLoadingSceneCycle();
-    alert(GT[lang].errorGen);
-    document.getElementById('loading').classList.add('hidden');
-    return;
+  gameData=readCachedGame();
+  if(!gameData){
+    try {
+      gameData=await requestGeneratedGame();
+      cacheGame(gameData);
+    } catch(e) {
+      console.error(e);
+      stopLoadingSceneCycle();
+      alert(GT[lang].errorGen);
+      document.getElementById('loading').classList.add('hidden');
+      return;
+    }
   }
 
   stopLoadingSceneCycle();
@@ -1700,81 +1759,48 @@ async function boot() {
   document.getElementById('game-wrap').classList.add('ready');
 }
 
-function legacyBuildPromptPayload() {
-  const {numCols,numRows,difficulty,qType,qLang,prompt}=cfg;
-  const pts=Array.from({length:numRows},(_,i)=>(i+1)*100);
-  const mcNote=(qType==='multiple'||qType==='mixed')
-    ?'Multiple choice MUST have "options":["A","B","C","D"] (exactly 4) and "correctIndex":0–3.':'';
-  const drawNote=(qType==='drawing'||qType==='mixed')
-    ?'Drawing questions: set "isDrawing":true, omit options/correctIndex.':'';
-
-  const diffMap={easy:'very easy',medium:'medium',hard:'hard',mixed:'varies by row'};
-  const rowDiff=Array.from({length:numRows},(_,i)=>{
-    const labels=['trivial','easy','medium','hard','very hard'];
-    return `row ${i+1} (${pts[i]}pts): ${labels[Math.min(i,labels.length-1)]}`;
-  }).join(', ');
-
-  const sys=`You are a quiz game generator for educators. Create a Jeopardy-style quiz as JSON.
-
-SCHEMA:
-{"categories":["Cat1",...],"questions":[[{"question":"...","answer":"...","type":"${qType}","options":[],"correctIndex":0,"isDrawing":false},...(${numRows} items)],...(${numCols} arrays)]}
-
-RULES:
-- Exactly ${numCols} categories, ${numRows} questions each
-- "questions" must be column-based: one inner array per category, not one inner array per row
-- Point values and difficulty: ${rowDiff}
-- All content in ${qLang}. Overall difficulty: ${diffMap[difficulty]||difficulty}. Type: ${qType}
-- ${mcNote}
-- IMPORTANT for MC: distribute correctIndex values across 0,1,2,3 — do NOT always use 0. Each value should appear roughly equally across the whole game.
-- ${drawNote}
-- Write questions that feel specific and surprising — avoid the most obvious, predictable question about a topic. Favor angles that reward genuine understanding over trivia recall.
-- Return ONLY raw JSON — no explanation, no markdown.`;
-
-  return {messages:[
-    {role:'system',content:sys},
-    {role:'user',content:`Topic: ${prompt}\n\nReturn ONLY valid JSON.`}
-  ]};
-}
-
 function buildPayload() {
   const {numCols,numRows,difficulty,qType,qLang,prompt}=cfg;
   const pts=Array.from({length:numRows},(_,i)=>(i+1)*100);
-  const mcNote=(qType==='multiple'||qType==='mixed')
-    ?'Multiple choice MUST have "options":["option 1","option 2","option 3","option 4"] (exactly 4 full answer choices, never just letters) and "correctIndex":0-3. The text in "answer" must match the option at correctIndex.':'';
-  const drawNote=(qType==='drawing'||qType==='mixed')
-    ?'Drawing questions: set "isDrawing":true, omit options/correctIndex.':'';
-
   const diffMap={easy:'very easy',medium:'medium',hard:'hard',mixed:'varies by row'};
   const rowDiff=Array.from({length:numRows},(_,i)=>{
     const labels=['trivial','easy','medium','hard','very hard'];
     return `row ${i+1} (${pts[i]}pts): ${labels[Math.min(i,labels.length-1)]}`;
   }).join(', ');
 
-  const sys=`You are a quiz game generator for educators. Create a Jeopardy-style quiz as JSON.
+  const itemSchemas={
+    multiple:'{"q":"question","o":["four","full","answer","choices"],"i":0}',
+    open:'{"q":"question","a":"answer"}',
+    drawing:'{"q":"drawable prompt","a":"expected answer","d":1}',
+    mixed:'{"q":"question","a":"answer"} OR {"q":"question","o":["four","full","answer","choices"],"i":0} OR {"q":"drawable prompt","a":"expected answer","d":1}'
+  };
+  const typeRule=qType==='mixed'
+    ?'Use a varied mix of open, multiple-choice, and drawing items.'
+    :`Every item uses the ${qType} schema.`;
+  const exampleItem=qType==='mixed' ? itemSchemas.open : (itemSchemas[qType]||itemSchemas.open);
 
-SCHEMA:
-{"categories":["Cat1",...],"questions":[[{"question":"...","answer":"...","type":"${qType}","options":[],"correctIndex":0,"isDrawing":false},...(${numRows} items)],...(${numCols} arrays)]}
-
-RULES:
-- Exactly ${numCols} categories, ${numRows} questions each
-- "questions" must be column-based: one inner array per category, not one inner array per row
-- Point values and difficulty: ${rowDiff}
-- All content in ${qLang}. Overall difficulty: ${diffMap[difficulty]||difficulty}. Type: ${qType}
-- ${mcNote}
-- IMPORTANT for MC: distribute correctIndex values across 0,1,2,3. Do NOT always use 0. Never make every correct answer land on A. Each value should appear roughly equally across the whole game.
-- ${drawNote}
-- Write questions that feel specific and surprising - avoid the most obvious, predictable question about a topic. Favor angles that reward genuine understanding over trivia recall.
-- Return ONLY raw JSON - no explanation, no markdown.`;
+  const sys=`Create an educator Jeopardy-style quiz as valid JSON only.
+FORMAT EXAMPLE: {"c":["category"],"qs":[[${exampleItem}]]}
+ITEM RULE (${qType}): ${itemSchemas[qType]||itemSchemas.open}
+"c" has exactly ${numCols} category names. "qs" is column-major: exactly ${numCols} matching category arrays with ${numRows} items each.
+For MC, "o" has 4 full choices and "i" is the 0-based correct index; omit "a" because the app derives it. For drawing, set "d":1. Omit unused keys.
+Content language: ${qLang}. Overall difficulty: ${diffMap[difficulty]||difficulty}. Row progression: ${rowDiff}.
+${typeRule}
+Make questions specific and surprising; reward understanding rather than obvious trivia. No markdown or commentary.`;
 
   return {messages:[
     {role:'system',content:sys},
-    {role:'user',content:`Topic: ${prompt}\n\nReturn ONLY valid JSON.`}
+    {role:'user',content:`Topic: ${prompt}`}
   ]};
 }
 
 function applyLabels() {
   const G=GT[lang];
   document.getElementById('lbl-back').textContent=G.back;
+  document.getElementById('lbl-redo').textContent=G.redo;
+  const redoButton=document.getElementById('redo-btn');
+  redoButton.title=G.redoTitle;
+  redoButton.setAttribute('aria-label',G.redoTitle);
   document.getElementById('lbl-end').textContent=G.end;
   document.getElementById('lbl-reveal').textContent=G.reveal;
   document.getElementById('lbl-done').textContent=G.done;
@@ -1827,9 +1853,45 @@ function renderScorebar() {
   });
 }
 
+function renderQuestionCell(cell,pts,used){
+  cell.classList.toggle('used',used);
+  cell.innerHTML=used
+    ? `<div class="cell-pts" style="opacity:.2">${pts}</div><div class="cell-check">✓</div>`
+    : `<div class="cell-pts">${pts}</div>`;
+}
+
+function updateRedoButton(){
+  const button=document.getElementById('redo-btn');
+  if(button) button.disabled=!lastClosedQuestion || !!currentCell;
+}
+
+function redoLastQuestion(){
+  if(!lastClosedQuestion || currentCell) return;
+  if(boardCompletionTimer){
+    clearTimeout(boardCompletionTimer);
+    boardCompletionTimer=null;
+  }
+
+  const previous=lastClosedQuestion;
+  lastClosedQuestion=null;
+
+  // Revert only the score transaction made by this question. This keeps a
+  // genuine redo from awarding the same points twice.
+  if(previous.award){
+    const {teamIndex,delta}=previous.award;
+    applyScore(teamIndex,-delta,`${-delta>0?'+':''}${-delta}`);
+  }
+
+  renderQuestionCell(previous.cell,previous.pts,false);
+  updateRedoButton();
+  openQuestion(previous.col,previous.row,previous.pts,previous.cell);
+}
+
 function openQuestion(col,row,pts,cell) {
   if(cell.classList.contains('used')) return;
   currentCell={col,row,pts,cell};
+  currentQuestionAward=null;
+  updateRedoButton();
   const q=gameData.questions[col][row];
   document.getElementById('modal-cat').textContent=gameData.categories[col].toUpperCase();
   document.getElementById('modal-pts').textContent=pts;
@@ -1961,6 +2023,7 @@ function buildTeamPicker(pts){
     btn.onclick=()=>{
       if(effectiveOutcome===null) return;
       const delta=effectiveOutcome?pts:-pts;
+      currentQuestionAward={teamIndex:i,delta};
       applyScore(i,delta,(delta>0?'+':'')+delta);
       btn.classList.add('applied');
       picker.querySelectorAll('.team-pick-btn').forEach(b=>{b.disabled=true;});
@@ -2003,12 +2066,21 @@ function closeModal() {
   clearTimerBar();
   document.getElementById('q-modal').classList.remove('active');
   if(currentCell){
-    currentCell.cell.classList.add('used');
-    currentCell.cell.innerHTML=`<div class="cell-pts" style="opacity:.2">${currentCell.pts}</div><div class="cell-check">✓</div>`;
+    lastClosedQuestion={...currentCell,award:currentQuestionAward};
+    renderQuestionCell(currentCell.cell,currentCell.pts,true);
     currentCell=null;
+    currentQuestionAward=null;
   }
+  updateRedoButton();
   const cells=document.querySelectorAll('.q-cell');
-  if([...cells].every(c=>c.classList.contains('used'))) setTimeout(endGame,600);
+  if([...cells].every(c=>c.classList.contains('used'))){
+    if(boardCompletionTimer) clearTimeout(boardCompletionTimer);
+    // Leave a brief undo window after the final cell before showing results.
+    boardCompletionTimer=setTimeout(()=>{
+      boardCompletionTimer=null;
+      if([...document.querySelectorAll('.q-cell')].every(c=>c.classList.contains('used'))) endGame();
+    },2500);
+  }
 }
 
 function startTimerBar(secs) {
@@ -2068,6 +2140,12 @@ function clearCanvas() {
 }
 
 function endGame() {
+  if(boardCompletionTimer){
+    clearTimeout(boardCompletionTimer);
+    boardCompletionTimer=null;
+  }
+  lastClosedQuestion=null;
+  updateRedoButton();
   const G=GT[lang];
   const sorted=[...teams].sort((a,b)=>b.score-a.score);
   const winner=sorted[0];
@@ -2165,6 +2243,11 @@ function confirmScoreEdit(){
     if(el) el.textContent=val;
     const delta=val-old;
     if(delta!==0){
+      // An absolute score edit makes a recorded award unsafe to roll back.
+      if(lastClosedQuestion?.award){
+        lastClosedQuestion=null;
+        updateRedoButton();
+      }
       const card=document.getElementById(`sc-${scoreEditIdx}`);
       if(card){
         const pop=document.createElement('div');

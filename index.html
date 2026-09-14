@@ -894,6 +894,9 @@ function startGame(){
   loadEl.textContent=isArduino?'⚡ ARDUINO MODE ⚡':T[lang].generating;
   document.getElementById('loading').classList.add('active');
   document.getElementById('gen-btn').disabled=true;
+  // A deliberate Start always creates a fresh board. game.html keeps the
+  // generated board only for accidental refreshes within this tab.
+  try{sessionStorage.removeItem('jamboo_game_cache_v1');}catch(_){/* Storage unavailable. */}
   localStorage.setItem('jamboo_config',JSON.stringify(config));
   if(isArduino){setTimeout(()=>{window.location.href='game.html';},400);}
   else{window.location.href='game.html';}

@@ -8,8 +8,13 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const apiKey = process.env.DEEPSEEK_API_KEY;
-  const model = process.env.DEEPSEEK_MODEL || 'deepseek-v4-flash';
-  const maxTokens = Number(process.env.DEEPSEEK_MAX_TOKENS || 3000);
+  // Pin the current low-cost model instead of relying on a legacy alias or
+  // allowing a deployment variable to silently select a more expensive model.
+  const model = 'deepseek-flash';
+  // This is only a ceiling; DeepSeek bills the tokens actually generated.
+  // A larger ceiling prevents a maximum-size board from being truncated and
+  // regenerated from scratch by the client.
+  const maxTokens = Number(process.env.DEEPSEEK_MAX_TOKENS || 8000);
 
   if (!apiKey) {
     return res.status(500).json({ error: 'DEEPSEEK_API_KEY is not configured in environment variables.' });
@@ -32,6 +37,7 @@ export default async function handler(req, res) {
         max_tokens: maxTokens,
         temperature: 0.7,
         thinking: { type: 'disabled' },
+        response_format: { type: 'json_object' },
         messages,
       }),
     });
