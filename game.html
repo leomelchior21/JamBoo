@@ -1406,7 +1406,9 @@ let openOutcome=null;
 let loadingSceneTimer=null;
 let activeLoadingSceneIndex=0;
 const MAX_GENERATION_ATTEMPTS=3;
-const GAME_CACHE_KEY='jamboo_game_cache_v1';
+const LOCAL_CHAT_URL='http://localhost:11434/api/chat';
+const LOCAL_CHAT_MODEL='qwen3.5:4b';
+const GAME_CACHE_KEY='jamboo_game_cache_v2';
 
 function cleanText(value){
   return String(value ?? '').trim();
@@ -1424,13 +1426,32 @@ function normalizeAnswerKey(value){
 }
 
 function findCorrectOptionIndex(options, answer, correctIndex){
+  const strictAnswerKey=cleanText(answer)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g,'')
+    .toLowerCase()
+    .replace(/\s+/g,' ')
+    .trim();
+  const strictMatch=options.findIndex(opt=>cleanText(opt)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g,'')
+    .toLowerCase()
+    .replace(/\s+/g,' ')
+    .trim()===strictAnswerKey);
+  if(strictMatch>=0) return strictMatch;
+
   const answerKey=normalizeAnswerKey(answer);
-  const matchedIndex=options.findIndex(opt=>{
-    const optionKey=normalizeAnswerKey(opt);
-    return optionKey===answerKey || optionKey.includes(answerKey) || answerKey.includes(optionKey);
-  });
-  if(matchedIndex>=0) return matchedIndex;
+  const normalizedOptions=options.map(normalizeAnswerKey);
+  const normalizedMatches=normalizedOptions
+    .map((optionKey,index)=>optionKey===answerKey ? index : -1)
+    .filter(index=>index>=0);
+  if(normalizedMatches.length===1) return normalizedMatches[0];
   if(Number.isInteger(correctIndex) && correctIndex>=0 && correctIndex<options.length) return correctIndex;
+
+  const fuzzyMatches=normalizedOptions
+    .map((optionKey,index)=>optionKey.includes(answerKey) || answerKey.includes(optionKey) ? index : -1)
+    .filter(index=>index>=0);
+  if(fuzzyMatches.length===1) return fuzzyMatches[0];
   return -1;
 }
 
@@ -1471,7 +1492,7 @@ function sanitizeQuestion(rawQuestion, colIndex, rowIndex){
   if(rawOptions.length===4){
     const correctIndex=findCorrectOptionIndex(rawOptions,answer,parsedCorrectIndex);
     if(correctIndex>=0){
-      return {question,answer,type:'multiple',options:rawOptions,correctIndex,isDrawing:false};
+      return {question,answer:rawOptions[correctIndex],type:'multiple',options:rawOptions,correctIndex,isDrawing:false};
     }
   }
 
@@ -1624,6 +1645,7 @@ function sanitizeGameData(rawGame,{rebalance=true}={}){
 
 function gameCacheFingerprint(){
   return JSON.stringify([
+    LOCAL_CHAT_URL,LOCAL_CHAT_MODEL,
     cfg.prompt,cfg.numCols,cfg.numRows,cfg.difficulty,cfg.qType,cfg.qLang
   ]);
 }
@@ -1664,10 +1686,18 @@ async function requestGeneratedGame(){
           : `${GT[lang].generating} (${attempt}/${MAX_GENERATION_ATTEMPTS})`;
       }
 
-      const res=await fetch('/api/generate',{
+      const payload=attempt===1
+        ? buildPayload()
+        : buildRetryPayload(lastError?.message || 'Schema mismatch');
+      const res=await fetch(LOCAL_CHAT_URL,{
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body:JSON.stringify(attempt===1 ? buildPayload() : buildRetryPayload(lastError?.message || 'Schema mismatch'))
+        body:JSON.stringify({
+          model:LOCAL_CHAT_MODEL,
+          messages:payload.messages,
+          stream:false,
+          format:'json'
+        })
       });
       if(!res.ok){
         let apiError=`API ${res.status}`;
@@ -1684,7 +1714,7 @@ async function requestGeneratedGame(){
       }
 
       const data=await res.json();
-      const text=data.choices?.[0]?.message?.content;
+      const text=data.message?.content;
       if(!text) throw new Error('Empty response');
 
       return sanitizeGameData(JSON.parse(extractJsonObject(text)));
@@ -1761,6 +1791,8 @@ async function boot() {
 
 function buildPayload() {
   const {numCols,numRows,difficulty,qType,qLang,prompt}=cfg;
+  const isYear6Coding=cfg.preset==='year6-coding'
+    || /^Year 6 Computational Thinking\b/i.test(prompt||'');
   const pts=Array.from({length:numRows},(_,i)=>(i+1)*100);
   const diffMap={easy:'very easy',medium:'medium',hard:'hard',mixed:'varies by row'};
   const rowDiff=Array.from({length:numRows},(_,i)=>{
@@ -1778,14 +1810,19 @@ function buildPayload() {
     ?'Use a varied mix of open, multiple-choice, and drawing items.'
     :`Every item uses the ${qType} schema.`;
   const exampleItem=qType==='mixed' ? itemSchemas.open : (itemSchemas[qType]||itemSchemas.open);
+  const audienceRule=isYear6Coding
+    ?'PRE-CODING RULE: These students do not code yet. Use only conceptual computational thinking in plain language and familiar situations. Never include or ask about code, pseudocode, functions, variable names, syntax, operators, program output, or any programming language/tool. Make harder rows require deeper everyday logical reasoning, never coding knowledge.'
+    :'';
 
   const sys=`Create an educator Jeopardy-style quiz as valid JSON only.
 FORMAT EXAMPLE: {"c":["category"],"qs":[[${exampleItem}]]}
 ITEM RULE (${qType}): ${itemSchemas[qType]||itemSchemas.open}
 "c" has exactly ${numCols} category names. "qs" is column-major: exactly ${numCols} matching category arrays with ${numRows} items each.
 For MC, "o" has 4 full choices and "i" is the 0-based correct index; omit "a" because the app derives it. For drawing, set "d":1. Omit unused keys.
+For MC, exactly one choice must be correct. Distractors must be clearly wrong, not ambiguous variants or alternate spellings of the correct answer.
 Content language: ${qLang}. Overall difficulty: ${diffMap[difficulty]||difficulty}. Row progression: ${rowDiff}.
 ${typeRule}
+${audienceRule}
 Make questions specific and surprising; reward understanding rather than obvious trivia. No markdown or commentary.`;
 
   return {messages:[

@@ -680,18 +680,19 @@ const ARDUINO_PROMPT=`Arduino & Physical Computing — introductory quiz for a t
 Make all questions appropriate for a beginner or introductory level student, ages 11-14.`;
 
 /* Exact shortcut: "year 6 coding" */
-const YEAR6_CODING_PROMPT=`Year 6 Coding — an age-appropriate introduction to computational thinking for sixth-grade students. Distribute these ideas across the quiz categories:
-1. Algorithms: clear, ordered instructions and why sequence matters
+const YEAR6_CODING_PROMPT=`Year 6 Computational Thinking — a PRE-CODING quiz for sixth-grade students who have never programmed. Build every question from plain-language logic and introductory computational-thinking lessons. Distribute these ideas across the quiz categories:
+1. Algorithms: clear, ordered everyday instructions and why sequence matters
 2. Decomposition: breaking a large problem into smaller manageable parts
-3. Pattern recognition: spotting similarities and using patterns to solve new problems
-4. Abstraction: focusing on important information and ignoring unnecessary detail
-5. Inputs, processes, and outputs in everyday systems and simple programs
-6. Variables as named places that store changing information
-7. Conditionals: making decisions with if/then/else rules
-8. Loops: repeating instructions efficiently a fixed number of times or until a condition changes
-9. Debugging and testing: finding, explaining, and fixing mistakes step by step
-10. Reading and creating simple pseudocode and flowcharts
-Use concrete contexts such as recipes, classroom routines, mazes, robots, games, and Scratch-style block coding. Test understanding and problem-solving rather than memorized terminology. Avoid advanced syntax, obscure facts, and trick questions. Keep wording clear for learners around ages 10-12.`;
+3. Pattern recognition: spotting similarities and using patterns to solve a new problem
+4. Abstraction: keeping important information and ignoring distracting detail
+5. Inputs, processes, and outputs in familiar everyday systems
+6. Decisions: choosing an action using plain-language if/then rules
+7. Repetition: recognizing repeated steps and describing a more efficient instruction
+8. Debugging and testing: finding and fixing mistakes in instructions or a process
+9. Logical reasoning: predicting the next step, ordering actions, and eliminating impossible choices
+10. Simple flowcharts and routes using familiar words and visual concepts only
+Use concrete contexts such as recipes, classroom routines, mazes, treasure hunts, robots following spoken instructions, games, sorting objects, and planning an event. Every question must be answerable without coding experience.
+NEVER include source code, code snippets, pseudocode, functions, methods, variable declarations or naming rules, programming syntax, operators, console output, or language-specific terms such as Python or JavaScript. Never ask students to read, write, complete, or predict the output of code. Do not assume familiarity with Scratch or any other programming tool. If a concept resembles a loop or condition, explain it through ordinary words and situations. Increase difficulty through multi-step reasoning, not programming knowledge. Avoid obscure facts and trick questions. Keep wording clear for learners around ages 10-12.`;
 
 function levenshtein(a,b){
   const m=a.length,n=b.length;
@@ -907,7 +908,8 @@ function startGame(){
     teams:teams.slice(0,count),
     lang,qLang,
     timerOn:true,speedOn:false,
-    soloMode,prompt:finalPrompt
+    soloMode,prompt:finalPrompt,
+    preset:isYear6Coding?'year6-coding':(isArduino?'arduino':'')
   };
   const loadEl=document.getElementById('load-text');
   loadEl.textContent=isArduino?'⚡ ARDUINO MODE ⚡':(isYear6Coding?T[lang].year6Mode:T[lang].generating);
