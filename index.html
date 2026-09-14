@@ -613,7 +613,7 @@ const T={
     launchLabel:'◄ PRESS START ►', startBtn:'START GAME',
     promptPH:'> Describe your quiz... e.g. French Revolution for 9th grade students',
     noPrompt:'Please describe your quiz topic!',
-    generating:'Generating your game...',
+    generating:'Generating your game...', year6Mode:'💻 YEAR 6 CODING MODE 💻',
     teamDefaults:['Team 1','Team 2','Team 3','Team 4','Team 5','Team 6','Team 7','Team 8'],
     soloDefault:'Player 1', soloDesc:'solo mode', teamsWord:'teams',
     questions:'questions', solo:'1P',
@@ -635,7 +635,7 @@ const T={
     launchLabel:'◄ PRESSIONE START ►', startBtn:'INICIAR JOGO',
     promptPH:'> Descreva seu quiz... ex: Revolução Francesa para o 9º ano',
     noPrompt:'Por favor, descreva o tema do quiz!',
-    generating:'Gerando seu jogo...',
+    generating:'Gerando seu jogo...', year6Mode:'💻 PROGRAMAÇÃO — 6º ANO 💻',
     teamDefaults:['Time 1','Time 2','Time 3','Time 4','Time 5','Time 6','Time 7','Time 8'],
     soloDefault:'Jogador 1', soloDesc:'modo solo', teamsWord:'times',
     questions:'perguntas', solo:'1J',
@@ -657,7 +657,7 @@ const T={
     launchLabel:'◄ PRESIONA START ►', startBtn:'INICIAR JUEGO',
     promptPH:'> Describe tu quiz... ej: Revolución Francesa para 9° grado',
     noPrompt:'¡Por favor describe el tema de tu quiz!',
-    generating:'Generando tu juego...',
+    generating:'Generando tu juego...', year6Mode:'💻 PROGRAMACIÓN — 6.º AÑO 💻',
     teamDefaults:['Equipo 1','Equipo 2','Equipo 3','Equipo 4','Equipo 5','Equipo 6','Equipo 7','Equipo 8'],
     soloDefault:'Jugador 1', soloDesc:'modo solo', teamsWord:'equipos',
     questions:'preguntas', solo:'1J',
@@ -679,6 +679,20 @@ const ARDUINO_PROMPT=`Arduino & Physical Computing — introductory quiz for a t
 9. Arduino components and their functions: LED (emit light), Push Button (detect press), Servo Motor (controlled rotation angle), Buzzer (emit sound), Photoresistor/LDR (sense light), difference between sensors (inputs) and actuators (outputs)
 Make all questions appropriate for a beginner or introductory level student, ages 11-14.`;
 
+/* Exact shortcut: "year 6 coding" */
+const YEAR6_CODING_PROMPT=`Year 6 Coding — an age-appropriate introduction to computational thinking for sixth-grade students. Distribute these ideas across the quiz categories:
+1. Algorithms: clear, ordered instructions and why sequence matters
+2. Decomposition: breaking a large problem into smaller manageable parts
+3. Pattern recognition: spotting similarities and using patterns to solve new problems
+4. Abstraction: focusing on important information and ignoring unnecessary detail
+5. Inputs, processes, and outputs in everyday systems and simple programs
+6. Variables as named places that store changing information
+7. Conditionals: making decisions with if/then/else rules
+8. Loops: repeating instructions efficiently a fixed number of times or until a condition changes
+9. Debugging and testing: finding, explaining, and fixing mistakes step by step
+10. Reading and creating simple pseudocode and flowcharts
+Use concrete contexts such as recipes, classroom routines, mazes, robots, games, and Scratch-style block coding. Test understanding and problem-solving rather than memorized terminology. Avoid advanced syntax, obscure facts, and trick questions. Keep wording clear for learners around ages 10-12.`;
+
 function levenshtein(a,b){
   const m=a.length,n=b.length;
   const dp=[];
@@ -692,6 +706,10 @@ function levenshtein(a,b){
 function detectArduino(text){
   const words=text.toLowerCase().replace(/[^a-z0-9]/g,' ').split(/\s+/).filter(w=>w.length>=4);
   return words.some(w=>levenshtein(w,'arduino')<=2);
+}
+function detectYear6Coding(text){
+  const normalized=text.toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+  return /^(?:year\s*6|year\s+six)\s+(?:coding|code)$/.test(normalized);
 }
 const TEAMS_OPTS=[
   {val:'solo',labelKey:'solo'},
@@ -880,7 +898,8 @@ function startGame(){
   const prompt=document.getElementById('ai-prompt').value.trim();
   if(!prompt){alert(T[lang].noPrompt);return;}
   const isArduino=detectArduino(prompt);
-  const finalPrompt=isArduino?ARDUINO_PROMPT:prompt;
+  const isYear6Coding=!isArduino&&detectYear6Coding(prompt);
+  const finalPrompt=isArduino?ARDUINO_PROMPT:(isYear6Coding?YEAR6_CODING_PROMPT:prompt);
   const qLang={en:'English',pt:'Portuguese',es:'Spanish'}[lang];
   const count=soloMode?1:numTeams;
   const config={
@@ -891,14 +910,14 @@ function startGame(){
     soloMode,prompt:finalPrompt
   };
   const loadEl=document.getElementById('load-text');
-  loadEl.textContent=isArduino?'⚡ ARDUINO MODE ⚡':T[lang].generating;
+  loadEl.textContent=isArduino?'⚡ ARDUINO MODE ⚡':(isYear6Coding?T[lang].year6Mode:T[lang].generating);
   document.getElementById('loading').classList.add('active');
   document.getElementById('gen-btn').disabled=true;
   // A deliberate Start always creates a fresh board. game.html keeps the
   // generated board only for accidental refreshes within this tab.
   try{sessionStorage.removeItem('jamboo_game_cache_v1');}catch(_){/* Storage unavailable. */}
   localStorage.setItem('jamboo_config',JSON.stringify(config));
-  if(isArduino){setTimeout(()=>{window.location.href='game.html';},400);}
+  if(isArduino||isYear6Coding){setTimeout(()=>{window.location.href='game.html';},400);}
   else{window.location.href='game.html';}
 }
 
