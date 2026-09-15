@@ -1573,7 +1573,7 @@ let generationProgressDetailOverride='';
 let generationManualProgress=8;
 let generationRequest=null;
 const GENERATION_API_URL='/api/ai';
-const GENERATION_PROVIDER='ollama-category-pipeline-v4';
+const GENERATION_PROVIDER='ollama-safe-category-v7';
 const GAME_CACHE_KEY='jamboo_game_cache_v4';
 
 function cleanText(value){
@@ -1786,11 +1786,12 @@ function parseExplicitCategories(topic,expectedCount){
   return new Set(normalized).size===categories.length ? categories : null;
 }
 
-async function requestQuizAction(body){
+async function requestQuizAction(body,signal){
   const res=await fetch(GENERATION_API_URL,{
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify(body)
+    body:JSON.stringify(body),
+    signal
   });
   if(!res.ok){
     let apiError=`API ${res.status}`;
@@ -1814,7 +1815,7 @@ async function requestQuizAction(body){
   return JSON.parse(extractJsonObject(data.answer));
 }
 
-async function resolveQuizCategories(){
+async function resolveQuizCategories(signal){
   const G=GT[lang]||GT.en;
   const explicit=parseExplicitCategories(cfg.prompt,cfg.numCols);
   if(explicit){
@@ -1828,7 +1829,7 @@ async function resolveQuizCategories(){
   const plan=await requestQuizAction({
     action:'quiz-plan',
     quiz:{topic:cfg.prompt,columns:cfg.numCols,language:cfg.qLang}
-  });
+  },signal);
   const categories=Array.isArray(plan?.categories) ? plan.categories.map(cleanText) : [];
   if(
     categories.length!==cfg.numCols ||
@@ -1841,15 +1842,15 @@ async function resolveQuizCategories(){
   return categories;
 }
 
-async function generateCategoryColumn(category,categories,categoryIndex){
+async function generateCategoryColumn(categories,categoryIndex,signal){
   const isYear6Coding=cfg.preset==='year6-coding'
     || /^Year 6 Computational Thinking\b/i.test(cfg.prompt||'');
   const response=await requestQuizAction({
     action:'quiz-category',
     quiz:{
       topic:cfg.prompt,
-      category,
       allCategories:categories,
+      category:categories[categoryIndex],
       categoryIndex,
       categoryCount:categories.length,
       rows:cfg.numRows,
@@ -1858,12 +1859,18 @@ async function generateCategoryColumn(category,categories,categoryIndex){
       language:cfg.qLang,
       audience:isYear6Coding ? 'year6-pre-coding' : undefined
     }
-  });
-  const responseCategory=cleanText(response?.c?.[0]);
-  if(normalizeAnswerKey(responseCategory)!==normalizeAnswerKey(category)){
-    throw new Error(`Category lock failed for ${category}`);
+  },signal);
+  if(!Array.isArray(response?.c) || response.c.length!==1 || !Array.isArray(response?.qs)){
+    throw new Error(`AI returned invalid questions for ${categories[categoryIndex]}`);
   }
-  const rawColumn=normalizeQuestionColumns(response?.qs,1,cfg.numRows)[0];
+  const responseCategory=cleanText(response.c[0]);
+  if(normalizeAnswerKey(responseCategory)!==normalizeAnswerKey(categories[categoryIndex])){
+    throw new Error(`Category lock failed for ${categories[categoryIndex]}`);
+  }
+  const rawColumn=response.qs[0];
+  if(!Array.isArray(rawColumn) || rawColumn.length!==cfg.numRows){
+    throw new Error(`Invalid question count for ${categories[categoryIndex]}`);
+  }
   return rawColumn.map((question,rowIndex)=>sanitizeQuestion(question,categoryIndex,rowIndex));
 }
 
@@ -1953,30 +1960,34 @@ function cacheGame(game){
 
 async function generateGame(){
   const G=GT[lang]||GT.en;
-  const categories=await resolveQuizCategories();
-  const questions=[];
-  setGenerationStep(2);
-
-  for(let categoryIndex=0;categoryIndex<categories.length;categoryIndex++){
-    const category=categories[categoryIndex];
-    const detail=formatGenerationStatus(G.categoryProgress,{
-      current:categoryIndex+1,
-      total:categories.length,
-      category
-    });
-    setGenerationStep(2,detail);
-    setGenerationProgress(18+(categoryIndex/categories.length)*64);
-    questions.push(await generateCategoryColumn(category,categories,categoryIndex));
-    setGenerationProgress(18+((categoryIndex+1)/categories.length)*64);
+  const controller=new AbortController();
+  try{
+    const categories=await resolveQuizCategories(controller.signal);
+    const questions=Array(categories.length);
+    let completedCategories=0;
+    setGenerationStep(2);
+    for(let categoryIndex=0;categoryIndex<categories.length;categoryIndex+=1){
+      const detail=formatGenerationStatus(G.categoryProgress,{
+        current:categoryIndex+1,
+        total:categories.length,
+        category:categories[categoryIndex]
+      });
+      setGenerationStep(2,detail);
+      questions[categoryIndex]=await generateCategoryColumn(categories,categoryIndex,controller.signal);
+      completedCategories+=1;
+      setGenerationProgress(18+(completedCategories/categories.length)*64);
+    }
+    setGenerationStep(3,G.validatingQuiz);
+    setGenerationProgress(86);
+    const game=validateCompletedGame({categories,questions});
+    setGenerationStep(4);
+    setGenerationProgress(94);
+    setGenerationStep(5);
+    return rebalanceMultipleChoiceAnswers(game);
+  }catch(error){
+    controller.abort();
+    throw error;
   }
-
-  setGenerationStep(3,G.validatingQuiz);
-  setGenerationProgress(86);
-  const game=validateCompletedGame({categories,questions});
-  setGenerationStep(4);
-  setGenerationProgress(94);
-  setGenerationStep(5);
-  return rebalanceMultipleChoiceAnswers(game);
 }
 
 function requestGeneratedGame(){
