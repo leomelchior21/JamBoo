@@ -53,6 +53,23 @@ test('quiz plan returns code-created slots and configured batch size', { concurr
   assert.equal(plan.batchSize, 6);
 });
 
+test('uses safe generic categories when category JSON cannot be generated', { concurrency: false }, async () => {
+  let calls = 0;
+  globalThis.fetch = async () => {
+    calls += 1;
+    return ollamaResponse({ categories: ['Repeated', 'Repeated'] });
+  };
+  const res = await callApi({
+    action: 'quiz-plan',
+    quiz: { ...baseQuiz, topic: 'An unusual teacher-defined topic', columns: 2, categories: undefined },
+  });
+  assert.equal(res.statusCode, 200);
+  const plan = JSON.parse(res.body.answer);
+  assert.equal(calls, 2);
+  assert.deepEqual(plan.categories, ['Overview', 'Key Elements']);
+  assert.equal(plan.slots.length, 4);
+});
+
 test('repairs only a malformed slot and preserves the valid result', { concurrency: false }, async () => {
   const calls = [];
   globalThis.fetch = async (_url, init) => {

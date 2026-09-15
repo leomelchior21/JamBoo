@@ -88,6 +88,15 @@ test('rejects one malformed multiple-choice slot without invalidating valid slot
   assert.equal(invalid.reason, 'duplicate answer option');
 });
 
+test('rejects answer choices that are too long for the game card', () => {
+  const [slot] = createSlotPlan(spec({ columns: 1, rows: 1 }), categories(1));
+  const question = validQuestion(slot);
+  question.o[1] = 'This answer choice contains far too many words for one compact game card';
+  const result = validateQuestionForSlot(question, slot);
+  assert.equal(result.valid, false);
+  assert.equal(result.reason, 'answer option too long');
+});
+
 test('does not accept a quiz with a missing slot', () => {
   const plan = createSlotPlan(spec({ columns: 2, rows: 2 }), categories(2));
   const result = validateCompleteQuiz(plan, plan.slice(0, -1).map(validQuestion));

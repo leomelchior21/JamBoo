@@ -570,10 +570,10 @@ body{
   overflow:hidden;
 }
 .load-bar{
-  position:relative;width:var(--load-progress,8%);height:100%;
+  position:relative;width:var(--load-progress,0%);height:100%;
   background:linear-gradient(90deg, rgba(0,255,204,.15), rgba(0,255,204,.95), rgba(255,0,187,.85));
   box-shadow:0 0 18px rgba(0,255,204,.42);
-  transition:width 1s cubic-bezier(.2,.75,.2,1);
+  transition:width .3s linear;
 }
 .load-bar::after{
   content:'';position:absolute;inset:0;
@@ -1579,12 +1579,11 @@ let activeLoadingSceneIndex=0;
 let generationProgressTimer=null;
 let generationStartedAt=0;
 let generationProgressStep=0;
-let generationProgressDetailOverride='';
-let generationManualProgress=8;
 let generationRequest=null;
 const GENERATION_API_URL='/api/ai';
-const GENERATION_PROVIDER='ollama-atomic-slots-v8';
+const GENERATION_PROVIDER='ollama-atomic-slots-v9';
 const GAME_CACHE_KEY='jamboo_game_cache_v4';
+const GENERATION_SIMULATION_MS=120000;
 
 function cleanText(value){
   return String(value ?? '').trim();
@@ -1852,14 +1851,7 @@ function buildQuizSpec(seed,generationId){
 }
 
 async function planQuiz(spec,signal){
-  const G=GT[lang]||GT.en;
   const explicit=parseExplicitCategories(cfg.prompt,cfg.numCols);
-  if(explicit){
-    setGenerationStep(1,formatGenerationStatus(G.usingCategories,{count:explicit.length}));
-  }else{
-    setGenerationStep(1,formatGenerationStatus(G.planningCategories,{count:cfg.numCols}));
-  }
-  setGenerationProgress(12);
   const plan=await requestQuizAction({
     action:'quiz-plan',
     quiz:{...spec,explicitCategories:explicit||undefined}
@@ -1880,7 +1872,6 @@ async function planQuiz(spec,signal){
   ){
     throw new Error('AI returned an invalid board plan');
   }
-  setGenerationProgress(18);
   return {categories,slots,batchSize:plan.batchSize};
 }
 
@@ -1985,7 +1976,6 @@ function cacheGame(game){
 }
 
 async function generateGame(){
-  const G=GT[lang]||GT.en;
   const controller=new AbortController();
   const seed=createGenerationToken();
   const generationId=createGenerationToken();
@@ -1994,14 +1984,8 @@ async function generateGame(){
     const {categories,slots,batchSize}=await planQuiz(spec,controller.signal);
     const draftQuestions=[];
     const excludedQuestions=[];
-    setGenerationStep(2);
     for(let offset=0;offset<slots.length;offset+=batchSize){
       const batchSlots=slots.slice(offset,offset+batchSize);
-      const completed=Math.min(slots.length,offset+batchSlots.length);
-      setGenerationStep(2,formatGenerationStatus(G.questionProgress,{
-        current:completed,
-        total:slots.length
-      }));
       const batch=await generateQuestionBatch(
         spec,
         categories,
@@ -2009,17 +1993,11 @@ async function generateGame(){
         excludedQuestions,
         controller.signal
       );
-      if(batch.repaired){
-        setGenerationStep(2,formatGenerationStatus(G.repairingQuestions,{count:batch.repaired}));
-      }
       batch.questions.forEach(question=>{
         draftQuestions.push(question);
         excludedQuestions.push(cleanText(question.q ?? question.question));
       });
-      setGenerationProgress(18+(completed/slots.length)*64);
     }
-    setGenerationStep(3,G.validatingQuiz);
-    setGenerationProgress(86);
     const finalized=await requestQuizAction({
       action:'quiz-validate',
       quiz:{...spec,categories,questions:draftQuestions}
@@ -2038,9 +2016,6 @@ async function generateGame(){
       );
     });
     const game=validateCompletedGame({categories,questions});
-    setGenerationStep(4);
-    setGenerationProgress(94);
-    setGenerationStep(5);
     return rebalanceMultipleChoiceAnswers(game);
   }catch(error){
     controller.abort();
@@ -2081,28 +2056,26 @@ function renderGenerationSteps(){
   });
 }
 
-function setGenerationStep(index,detailOverride=''){
+function setGenerationStep(index){
   const G=GT[lang]||GT.en;
   const lastIndex=G.generationSteps.length-1;
-  const nextStep=Math.min(lastIndex,Math.max(generationProgressStep,index));
-  if(nextStep>generationProgressStep) generationProgressDetailOverride='';
+  const nextStep=Math.min(lastIndex,Math.max(0,index));
   generationProgressStep=nextStep;
-  if(detailOverride) generationProgressDetailOverride=detailOverride;
   document.querySelectorAll('.generation-step').forEach((step,stepIndex)=>{
     step.classList.toggle('is-complete',stepIndex<generationProgressStep);
     step.classList.toggle('is-active',stepIndex===generationProgressStep);
   });
 
   const detail=document.getElementById('generation-detail');
-  const nextDetail=generationProgressDetailOverride||G.generationDetails[generationProgressStep];
+  const nextDetail=G.generationDetails[generationProgressStep];
   if(detail && detail.textContent!==nextDetail) detail.textContent=nextDetail;
 }
 
-function setGenerationProgress(percent){
-  generationManualProgress=Math.min(100,Math.max(generationManualProgress,percent));
+function renderGenerationProgress(percent){
+  const progress=Math.min(100,Math.max(0,percent));
   document.querySelector('.loading-shell')?.style.setProperty(
     '--load-progress',
-    `${generationManualProgress.toFixed(1)}%`
+    `${progress.toFixed(1)}%`
   );
 }
 
@@ -2116,19 +2089,21 @@ function updateGenerationProgress(){
     const seconds=String(elapsedSeconds%60).padStart(2,'0');
     elapsedLabel.textContent=`${minutes}:${seconds}`;
   }
-  setGenerationProgress(generationManualProgress);
+  const simulatedProgress=Math.min(100,(elapsed/GENERATION_SIMULATION_MS)*100);
+  const stepCount=(GT[lang]||GT.en).generationSteps.length;
+  setGenerationStep(Math.min(stepCount-1,Math.floor((simulatedProgress/100)*stepCount)));
+  renderGenerationProgress(simulatedProgress);
 }
 
 function startGenerationProgress(){
   stopGenerationProgress();
   generationProgressStep=0;
-  generationProgressDetailOverride='';
-  generationManualProgress=8;
   generationStartedAt=Date.now();
   renderGenerationSteps();
   setGenerationStep(0);
+  renderGenerationProgress(0);
   updateGenerationProgress();
-  generationProgressTimer=setInterval(updateGenerationProgress,1000);
+  generationProgressTimer=setInterval(updateGenerationProgress,250);
 }
 
 function stopGenerationProgress(){
@@ -2141,7 +2116,7 @@ function stopGenerationProgress(){
 function completeGenerationProgress(){
   stopGenerationProgress();
   setGenerationStep((GT[lang]||GT.en).generationSteps.length-1);
-  setGenerationProgress(100);
+  renderGenerationProgress(100);
 }
 
 function setActiveLoadingScene(index) {

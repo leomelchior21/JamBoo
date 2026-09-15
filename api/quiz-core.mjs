@@ -4,6 +4,10 @@ export const DIFFICULTIES = Object.freeze(['easy', 'medium', 'hard', 'mixed']);
 
 const TYPE_CYCLE = ['multiple', 'open', 'drawing'];
 const DIFFICULTY_CYCLE = ['easy', 'medium', 'hard'];
+const MAX_MC_OPTION_LENGTH = 60;
+const MAX_MC_OPTION_WORDS = 8;
+const MAX_ANSWER_LENGTH = 80;
+const MAX_ANSWER_WORDS = 12;
 const COGNITIVE_SKILLS = {
   easy: ['recognize', 'recall', 'identify', 'classify'],
   medium: ['explain', 'compare', 'connect facts', 'sequence', 'apply'],
@@ -103,6 +107,9 @@ export function validateQuestionForSlot(question, slot) {
     if (new Set(options.map(normalizeText)).size !== 4) {
       return { valid: false, reason: 'duplicate answer option' };
     }
+    if (options.some(option => cleanText(option).length > MAX_MC_OPTION_LENGTH || cleanText(option).split(/\s+/).length > MAX_MC_OPTION_WORDS)) {
+      return { valid: false, reason: 'answer option too long' };
+    }
     if (!Number.isInteger(answerIndex) || answerIndex < 0 || answerIndex > 3) {
       return { valid: false, reason: 'invalid answerIndex' };
     }
@@ -116,6 +123,9 @@ export function validateQuestionForSlot(question, slot) {
     return { valid: false, reason: 'wrong question type' };
   }
   if (!answer) return { valid: false, reason: 'blank expected answer' };
+  if (answer.length > MAX_ANSWER_LENGTH || answer.split(/\s+/).length > MAX_ANSWER_WORDS) {
+    return { valid: false, reason: 'expected answer too long' };
+  }
   if (slot.type === 'drawing' && !drawing) {
     return { valid: false, reason: 'drawing marker missing' };
   }
