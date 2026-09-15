@@ -564,22 +564,25 @@ body{
 
 .load-bar-wrap{
   width:min(100%,340px);height:8px;
-  padding:0;
-  background:linear-gradient(90deg, transparent, rgba(255,255,255,.14), transparent);
-  border:none;
-  box-shadow:none;
-  overflow:visible;
+  padding:0;background:rgba(255,255,255,.08);
+  border:1px solid rgba(0,255,204,.24);
+  box-shadow:inset 0 0 8px rgba(0,0,0,.7),0 0 12px rgba(0,255,204,.12);
+  overflow:hidden;
 }
 .load-bar{
-  width:30%;height:100%;
+  position:relative;width:var(--load-progress,8%);height:100%;
   background:linear-gradient(90deg, rgba(0,255,204,.15), rgba(0,255,204,.95), rgba(255,0,187,.85));
   box-shadow:0 0 18px rgba(0,255,204,.42);
-  animation:loadSweep 2s ease-in-out infinite;
+  transition:width 1s cubic-bezier(.2,.75,.2,1);
 }
-@keyframes loadSweep{
-  0%{transform:translateX(-160%) skewX(-20deg);}
-  58%{transform:translateX(265%) skewX(-20deg);}
-  100%{transform:translateX(265%) skewX(-20deg);}
+.load-bar::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent 0 38%,rgba(255,255,255,.7) 50%,transparent 62% 100%);
+  animation:loadSignal 1.8s linear infinite;
+}
+@keyframes loadSignal{
+  from{transform:translateX(-130%);}
+  to{transform:translateX(130%);}
 }
 .load-text{
   font-family:var(--fp);font-size:7px;
@@ -592,6 +595,80 @@ body{
   0%,100%{opacity:.7;letter-spacing:3px;}
   50%{opacity:1;letter-spacing:4px;}
 }
+.generation-console{
+  position:relative;width:min(100%,520px);padding:14px 16px 13px;
+  overflow:hidden;
+  background:linear-gradient(180deg,rgba(9,10,31,.92),rgba(4,4,16,.96));
+  border:1px solid rgba(0,255,204,.25);
+  box-shadow:4px 4px 0 rgba(0,0,0,.7),0 0 22px rgba(0,255,204,.08);
+}
+.generation-console::before{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(180deg,transparent,rgba(0,255,204,.055),transparent);
+  transform:translateY(-100%);animation:consoleScan 4s linear infinite;
+}
+@keyframes consoleScan{to{transform:translateY(100%);}}
+.generation-console-head{
+  position:relative;display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding-bottom:11px;border-bottom:1px solid rgba(255,255,255,.1);
+  font-family:var(--fp);font-size:6px;letter-spacing:1.4px;text-transform:uppercase;
+}
+.generation-console-title{color:var(--primary);}
+.generation-console-title::before{
+  content:'';display:inline-block;width:6px;height:6px;margin-right:7px;
+  background:var(--primary);box-shadow:0 0 8px var(--primary);
+  animation:statusBlink 1.2s steps(2,end) infinite;
+}
+@keyframes statusBlink{50%{opacity:.25;}}
+.generation-elapsed{color:rgba(255,255,255,.55);font-variant-numeric:tabular-nums;}
+.generation-steps{
+  position:relative;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));
+  gap:4px;margin-top:14px;
+}
+.generation-step{position:relative;min-width:0;text-align:center;color:rgba(255,255,255,.28);}
+.generation-step::after{
+  content:'';position:absolute;z-index:0;top:9px;left:calc(50% + 11px);
+  width:calc(100% - 18px);height:2px;background:rgba(255,255,255,.1);
+  transition:background .4s,box-shadow .4s;
+}
+.generation-step:last-child::after{display:none;}
+.generation-step.is-complete::after{
+  background:var(--primary);box-shadow:0 0 7px rgba(0,255,204,.7);
+}
+.generation-node{
+  position:relative;z-index:1;width:20px;height:20px;margin:0 auto 8px;
+  display:grid;place-items:center;
+  border:2px solid rgba(255,255,255,.18);background:#09091c;
+  font-family:var(--fp);font-size:5px;transition:all .35s;
+}
+.generation-step.is-active{color:#fff;}
+.generation-step.is-active .generation-node{
+  color:#03030c;border-color:var(--accent);background:var(--accent);
+  box-shadow:0 0 0 4px rgba(255,0,187,.1),0 0 16px rgba(255,0,187,.65);
+  animation:activeNode 1.2s ease-in-out infinite;
+}
+.generation-step.is-complete{color:rgba(0,255,204,.72);}
+.generation-step.is-complete .generation-node{
+  color:#031510;border-color:var(--primary);background:var(--primary);
+  box-shadow:0 0 9px rgba(0,255,204,.45);
+}
+.generation-step.is-complete .generation-node span{display:none;}
+.generation-step.is-complete .generation-node::before{content:'\2713';font-family:var(--fb);font-size:12px;font-weight:900;}
+@keyframes activeNode{
+  0%,100%{transform:translateY(0);}
+  50%{transform:translateY(-2px);filter:brightness(1.25);}
+}
+.generation-step-label{
+  display:block;overflow:hidden;text-overflow:ellipsis;
+  font-family:var(--fp);font-size:5px;line-height:1.45;letter-spacing:.25px;text-transform:uppercase;
+}
+.generation-detail{
+  position:relative;min-height:15px;margin-top:13px;
+  color:rgba(255,255,255,.62);font-family:var(--fp);font-size:5px;line-height:1.7;
+  letter-spacing:.45px;text-align:left;text-transform:uppercase;
+}
+.generation-detail::before{content:'>';color:var(--accent);margin-right:8px;}
+.generation-detail::after{content:'_';color:var(--primary);margin-left:4px;animation:statusBlink .85s steps(2,end) infinite;}
 .loading-error-actions{display:flex;justify-content:center;}
 .loading-error-actions[hidden]{display:none;}
 .loading-error-back{
@@ -605,6 +682,7 @@ body{
 #loading.has-error .loading-stage{opacity:.32;}
 #loading.has-error .load-bar-wrap{display:none;}
 #loading.has-error .load-text{color:#ff8fcf;animation:none;line-height:1.8;}
+#loading.has-error .generation-console{opacity:.38;filter:saturate(.5);}
 
 /* ═══════════════════════════════════════════
    GAME WRAPPER
@@ -1123,6 +1201,9 @@ body{
   .loading-shell{width:min(94vw,420px);padding:0;gap:14px;}
   .loading-stage{height:164px;}
   .load-logo{width:min(68vw,180px);}
+  .generation-console{padding:12px 10px 11px;}
+  .generation-step-label{font-size:4.5px;letter-spacing:0;}
+  .generation-detail{font-size:4.5px;}
   .relay-system{transform:scale(.82);}
   .cradle-wrap{transform:scale(.84);}
   .orbit-system{transform:scale(.84);}
@@ -1135,6 +1216,17 @@ body{
   .ghdr-btn-redo{padding:6px 8px;}
   .ghdr-btn-redo #lbl-redo{display:none;}
   .board-toolbar{margin-top:52px;}
+}
+
+@media(max-height:760px){
+  #loading{overflow-y:auto;padding:14px 0;}
+  .loading-shell{gap:11px;}
+  .load-logo{width:min(54vw,164px);}
+  .loading-stage{height:132px;}
+  .relay-system,.cradle-wrap,.orbit-system{transform:scale(.7);}
+  .generation-console{padding-top:10px;padding-bottom:9px;}
+  .generation-steps{margin-top:10px;}
+  .generation-detail{margin-top:9px;}
 }
 
 /* ═══════════════════════════════════════════
@@ -1234,6 +1326,14 @@ body{
 
     <div class="load-bar-wrap"><div class="load-bar"></div></div>
     <p class="load-text" id="load-text">Generating your game...</p>
+    <div class="generation-console" id="generation-console">
+      <div class="generation-console-head">
+        <span class="generation-console-title" id="generation-console-title">Creation pipeline</span>
+        <span class="generation-elapsed" id="generation-elapsed" aria-hidden="true">00:00</span>
+      </div>
+      <div class="generation-steps" id="generation-steps"></div>
+      <div class="generation-detail" id="generation-detail" role="status" aria-live="polite">Reading your game brief</div>
+    </div>
     <div class="loading-error-actions" id="loading-error-actions" hidden>
       <a class="loading-error-back" href="index.html" id="loading-error-back">Back to setup</a>
     </div>
@@ -1391,6 +1491,17 @@ const GT = {
     aiOffline:'AI server offline. Start Ollama and the tunnel, then try again.', backToSetup:'Back to setup',
     noConfig:'No game config found. Please go back to setup.',
     calculating:'CALCULATING...',
+    creationPipeline:'Creation pipeline',
+    generationSteps:['Brief','Categories','Questions','Answers','Review','Board'],
+    generationDetails:[
+      'Reading the topic, level, and language',
+      'Designing distinct category angles',
+      'Writing clear questions by difficulty',
+      'Crafting accurate answers and distractors',
+      'Checking facts and quiz structure',
+      'Assembling your game board'
+    ],
+    generationRetry:'Running another quality pass',
   },
   pt:{
     back:'Início', redo:'Refazer', redoTitle:'Refazer última pergunta', end:'🏆 Fim', reveal:'Revelar Resposta', done:'Feito ✓',
@@ -1402,6 +1513,17 @@ const GT = {
     aiOffline:'Servidor de IA offline. Inicie o Ollama e o túnel e tente novamente.', backToSetup:'Voltar ao início',
     noConfig:'Configuração não encontrada. Volte ao início.',
     calculating:'CALCULANDO...',
+    creationPipeline:'Linha de criação',
+    generationSteps:['Tema','Categorias','Perguntas','Respostas','Revisão','Tabuleiro'],
+    generationDetails:[
+      'Lendo o tema, o nível e o idioma',
+      'Planejando categorias diferentes',
+      'Escrevendo perguntas por dificuldade',
+      'Criando respostas e alternativas precisas',
+      'Conferindo fatos e estrutura do quiz',
+      'Montando o tabuleiro do jogo'
+    ],
+    generationRetry:'Fazendo mais uma revisão de qualidade',
   },
   es:{
     back:'Inicio', redo:'Rehacer', redoTitle:'Rehacer última pregunta', end:'🏆 Fin', reveal:'Revelar Respuesta', done:'Listo ✓',
@@ -1413,6 +1535,17 @@ const GT = {
     aiOffline:'Servidor de IA sin conexión. Inicia Ollama y el túnel e inténtalo de nuevo.', backToSetup:'Volver al inicio',
     noConfig:'Configuración no encontrada. Vuelve al inicio.',
     calculating:'CALCULANDO...',
+    creationPipeline:'Línea de creación',
+    generationSteps:['Tema','Categorías','Preguntas','Respuestas','Revisión','Tablero'],
+    generationDetails:[
+      'Leyendo el tema, el nivel y el idioma',
+      'Diseñando categorías diferentes',
+      'Escribiendo preguntas por dificultad',
+      'Creando respuestas y opciones precisas',
+      'Revisando datos y estructura del quiz',
+      'Preparando el tablero del juego'
+    ],
+    generationRetry:'Realizando otra revisión de calidad',
   }
 };
 
@@ -1424,11 +1557,17 @@ let mcAnswered=null;
 let openOutcome=null;
 let loadingSceneTimer=null;
 let activeLoadingSceneIndex=0;
+let generationProgressTimer=null;
+let generationStartedAt=0;
+let generationProgressStep=0;
+let generationProgressDetailOverride='';
 let generationRequest=null;
 const MAX_GENERATION_ATTEMPTS=3;
 const GENERATION_API_URL='/api/ai';
-const GENERATION_PROVIDER='ollama-proxy-v1';
+const GENERATION_PROVIDER='ollama-proxy-quality-v2';
 const GAME_CACHE_KEY='jamboo_game_cache_v4';
+const GENERATION_STAGE_TIMES=[0,9000,23000,42000,64000];
+const GENERATION_STAGE_PROGRESS=[8,22,42,63,82];
 
 function cleanText(value){
   return String(value ?? '').trim();
@@ -1705,6 +1844,7 @@ async function generateGame(){
           ? GT[lang].generating
           : `${GT[lang].generating} (${attempt}/${MAX_GENERATION_ATTEMPTS})`;
       }
+      if(attempt>1) setGenerationStep(4,GT[lang].generationRetry);
 
       const payload=attempt===1
         ? buildPayload()
@@ -1741,7 +1881,9 @@ async function generateGame(){
       const text=data.answer;
       if(!text) throw new Error('Empty response');
 
-      return sanitizeGameData(JSON.parse(extractJsonObject(text)));
+      const generatedGame=sanitizeGameData(JSON.parse(extractJsonObject(text)));
+      setGenerationStep(5);
+      return generatedGame;
     }catch(error){
       lastError=error;
       console.warn(`Game generation attempt ${attempt} failed`, error);
@@ -1756,6 +1898,105 @@ function requestGeneratedGame(){
   if(generationRequest) return generationRequest;
   generationRequest=generateGame().finally(()=>{generationRequest=null;});
   return generationRequest;
+}
+
+function renderGenerationSteps(){
+  const G=GT[lang]||GT.en;
+  const title=document.getElementById('generation-console-title');
+  const stepsContainer=document.getElementById('generation-steps');
+  if(title) title.textContent=G.creationPipeline;
+  if(!stepsContainer) return;
+
+  stepsContainer.replaceChildren();
+  G.generationSteps.forEach((label,index)=>{
+    const step=document.createElement('div');
+    step.className='generation-step';
+    step.dataset.step=String(index);
+
+    const node=document.createElement('span');
+    node.className='generation-node';
+    const number=document.createElement('span');
+    number.textContent=String(index+1).padStart(2,'0');
+    node.appendChild(number);
+
+    const text=document.createElement('span');
+    text.className='generation-step-label';
+    text.textContent=label;
+    step.append(node,text);
+    stepsContainer.appendChild(step);
+  });
+}
+
+function setGenerationStep(index,detailOverride=''){
+  const G=GT[lang]||GT.en;
+  const lastIndex=G.generationSteps.length-1;
+  const nextStep=Math.min(lastIndex,Math.max(generationProgressStep,index));
+  if(nextStep>generationProgressStep) generationProgressDetailOverride='';
+  generationProgressStep=nextStep;
+  if(detailOverride) generationProgressDetailOverride=detailOverride;
+  document.querySelectorAll('.generation-step').forEach((step,stepIndex)=>{
+    step.classList.toggle('is-complete',stepIndex<generationProgressStep);
+    step.classList.toggle('is-active',stepIndex===generationProgressStep);
+  });
+
+  const detail=document.getElementById('generation-detail');
+  const nextDetail=generationProgressDetailOverride||G.generationDetails[generationProgressStep];
+  if(detail && detail.textContent!==nextDetail) detail.textContent=nextDetail;
+}
+
+function updateGenerationProgress(){
+  if(!generationStartedAt) return;
+  const elapsed=Date.now()-generationStartedAt;
+  const elapsedSeconds=Math.floor(elapsed/1000);
+  const elapsedLabel=document.getElementById('generation-elapsed');
+  if(elapsedLabel){
+    const minutes=String(Math.floor(elapsedSeconds/60)).padStart(2,'0');
+    const seconds=String(elapsedSeconds%60).padStart(2,'0');
+    elapsedLabel.textContent=`${minutes}:${seconds}`;
+  }
+
+  let timedStep=0;
+  GENERATION_STAGE_TIMES.forEach((threshold,index)=>{
+    if(elapsed>=threshold) timedStep=index;
+  });
+  setGenerationStep(timedStep);
+
+  let progress;
+  const nextTime=GENERATION_STAGE_TIMES[timedStep+1];
+  if(nextTime!==undefined){
+    const range=nextTime-GENERATION_STAGE_TIMES[timedStep];
+    const fraction=Math.min(1,(elapsed-GENERATION_STAGE_TIMES[timedStep])/range);
+    const nextProgress=GENERATION_STAGE_PROGRESS[timedStep+1]-2;
+    progress=GENERATION_STAGE_PROGRESS[timedStep]
+      +(nextProgress-GENERATION_STAGE_PROGRESS[timedStep])*fraction;
+  }else{
+    progress=Math.min(94,GENERATION_STAGE_PROGRESS[timedStep]+(elapsed-GENERATION_STAGE_TIMES[timedStep])/6000);
+  }
+  document.querySelector('.loading-shell')?.style.setProperty('--load-progress',`${progress.toFixed(1)}%`);
+}
+
+function startGenerationProgress(){
+  stopGenerationProgress();
+  generationProgressStep=0;
+  generationProgressDetailOverride='';
+  generationStartedAt=Date.now();
+  renderGenerationSteps();
+  setGenerationStep(0);
+  updateGenerationProgress();
+  generationProgressTimer=setInterval(updateGenerationProgress,1000);
+}
+
+function stopGenerationProgress(){
+  if(generationProgressTimer){
+    clearInterval(generationProgressTimer);
+    generationProgressTimer=null;
+  }
+}
+
+function completeGenerationProgress(){
+  stopGenerationProgress();
+  setGenerationStep((GT[lang]||GT.en).generationSteps.length-1);
+  document.querySelector('.loading-shell')?.style.setProperty('--load-progress','100%');
 }
 
 function setActiveLoadingScene(index) {
@@ -1800,12 +2041,14 @@ async function boot() {
 
   gameData=readCachedGame();
   if(!gameData){
+    startGenerationProgress();
     try {
       gameData=await requestGeneratedGame();
       cacheGame(gameData);
     } catch(e) {
       console.error(e);
       stopLoadingSceneCycle();
+      stopGenerationProgress();
       const offline=String(e?.message||'').includes('AI server unavailable');
       document.getElementById('load-text').textContent=offline ? GT[lang].aiOffline : GT[lang].errorGen;
       document.getElementById('loading-error-actions').hidden=false;
@@ -1814,9 +2057,14 @@ async function boot() {
     }
   }
 
-  stopLoadingSceneCycle();
   buildBoard();
   renderScorebar();
+  if(generationStartedAt){
+    completeGenerationProgress();
+    await new Promise(resolve=>setTimeout(resolve,450));
+  }
+  stopLoadingSceneCycle();
+  stopGenerationProgress();
   document.getElementById('loading').classList.add('hidden');
   document.getElementById('game-wrap').classList.add('ready');
 }
@@ -1851,11 +2099,12 @@ FORMAT EXAMPLE: {"c":["category"],"qs":[[${exampleItem}]]}
 ITEM RULE (${qType}): ${itemSchemas[qType]||itemSchemas.open}
 "c" has exactly ${numCols} category names. "qs" is column-major: exactly ${numCols} matching category arrays with ${numRows} items each.
 For MC, "o" has 4 full choices and "i" is the 0-based correct index; omit "a" because the app derives it. For drawing, set "d":1. Omit unused keys.
-For MC, exactly one choice must be correct. Distractors must be clearly wrong, not ambiguous variants or alternate spellings of the correct answer.
+QUALITY BAR: Silently verify every fact, answer, and correct index before returning JSON. Every prompt must be a complete, self-contained question with one unambiguous answer. Do not invent facts, repeat a fact or answer, use filler, or write vague clues that only restate the category.
+For MC, exactly one choice must be correct. Write all four choices specifically for that question. Distractors should be plausible and the same semantic kind as the answer, but unquestionably incorrect; never reuse unrelated answers from other questions.
 Content language: ${qLang}. Overall difficulty: ${diffMap[difficulty]||difficulty}. Row progression: ${rowDiff}.
 ${typeRule}
 ${audienceRule}
-Make questions specific and surprising; reward understanding rather than obvious trivia. No markdown or commentary.`;
+Make questions specific and engaging; reward understanding, not wordplay or obvious trivia. Harder rows should require deeper knowledge or reasoning, not merely longer wording. No markdown or commentary.`;
 
   return {messages:[
     {role:'system',content:sys},
