@@ -4,8 +4,7 @@ const MAX_MESSAGES = 4;
 const MAX_MESSAGE_LENGTH = 12000;
 const MAX_TOTAL_LENGTH = 20000;
 const QUIZ_LIMITS = { columns: 8, rows: 6 };
-const MAX_QUIZ_ITEMS_PER_CALL = 6;
-const MAX_QUIZ_SCHEMA_ATTEMPTS = 2;
+const MAX_QUIZ_ITEMS_PER_CALL = 12;
 const SERVER_SYSTEM_PROMPT = 'Follow the conversation instructions precisely. When asked to reply with exact literal text, output only that text; literal output is formatting, not an identity claim.';
 
 class InvalidAIResponseError extends Error {}
@@ -101,15 +100,153 @@ function isValidQuizQuestion(question, questionType) {
     (!isDrawing && !hasMultipleChoice && hasAnswer);
 }
 
+function expandWireQuestion(question, questionType) {
+  if (!Array.isArray(question)) return question;
+
+  if (questionType === 'multiple') {
+    if (question.length === 3 && Array.isArray(question[1])) {
+      return { q: question[0], o: question[1], i: question[2] };
+    }
+    return { q: question[0], o: question.slice(1, 5), i: question[5] };
+  }
+  if (questionType === 'open') return { q: question[0], a: question[1] };
+  if (questionType === 'drawing') return { q: question[0], a: question[1], d: 1 };
+
+  const [rawType, prompt, ...fields] = question;
+  const type = String(rawType ?? '').toLowerCase();
+  if (type === 'm' || type === 'multiple') {
+    if (fields.length === 2 && Array.isArray(fields[0])) {
+      return { q: prompt, o: fields[0], i: fields[1] };
+    }
+    return { q: prompt, o: fields.slice(0, 4), i: fields[4] };
+  }
+  if (type === 'd' || type === 'drawing') return { q: prompt, a: fields[0], d: 1 };
+  if (type === 'o' || type === 'open') return { q: prompt, a: fields[0] };
+  return null;
+}
+
+function uniqueTexts(values) {
+  const seen = new Set();
+  return values.filter(value => {
+    if (!isNonEmptyText(value)) return false;
+    const key = normalizeAnswerKey(value);
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function buildMultipleChoiceQuestion(prompt, answer, categoryPool, columnIndex, rowIndex) {
+  if (!isNonEmptyText(prompt) || !isNonEmptyText(answer)) return null;
+
+  const answerKey = normalizeAnswerKey(answer);
+  const distractors = categoryPool.filter(option => normalizeAnswerKey(option) !== answerKey);
+  if (distractors.length < 3) return null;
+
+  const start = rowIndex % distractors.length;
+  const choices = Array.from(
+    { length: 3 },
+    (_, index) => distractors[(start + index) % distractors.length]
+  );
+  const correctIndex = (columnIndex + rowIndex) % 4;
+  choices.splice(correctIndex, 0, answer);
+  return { q: prompt, o: choices, i: correctIndex };
+}
+
+function expandPooledMultipleChoice(questionColumns, extraColumns) {
+  const allAnswers = uniqueTexts([
+    ...questionColumns.flatMap(column => column.map(question => question[1])),
+    ...(Array.isArray(extraColumns) ? extraColumns.flat() : []),
+  ]);
+
+  const expanded = questionColumns.map((column, columnIndex) => {
+    const categoryExtras = Array.isArray(extraColumns?.[columnIndex])
+      ? extraColumns[columnIndex]
+      : [];
+    const categoryPool = uniqueTexts([
+      ...column.map(question => question[1]),
+      ...categoryExtras,
+      ...allAnswers,
+    ]);
+    if (categoryPool.length < 4) return null;
+
+    return column.map((question, rowIndex) =>
+      buildMultipleChoiceQuestion(
+        question[0],
+        question[1],
+        categoryPool,
+        columnIndex,
+        rowIndex
+      )
+    );
+  });
+
+  if (expanded.some(column => !column || column.some(question => !question))) return null;
+  return expanded;
+}
+
+function expandPooledMixed(questionColumns, extraColumns) {
+  const allAnswers = uniqueTexts([
+    ...questionColumns.flatMap(column => column.map(question => question[2])),
+    ...(Array.isArray(extraColumns) ? extraColumns.flat() : []),
+  ]);
+
+  const expanded = questionColumns.map((column, columnIndex) => {
+    const categoryExtras = Array.isArray(extraColumns?.[columnIndex])
+      ? extraColumns[columnIndex]
+      : [];
+    const categoryPool = uniqueTexts([
+      ...column.map(question => question[2]),
+      ...categoryExtras,
+      ...allAnswers,
+    ]);
+    if (categoryPool.length < 4) return null;
+
+    return column.map((question, rowIndex) => {
+      const [rawType, prompt, answer] = question;
+      const type = String(rawType ?? '').toLowerCase();
+      if (type === 'm') {
+        return buildMultipleChoiceQuestion(
+          prompt,
+          answer,
+          categoryPool,
+          columnIndex,
+          rowIndex
+        );
+      }
+      if (type === 'd' && isNonEmptyText(prompt) && isNonEmptyText(answer)) {
+        return { q: prompt, a: answer, d: 1 };
+      }
+      if (type === 'o' && isNonEmptyText(prompt) && isNonEmptyText(answer)) {
+        return { q: prompt, a: answer };
+      }
+      return null;
+    });
+  });
+
+  if (expanded.some(column => !column || column.some(question => !question))) return null;
+  return expanded;
+}
+
 function normalizeQuestionColumns(questions, columns, rows) {
+  const isQuestionValue = question =>
+    question && typeof question === 'object';
   const columnShape = questions.length >= columns &&
-    questions.slice(0, columns).every(column => Array.isArray(column) && column.length >= rows);
+    questions.slice(0, columns).every(column =>
+      Array.isArray(column) &&
+      column.length >= rows &&
+      column.slice(0, rows).every(isQuestionValue)
+    );
   if (columnShape) {
     return questions.slice(0, columns).map(column => column.slice(0, rows));
   }
 
   const rowShape = questions.length >= rows &&
-    questions.slice(0, rows).every(row => Array.isArray(row) && row.length >= columns);
+    questions.slice(0, rows).every(row =>
+      Array.isArray(row) &&
+      row.length >= columns &&
+      row.slice(0, columns).every(isQuestionValue)
+    );
   if (rowShape) {
     const trimmedRows = questions.slice(0, rows).map(row => row.slice(0, columns));
     return Array.from({ length: columns }, (_, columnIndex) =>
@@ -118,9 +255,7 @@ function normalizeQuestionColumns(questions, columns, rows) {
   }
 
   const flatShape = questions.length >= columns * rows &&
-    questions.slice(0, columns * rows).every(question =>
-      question && typeof question === 'object' && !Array.isArray(question)
-    );
+    questions.slice(0, columns * rows).every(isQuestionValue);
   if (flatShape) {
     return Array.from({ length: columns }, (_, columnIndex) => {
       const start = columnIndex * rows;
@@ -135,7 +270,7 @@ function normalizeQuiz(value, schema) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
 
   const rawCategories = value.c ?? value.categories;
-  const questions = value.qs ?? value.questions;
+  const questions = value.qs ?? value.questions ?? value.q;
   if (
     !Array.isArray(rawCategories) ||
     rawCategories.length < 1 ||
@@ -145,12 +280,46 @@ function normalizeQuiz(value, schema) {
     return null;
   }
 
-  const normalizedQuestions = normalizeQuestionColumns(
+  const questionColumns = normalizeQuestionColumns(
     questions,
     schema.columns,
     schema.rows
   );
-  if (!normalizedQuestions || !normalizedQuestions.every(column =>
+  if (!questionColumns) return null;
+
+  const usesPooledMultipleChoice = schema.questionType === 'multiple' &&
+    questionColumns.every(column => column.every(question =>
+      Array.isArray(question) &&
+      question.length === 2 &&
+      isNonEmptyText(question[0]) &&
+      isNonEmptyText(question[1])
+    ));
+  const usesPooledMixed = schema.questionType === 'mixed' &&
+    questionColumns.every(column => column.every(question =>
+      Array.isArray(question) &&
+      question.length === 3 &&
+      ['m', 'o', 'd'].includes(String(question[0] ?? '').toLowerCase()) &&
+      isNonEmptyText(question[1]) &&
+      isNonEmptyText(question[2])
+    ));
+  let normalizedQuestions;
+  if (usesPooledMultipleChoice) {
+    normalizedQuestions = expandPooledMultipleChoice(
+      questionColumns,
+      value.d ?? value.distractors
+    );
+  } else if (usesPooledMixed) {
+    normalizedQuestions = expandPooledMixed(
+      questionColumns,
+      value.d ?? value.distractors
+    );
+  } else {
+    normalizedQuestions = questionColumns.map(column =>
+      column.map(question => expandWireQuestion(question, schema.questionType))
+    );
+  }
+  if (!normalizedQuestions) return null;
+  if (!normalizedQuestions.every(column =>
     column.every(question => isValidQuizQuestion(question, schema.questionType))
   )) {
     return null;
@@ -229,10 +398,11 @@ function createOllamaRequest(messages, format) {
     options: {
       num_ctx: 4096,
       num_predict: 400,
+      temperature: 0,
     },
     keep_alive: '30m',
   };
-  if (format === 'json') request.format = 'json';
+  if (format) request.format = format;
   return request;
 }
 
@@ -270,33 +440,89 @@ function createBatchInstructions(schema, columns, usedCategories) {
   const exclusions = usedCategories.length
     ? ` Do not reuse these categories: ${JSON.stringify(usedCategories)}.`
     : ' Make the category names distinct.';
-  return `BATCH OUTPUT OVERRIDE: This overrides only any earlier total-category count. Keep the original topic, language, difficulty, and item rules, but for this response generate exactly ${columns} new category arrays with exactly ${schema.rows} questions per array. The top-level "c" and "qs" arrays must each contain exactly ${columns} entries.${exclusions}`;
+  const usesChoicePool = schema.questionType === 'multiple' || schema.questionType === 'mixed';
+  const extraAnswerCount = usesChoicePool ? Math.max(0, 4 - schema.rows) : 0;
+  const itemShape = {
+    multiple: `Each "q" item is ["real question","correct answer"]. The server creates choices from the correct answers in that category${extraAnswerCount ? ` plus exactly ${extraAnswerCount} extra wrong answer${extraAnswerCount === 1 ? '' : 's'} per category in "d"` : ''}.`,
+    open: 'Each item is ["question","short answer"].',
+    drawing: 'Each item is ["drawing prompt","expected answer"].',
+    mixed: `Each item is ["m","real question","correct answer"], ["o","question","short answer"], or ["d","drawing prompt","expected answer"]. Use a varied mix. The server creates choices for "m" from answers in that category${extraAnswerCount ? ' plus the extra answers in "d"' : ''}.`,
+  }[schema.questionType];
+  const itemExample = {
+    multiple: '["question","correct answer"]',
+    open: '["question","short answer"]',
+    drawing: '["drawing prompt","expected answer"]',
+    mixed: '["type","question","answer"]',
+  }[schema.questionType];
+  const extraExample = usesChoicePool && extraAnswerCount
+    ? `,"d":[[${Array.from({ length: extraAnswerCount }, () => '"extra answer"').join(',')}]]`
+    : '';
+  return `FAST QUIZ OUTPUT OVERRIDE: Create the quiz from the user's topic. Keep the requested content language, difficulty progression, and question type, but ignore all earlier JSON examples. Return only {"c":["category"]${extraExample},"q":[[${itemExample}]]}. "c" and column-major "q" must each have exactly ${columns} entries; each "q" column must have exactly ${schema.rows} items. ${itemShape} Correct answers within a category must differ. Use no question objects, blanks, underscores, or answer-only prompts. Keep questions at most 9 words, answers at most 3 words, and category names at most 3 words.${exclusions}`;
+}
+
+function exactArray(length, items) {
+  return { type: 'array', items, minItems: length, maxItems: length };
+}
+
+function createQuizFormat(schema) {
+  const shortText = { type: 'string', minLength: 1, maxLength: 24 };
+  const questionText = { type: 'string', minLength: 1, maxLength: 72 };
+  const columns = schema.columns;
+  const rows = schema.rows;
+  const properties = {
+    c: exactArray(columns, shortText),
+  };
+  const required = ['c'];
+
+  if (schema.questionType === 'multiple' || schema.questionType === 'mixed') {
+    const prefixItems = schema.questionType === 'multiple'
+      ? [questionText, shortText]
+      : [{ type: 'string', enum: ['m', 'o', 'd'] }, questionText, shortText];
+    const pair = {
+      type: 'array',
+      prefixItems,
+      minItems: prefixItems.length,
+      maxItems: prefixItems.length,
+    };
+    const extraAnswerCount = Math.max(0, 4 - rows);
+    if (extraAnswerCount) {
+      properties.d = exactArray(columns, exactArray(extraAnswerCount, shortText));
+      required.push('d');
+    }
+    properties.q = exactArray(columns, exactArray(rows, pair));
+  } else {
+    const pair = {
+      type: 'array',
+      prefixItems: [questionText, shortText],
+      minItems: 2,
+      maxItems: 2,
+    };
+    properties.q = exactArray(columns, exactArray(rows, pair));
+  }
+  required.push('q');
+
+  return {
+    type: 'object',
+    additionalProperties: false,
+    properties,
+    required,
+  };
 }
 
 async function requestValidQuizBatch(chatUrl, messages, schema, instructions, signal) {
-  for (let attempt = 1; attempt <= MAX_QUIZ_SCHEMA_ATTEMPTS; attempt += 1) {
-    const repairInstruction = attempt === 1
-      ? instructions
-      : `${instructions}\nSCHEMA REPAIR: The previous response failed validation. Count every category, column, row, option, and correct-index field before responding.`;
-    const answer = await requestOllama(
-      chatUrl,
-      addServerInstructions(messages, repairInstruction),
-      'json',
-      signal
-    );
-    const validated = validateStructuredAnswer(answer, schema);
-    if (validated) return validated;
-  }
+  const answer = await requestOllama(
+    chatUrl,
+    addServerInstructions(messages, instructions),
+    createQuizFormat(schema),
+    signal
+  );
+  const validated = validateStructuredAnswer(answer, schema);
+  if (validated) return validated;
 
   throw new InvalidAIResponseError('AI returned quiz data in an unexpected format');
 }
 
 async function generateQuizAnswer(chatUrl, messages, schema, signal) {
-  const totalItems = schema.columns * schema.rows;
-  if (totalItems <= MAX_QUIZ_ITEMS_PER_CALL) {
-    return requestValidQuizBatch(chatUrl, messages, schema, '', signal);
-  }
-
   const columnsPerBatch = Math.max(1, Math.floor(MAX_QUIZ_ITEMS_PER_CALL / schema.rows));
   const quiz = { c: [], qs: [] };
 
