@@ -669,7 +669,7 @@ body{
 }
 .generation-detail::before{content:'>';color:var(--accent);margin-right:8px;}
 .generation-detail::after{content:'_';color:var(--primary);margin-left:4px;animation:statusBlink .85s steps(2,end) infinite;}
-.loading-error-actions{display:flex;justify-content:center;}
+.loading-error-actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;}
 .loading-error-actions[hidden]{display:none;}
 .loading-error-back{
   padding:10px 16px;
@@ -1335,6 +1335,7 @@ body{
       <div class="generation-detail" id="generation-detail" role="status" aria-live="polite">Reading your game brief</div>
     </div>
     <div class="loading-error-actions" id="loading-error-actions" hidden>
+      <button class="loading-error-back" type="button" id="loading-error-retry" onclick="retryGeneration()">Retry</button>
       <a class="loading-error-back" href="index.html" id="loading-error-back">Back to setup</a>
     </div>
   </div>
@@ -1504,6 +1505,9 @@ const GT = {
     usingCategories:'Locking your {count} named categories',
     planningCategories:'Planning {count} focused categories',
     categoryProgress:'Creating {current}/{total}: {category}',
+    questionProgress:'Generating questions {current} / {total}',
+    repairingQuestions:'Repairing {count} question(s)',
+    retry:'Retry',
     validatingQuiz:'Validating every question and answer',
   },
   pt:{
@@ -1529,6 +1533,9 @@ const GT = {
     usingCategories:'Fixando suas {count} categorias',
     planningCategories:'Planejando {count} categorias específicas',
     categoryProgress:'Criando {current}/{total}: {category}',
+    questionProgress:'Gerando perguntas {current} / {total}',
+    repairingQuestions:'Reparando {count} pergunta(s)',
+    retry:'Tentar novamente',
     validatingQuiz:'Validando todas as perguntas e respostas',
   },
   es:{
@@ -1554,6 +1561,9 @@ const GT = {
     usingCategories:'Fijando tus {count} categorías',
     planningCategories:'Planificando {count} categorías específicas',
     categoryProgress:'Creando {current}/{total}: {category}',
+    questionProgress:'Generando preguntas {current} / {total}',
+    repairingQuestions:'Reparando {count} pregunta(s)',
+    retry:'Reintentar',
     validatingQuiz:'Validando todas las preguntas y respuestas',
   }
 };
@@ -1573,7 +1583,7 @@ let generationProgressDetailOverride='';
 let generationManualProgress=8;
 let generationRequest=null;
 const GENERATION_API_URL='/api/ai';
-const GENERATION_PROVIDER='ollama-safe-category-v7';
+const GENERATION_PROVIDER='ollama-atomic-slots-v8';
 const GAME_CACHE_KEY='jamboo_game_cache_v4';
 
 function cleanText(value){
@@ -1787,12 +1797,17 @@ function parseExplicitCategories(topic,expectedCount){
 }
 
 async function requestQuizAction(body,signal){
-  const res=await fetch(GENERATION_API_URL,{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify(body),
-    signal
-  });
+  let res;
+  try{
+    res=await fetch(GENERATION_API_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(body),
+      signal
+    });
+  }catch(error){
+    throw new Error('AI server unavailable',{cause:error});
+  }
   if(!res.ok){
     let apiError=`API ${res.status}`;
     try{
@@ -1815,63 +1830,74 @@ async function requestQuizAction(body,signal){
   return JSON.parse(extractJsonObject(data.answer));
 }
 
-async function resolveQuizCategories(signal){
+function createGenerationToken(){
+  if(globalThis.crypto?.randomUUID) return crypto.randomUUID();
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+}
+
+function buildQuizSpec(seed,generationId){
+  const isYear6Coding=cfg.preset==='year6-coding'
+    || /^Year 6 Computational Thinking\b/i.test(cfg.prompt||'');
+  return {
+    topic:cfg.prompt,
+    columns:cfg.numCols,
+    rows:cfg.numRows,
+    difficulty:cfg.difficulty,
+    questionType:cfg.qType,
+    language:cfg.qLang,
+    seed,
+    generationId,
+    audience:isYear6Coding ? 'year6-pre-coding' : undefined
+  };
+}
+
+async function planQuiz(spec,signal){
   const G=GT[lang]||GT.en;
   const explicit=parseExplicitCategories(cfg.prompt,cfg.numCols);
   if(explicit){
     setGenerationStep(1,formatGenerationStatus(G.usingCategories,{count:explicit.length}));
-    setGenerationProgress(18);
-    return explicit;
+  }else{
+    setGenerationStep(1,formatGenerationStatus(G.planningCategories,{count:cfg.numCols}));
   }
-
-  setGenerationStep(1,formatGenerationStatus(G.planningCategories,{count:cfg.numCols}));
   setGenerationProgress(12);
   const plan=await requestQuizAction({
     action:'quiz-plan',
-    quiz:{topic:cfg.prompt,columns:cfg.numCols,language:cfg.qLang}
+    quiz:{...spec,explicitCategories:explicit||undefined}
   },signal);
   const categories=Array.isArray(plan?.categories) ? plan.categories.map(cleanText) : [];
+  const slots=Array.isArray(plan?.slots) ? plan.slots : [];
+  const expectedSlotIds=[];
+  for(let columnIndex=0;columnIndex<cfg.numCols;columnIndex++){
+    for(let rowIndex=0;rowIndex<cfg.numRows;rowIndex++) expectedSlotIds.push(`${columnIndex}-${rowIndex}`);
+  }
   if(
     categories.length!==cfg.numCols ||
     categories.some(category=>!category) ||
-    new Set(categories.map(normalizeAnswerKey)).size!==categories.length
+    new Set(categories.map(normalizeAnswerKey)).size!==categories.length ||
+    slots.length!==expectedSlotIds.length ||
+    slots.some((slot,index)=>slot?.slotId!==expectedSlotIds[index]) ||
+    !Number.isInteger(plan?.batchSize) || plan.batchSize<1 || plan.batchSize>8
   ){
-    throw new Error('AI returned an invalid category plan');
+    throw new Error('AI returned an invalid board plan');
   }
   setGenerationProgress(18);
-  return categories;
+  return {categories,slots,batchSize:plan.batchSize};
 }
 
-async function generateCategoryColumn(categories,categoryIndex,signal){
-  const isYear6Coding=cfg.preset==='year6-coding'
-    || /^Year 6 Computational Thinking\b/i.test(cfg.prompt||'');
+async function generateQuestionBatch(spec,categories,slotIds,excludedQuestions,signal){
   const response=await requestQuizAction({
-    action:'quiz-category',
+    action:'quiz-batch',
     quiz:{
-      topic:cfg.prompt,
-      allCategories:categories,
-      category:categories[categoryIndex],
-      categoryIndex,
-      categoryCount:categories.length,
-      rows:cfg.numRows,
-      questionType:cfg.qType,
-      difficulty:cfg.difficulty,
-      language:cfg.qLang,
-      audience:isYear6Coding ? 'year6-pre-coding' : undefined
+      ...spec,
+      categories,
+      slotIds,
+      excludedQuestions
     }
   },signal);
-  if(!Array.isArray(response?.c) || response.c.length!==1 || !Array.isArray(response?.qs)){
-    throw new Error(`AI returned invalid questions for ${categories[categoryIndex]}`);
+  if(!Array.isArray(response?.questions) || response.questions.length!==slotIds.length){
+    throw new Error('AI returned an incomplete question batch');
   }
-  const responseCategory=cleanText(response.c[0]);
-  if(normalizeAnswerKey(responseCategory)!==normalizeAnswerKey(categories[categoryIndex])){
-    throw new Error(`Category lock failed for ${categories[categoryIndex]}`);
-  }
-  const rawColumn=response.qs[0];
-  if(!Array.isArray(rawColumn) || rawColumn.length!==cfg.numRows){
-    throw new Error(`Invalid question count for ${categories[categoryIndex]}`);
-  }
-  return rawColumn.map((question,rowIndex)=>sanitizeQuestion(question,categoryIndex,rowIndex));
+  return {questions:response.questions,repaired:Number(response.repaired)||0};
 }
 
 function validateCompletedGame(game){
@@ -1961,24 +1987,56 @@ function cacheGame(game){
 async function generateGame(){
   const G=GT[lang]||GT.en;
   const controller=new AbortController();
+  const seed=createGenerationToken();
+  const generationId=createGenerationToken();
+  const spec=buildQuizSpec(seed,generationId);
   try{
-    const categories=await resolveQuizCategories(controller.signal);
-    const questions=Array(categories.length);
-    let completedCategories=0;
+    const {categories,slots,batchSize}=await planQuiz(spec,controller.signal);
+    const draftQuestions=[];
+    const excludedQuestions=[];
     setGenerationStep(2);
-    for(let categoryIndex=0;categoryIndex<categories.length;categoryIndex+=1){
-      const detail=formatGenerationStatus(G.categoryProgress,{
-        current:categoryIndex+1,
-        total:categories.length,
-        category:categories[categoryIndex]
+    for(let offset=0;offset<slots.length;offset+=batchSize){
+      const batchSlots=slots.slice(offset,offset+batchSize);
+      const completed=Math.min(slots.length,offset+batchSlots.length);
+      setGenerationStep(2,formatGenerationStatus(G.questionProgress,{
+        current:completed,
+        total:slots.length
+      }));
+      const batch=await generateQuestionBatch(
+        spec,
+        categories,
+        batchSlots.map(slot=>slot.slotId),
+        excludedQuestions,
+        controller.signal
+      );
+      if(batch.repaired){
+        setGenerationStep(2,formatGenerationStatus(G.repairingQuestions,{count:batch.repaired}));
+      }
+      batch.questions.forEach(question=>{
+        draftQuestions.push(question);
+        excludedQuestions.push(cleanText(question.q ?? question.question));
       });
-      setGenerationStep(2,detail);
-      questions[categoryIndex]=await generateCategoryColumn(categories,categoryIndex,controller.signal);
-      completedCategories+=1;
-      setGenerationProgress(18+(completedCategories/categories.length)*64);
+      setGenerationProgress(18+(completed/slots.length)*64);
     }
     setGenerationStep(3,G.validatingQuiz);
     setGenerationProgress(86);
+    const finalized=await requestQuizAction({
+      action:'quiz-validate',
+      quiz:{...spec,categories,questions:draftQuestions}
+    },controller.signal);
+    if(finalized?.ready!==true || !Array.isArray(finalized.questions)){
+      throw new Error('Quiz did not pass final validation');
+    }
+    const questions=Array.from({length:cfg.numCols},()=>Array(cfg.numRows));
+    finalized.questions.forEach(question=>{
+      const slot=slots.find(candidate=>candidate.slotId===question.slotId);
+      if(!slot) throw new Error(`Unexpected final slot ${question.slotId}`);
+      questions[slot.categoryIndex][slot.rowIndex]=sanitizeQuestion(
+        question,
+        slot.categoryIndex,
+        slot.rowIndex
+      );
+    });
     const game=validateCompletedGame({categories,questions});
     setGenerationStep(4);
     setGenerationProgress(94);
@@ -2110,6 +2168,10 @@ function stopLoadingSceneCycle() {
   }
 }
 
+function retryGeneration(){
+  window.location.reload();
+}
+
 async function boot() {
   startLoadingSceneCycle();
 
@@ -2172,6 +2234,7 @@ function applyLabels() {
   document.getElementById('lbl-again').textContent=G.playAgain;
   document.getElementById('lbl-same-teams').textContent=G.sameTeams;
   document.getElementById('lbl-home').textContent=G.home;
+  document.getElementById('loading-error-retry').textContent=G.retry;
   document.getElementById('loading-error-back').textContent=G.backToSetup;
   document.getElementById('btn-oc-correct').textContent=G.correct;
   document.getElementById('btn-oc-wrong').textContent=G.wrong;

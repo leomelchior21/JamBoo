@@ -1,5 +1,8 @@
-const OLLAMA_MODEL = 'qwen3.5:4b';
-const HEALTH_TIMEOUT_MS = 5000;
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL?.trim() || 'qwen3.5:4b';
+const configuredTimeout = Number.parseInt(process.env.OLLAMA_HEALTH_TIMEOUT_MS, 10);
+const HEALTH_TIMEOUT_MS = Number.isInteger(configuredTimeout) && configuredTimeout >= 1000 && configuredTimeout <= 10000
+  ? configuredTimeout
+  : 5000;
 
 function getTagsEndpoint() {
   const baseUrl = process.env.OLLAMA_URL?.trim().replace(/\/+$/, '');
@@ -25,11 +28,11 @@ export default async function handler(req, res) {
     tagsUrl = getTagsEndpoint();
   } catch (_) {
     console.error('Invalid OLLAMA_URL configuration');
-    return res.status(200).json({ online: false });
+    return res.status(200).json({ online: false, ollama: false, model: OLLAMA_MODEL, ready: false });
   }
   if (!tagsUrl) {
     console.error('OLLAMA_URL is not configured');
-    return res.status(200).json({ online: false });
+    return res.status(200).json({ online: false, ollama: false, model: OLLAMA_MODEL, ready: false });
   }
 
   const controller = new AbortController();
@@ -42,19 +45,24 @@ export default async function handler(req, res) {
       },
       signal: controller.signal,
     });
-    if (!upstream.ok) return res.status(200).json({ online: false });
+    if (!upstream.ok) {
+      return res.status(200).json({ online: false, ollama: false, model: OLLAMA_MODEL, ready: false });
+    }
 
     const data = await upstream.json();
     const hasModel = Array.isArray(data?.models) && data.models.some(model =>
       model?.name === OLLAMA_MODEL || model?.model === OLLAMA_MODEL
     );
 
-    return hasModel
-      ? res.status(200).json({ online: true, model: OLLAMA_MODEL })
-      : res.status(200).json({ online: false });
+    return res.status(200).json({
+      online: true,
+      ollama: true,
+      model: OLLAMA_MODEL,
+      ready: hasModel,
+    });
   } catch (_) {
     console.error('Ollama health check failed');
-    return res.status(200).json({ online: false });
+    return res.status(200).json({ online: false, ollama: false, model: OLLAMA_MODEL, ready: false });
   } finally {
     clearTimeout(timeout);
   }
