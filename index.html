@@ -917,7 +917,7 @@ function startGame(){
   document.getElementById('gen-btn').disabled=true;
   // A deliberate Start always creates a fresh board. game.html keeps the
   // generated board only for accidental refreshes within this tab.
-  try{sessionStorage.removeItem('jamboo_game_cache_v1');}catch(_){/* Storage unavailable. */}
+  try{sessionStorage.removeItem('jamboo_game_cache_v4');}catch(_){/* Storage unavailable. */}
   localStorage.setItem('jamboo_config',JSON.stringify(config));
   if(isArduino||isYear6Coding){setTimeout(()=>{window.location.href='game.html';},400);}
   else{window.location.href='game.html';}

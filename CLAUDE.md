@@ -3,15 +3,16 @@
 ## Stack
 - Pure HTML/CSS/JS — no bundler, no framework, no npm
 - Two pages: `index.html` (setup) + `game.html` (game board)
-- Serverless API: `api/generate.js` (Vercel, proxies DeepSeek)
+- Serverless API: `api/ai.js` plus `api/ai/health.js` (Vercel proxies a private Ollama server through the URL in `OLLAMA_URL`)
 - Deploy: Vercel + GitHub (`leomelchior21/JamBoo`)
+- Production: `https://jamboo.leomaker.app`
 
 ## Architecture Rules
 - **Single-file approach**: all CSS and JS are inline in each HTML file — no external `.css` or `.js` files
 - **No external JS libraries** (no jQuery, no React, no bundler)
-- **API key server-side only** — never expose `DEEPSEEK_API_KEY` in frontend code
+- **Ollama URL server-side only** — never expose `OLLAMA_URL` in frontend code
 - **localStorage** bridges config from setup → game (`jamboo_config` key)
-- Test setup page by opening `index.html` directly; game page needs `/api/generate` (use Vercel dev)
+- Test setup page by opening `index.html` directly; game page needs `/api/ai` (use Vercel dev)
 
 ## Design System
 - Fonts: `Press Start 2P` (pixel labels/headers), `Fredoka One` + `Nunito` (game UI)
@@ -28,7 +29,7 @@
 1. User configures game on `index.html`, clicks Start
 2. Config saved to `localStorage` as `jamboo_config`
 3. Redirects to `game.html`
-4. `game.html` reads config, POSTs to `/api/generate`, renders board
+4. `game.html` reads config and POSTs to `/api/ai`; the Vercel Function forwards the request to `${OLLAMA_URL}/api/chat`
 5. When all cells answered or teacher clicks End, a 3-second mystery countdown screen appears (`#mystery-screen`), then the winner screen is revealed with confetti
 
 ## Same Teams, New Game

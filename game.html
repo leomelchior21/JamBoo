@@ -592,6 +592,19 @@ body{
   0%,100%{opacity:.7;letter-spacing:3px;}
   50%{opacity:1;letter-spacing:4px;}
 }
+.loading-error-actions{display:flex;justify-content:center;}
+.loading-error-actions[hidden]{display:none;}
+.loading-error-back{
+  padding:10px 16px;
+  border:3px solid var(--accent);
+  background:#111126;color:#fff;
+  font-family:var(--fp);font-size:7px;text-decoration:none;text-transform:uppercase;
+  box-shadow:4px 4px 0 #000,0 0 14px rgba(255,0,187,.28);
+}
+.loading-error-back:hover{filter:brightness(1.2);}
+#loading.has-error .loading-stage{opacity:.32;}
+#loading.has-error .load-bar-wrap{display:none;}
+#loading.has-error .load-text{color:#ff8fcf;animation:none;line-height:1.8;}
 
 /* ═══════════════════════════════════════════
    GAME WRAPPER
@@ -1221,6 +1234,9 @@ body{
 
     <div class="load-bar-wrap"><div class="load-bar"></div></div>
     <p class="load-text" id="load-text">Generating your game...</p>
+    <div class="loading-error-actions" id="loading-error-actions" hidden>
+      <a class="loading-error-back" href="index.html" id="loading-error-back">Back to setup</a>
+    </div>
   </div>
 
   <img class="load-logo" src="Jamboo-logo-png.png" alt="JamBoo">
@@ -1372,6 +1388,7 @@ const GT = {
     sameTeams:'↺ Same Teams, New Game', home:'⌂ Home',
     pts:'pts', generating:'Generating your game...',
     errorGen:'Error generating game. Please go back and try again.',
+    aiOffline:'AI server offline. Start Ollama and the tunnel, then try again.', backToSetup:'Back to setup',
     noConfig:'No game config found. Please go back to setup.',
     calculating:'CALCULATING...',
   },
@@ -1382,6 +1399,7 @@ const GT = {
     sameTeams:'↺ Mesmos Times, Novo Jogo', home:'⌂ Início',
     pts:'pontos', generating:'Gerando seu jogo...',
     errorGen:'Erro ao gerar o jogo. Volte e tente novamente.',
+    aiOffline:'Servidor de IA offline. Inicie o Ollama e o túnel e tente novamente.', backToSetup:'Voltar ao início',
     noConfig:'Configuração não encontrada. Volte ao início.',
     calculating:'CALCULANDO...',
   },
@@ -1392,6 +1410,7 @@ const GT = {
     sameTeams:'↺ Mismos Equipos, Nuevo Juego', home:'⌂ Inicio',
     pts:'puntos', generating:'Generando tu juego...',
     errorGen:'Error al generar el juego. Vuelve e intenta de nuevo.',
+    aiOffline:'Servidor de IA sin conexión. Inicia Ollama y el túnel e inténtalo de nuevo.', backToSetup:'Volver al inicio',
     noConfig:'Configuración no encontrada. Vuelve al inicio.',
     calculating:'CALCULANDO...',
   }
@@ -1405,10 +1424,11 @@ let mcAnswered=null;
 let openOutcome=null;
 let loadingSceneTimer=null;
 let activeLoadingSceneIndex=0;
+let generationRequest=null;
 const MAX_GENERATION_ATTEMPTS=3;
-const LOCAL_CHAT_URL='http://localhost:11434/api/chat';
-const LOCAL_CHAT_MODEL='qwen3.5:4b';
-const GAME_CACHE_KEY='jamboo_game_cache_v2';
+const GENERATION_API_URL='/api/ai';
+const GENERATION_PROVIDER='ollama-proxy-v1';
+const GAME_CACHE_KEY='jamboo_game_cache_v4';
 
 function cleanText(value){
   return String(value ?? '').trim();
@@ -1645,7 +1665,7 @@ function sanitizeGameData(rawGame,{rebalance=true}={}){
 
 function gameCacheFingerprint(){
   return JSON.stringify([
-    LOCAL_CHAT_URL,LOCAL_CHAT_MODEL,
+    GENERATION_PROVIDER,
     cfg.prompt,cfg.numCols,cfg.numRows,cfg.difficulty,cfg.qType,cfg.qLang
   ]);
 }
@@ -1674,7 +1694,7 @@ function cacheGame(game){
   }
 }
 
-async function requestGeneratedGame(){
+async function generateGame(){
   let lastError=null;
 
   for(let attempt=1;attempt<=MAX_GENERATION_ATTEMPTS;attempt++){
@@ -1689,14 +1709,18 @@ async function requestGeneratedGame(){
       const payload=attempt===1
         ? buildPayload()
         : buildRetryPayload(lastError?.message || 'Schema mismatch');
-      const res=await fetch(LOCAL_CHAT_URL,{
+      const res=await fetch(GENERATION_API_URL,{
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({
-          model:LOCAL_CHAT_MODEL,
-          messages:payload.messages,
-          stream:false,
-          format:'json'
+          ...payload,
+          format:'json',
+          responseSchema:{
+            type:'jamboo-quiz',
+            columns:cfg.numCols,
+            rows:cfg.numRows,
+            questionType:cfg.qType
+          }
         })
       });
       if(!res.ok){
@@ -1709,12 +1733,12 @@ async function requestGeneratedGame(){
           // Keep the status-only error when the API did not return JSON.
         }
         const error=new Error(apiError);
-        error.noRetry=res.status===429 || res.status===402;
+        error.noRetry=true;
         throw error;
       }
 
       const data=await res.json();
-      const text=data.message?.content;
+      const text=data.answer;
       if(!text) throw new Error('Empty response');
 
       return sanitizeGameData(JSON.parse(extractJsonObject(text)));
@@ -1726,6 +1750,12 @@ async function requestGeneratedGame(){
   }
 
   throw lastError || new Error('Unable to generate game');
+}
+
+function requestGeneratedGame(){
+  if(generationRequest) return generationRequest;
+  generationRequest=generateGame().finally(()=>{generationRequest=null;});
+  return generationRequest;
 }
 
 function setActiveLoadingScene(index) {
@@ -1776,8 +1806,10 @@ async function boot() {
     } catch(e) {
       console.error(e);
       stopLoadingSceneCycle();
-      alert(GT[lang].errorGen);
-      document.getElementById('loading').classList.add('hidden');
+      const offline=String(e?.message||'').includes('AI server unavailable');
+      document.getElementById('load-text').textContent=offline ? GT[lang].aiOffline : GT[lang].errorGen;
+      document.getElementById('loading-error-actions').hidden=false;
+      document.getElementById('loading').classList.add('has-error');
       return;
     }
   }
@@ -1847,6 +1879,7 @@ function applyLabels() {
   document.getElementById('lbl-again').textContent=G.playAgain;
   document.getElementById('lbl-same-teams').textContent=G.sameTeams;
   document.getElementById('lbl-home').textContent=G.home;
+  document.getElementById('loading-error-back').textContent=G.backToSetup;
   document.getElementById('btn-oc-correct').textContent=G.correct;
   document.getElementById('btn-oc-wrong').textContent=G.wrong;
 }

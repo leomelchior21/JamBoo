@@ -1,5 +1,16 @@
 {
   "version": 2,
+  "functions": {
+    "api/ai.js": {
+      "maxDuration": 150
+    },
+    "api/ai/health.js": {
+      "maxDuration": 10
+    },
+    "api/generate.js": {
+      "maxDuration": 150
+    }
+  },
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" }
   ],
