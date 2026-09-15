@@ -1,11 +1,13 @@
 const OLLAMA_MODEL = 'qwen3.5:4b';
-const CHAT_TIMEOUT_MS = 120000;
+const CHAT_TIMEOUT_MS = 140000;
 const MAX_MESSAGES = 4;
 const MAX_MESSAGE_LENGTH = 12000;
 const MAX_TOTAL_LENGTH = 20000;
 const QUIZ_LIMITS = { columns: 8, rows: 6 };
 const MAX_QUIZ_ITEMS_PER_CALL = 6;
 const MAX_QUIZ_SCHEMA_ATTEMPTS = 2;
+const DEFAULT_NUM_PREDICT = 400;
+const QUIZ_NUM_PREDICT = 650;
 const SERVER_SYSTEM_PROMPT = 'Follow the conversation instructions precisely. When asked to reply with exact literal text, output only that text; literal output is formatting, not an identity claim.';
 
 class InvalidAIResponseError extends Error {}
@@ -116,10 +118,6 @@ function getQuizAnswer(question) {
     : question.a ?? question.answer;
 }
 
-function getQuizAnswerKey(question) {
-  return normalizeAnswerKey(getQuizAnswer(question));
-}
-
 function normalizeQuestionColumns(questions, columns, rows) {
   const isQuestionValue = question =>
     question && typeof question === 'object';
@@ -189,8 +187,6 @@ function normalizeQuiz(value, schema) {
     normalizeAnswerKey(question.q ?? question.question)
   );
   if (new Set(prompts).size !== prompts.length) return null;
-  const answers = normalizedQuestions.flat().map(getQuizAnswerKey);
-  if (answers.some(answer => !answer) || new Set(answers).size !== answers.length) return null;
   return { c: categories, qs: normalizedQuestions };
 }
 
@@ -259,7 +255,7 @@ function createOllamaRequest(messages, format) {
     think: false,
     options: {
       num_ctx: 4096,
-      num_predict: 400,
+      num_predict: typeof format === 'object' ? QUIZ_NUM_PREDICT : DEFAULT_NUM_PREDICT,
     },
     keep_alive: '30m',
   };
@@ -307,15 +303,79 @@ function createBatchInstructions(schema, columns, usedCategories, usedAnswers) {
   return `BATCH OUTPUT OVERRIDE: This overrides only any earlier total-category count. Keep the original topic, language, difficulty, and item rules, but for this response generate exactly ${columns} new category arrays with exactly ${schema.rows} questions per array. The top-level "c" and "qs" arrays must each contain exactly ${columns} entries.${categoryExclusions}${answerExclusions}`;
 }
 
+function exactArray(length, items) {
+  return {
+    type: 'array',
+    items,
+    minItems: length,
+    maxItems: length,
+  };
+}
+
+function quizQuestionFormat(questionType) {
+  const question = { type: 'string', minLength: 4, maxLength: 180 };
+  const answer = { type: 'string', minLength: 1, maxLength: 80 };
+  const multiple = {
+    type: 'object',
+    additionalProperties: false,
+    properties: {
+      q: question,
+      o: exactArray(4, answer),
+      i: { type: 'integer', minimum: 0, maximum: 3 },
+    },
+    required: ['q', 'o', 'i'],
+  };
+  const open = {
+    type: 'object',
+    additionalProperties: false,
+    properties: { q: question, a: answer },
+    required: ['q', 'a'],
+  };
+  const drawing = {
+    type: 'object',
+    additionalProperties: false,
+    properties: {
+      q: question,
+      a: answer,
+      d: { type: 'integer', enum: [1] },
+    },
+    required: ['q', 'a', 'd'],
+  };
+
+  if (questionType === 'multiple') return multiple;
+  if (questionType === 'drawing') return drawing;
+  if (questionType === 'open') return open;
+  return { oneOf: [multiple, open, drawing] };
+}
+
+function createQuizFormat(schema) {
+  return {
+    type: 'object',
+    additionalProperties: false,
+    properties: {
+      c: exactArray(schema.columns, {
+        type: 'string',
+        minLength: 1,
+        maxLength: 50,
+      }),
+      qs: exactArray(
+        schema.columns,
+        exactArray(schema.rows, quizQuestionFormat(schema.questionType))
+      ),
+    },
+    required: ['c', 'qs'],
+  };
+}
+
 async function requestValidQuizBatch(chatUrl, messages, schema, instructions, signal) {
   for (let attempt = 1; attempt <= MAX_QUIZ_SCHEMA_ATTEMPTS; attempt += 1) {
     const repairInstruction = attempt === 1
       ? instructions
-      : `${instructions}\nSCHEMA REPAIR: The previous response failed validation. Count every category, column, row, option, and correct-index field before responding.`;
+      : `${instructions}\nQUALITY REPAIR: The previous response failed validation. Make every category and question unique, use four distinct options for each multiple-choice question, and ensure each correct index points to the only correct option.`;
     const answer = await requestOllama(
       chatUrl,
       addServerInstructions(messages, repairInstruction),
-      'json',
+      createQuizFormat(schema),
       signal
     );
     const validated = validateStructuredAnswer(answer, schema);
