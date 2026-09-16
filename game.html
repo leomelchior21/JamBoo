@@ -1273,14 +1273,264 @@ body{
 .score-edit-btn-cancel{background:transparent;border-color:rgba(255,255,255,.25);color:var(--text2);}
 .score-edit-btn-cancel:hover{border-color:rgba(255,255,255,.5);color:#fff;}
 
+/* ================================================================
+   RESPONSIVE INTERFACE REFINEMENT
+   ================================================================ */
+html{scroll-behavior:smooth;color-scheme:dark;overflow-x:hidden;}
+body{
+  min-height:100dvh;
+  background:
+    radial-gradient(circle at 12% 8%,rgba(0,255,204,.08),transparent 28rem),
+    radial-gradient(circle at 88% 12%,rgba(255,0,187,.1),transparent 34rem),
+    linear-gradient(180deg,#09091f,#050513 65%,#0b051d);
+}
+body::before{
+  content:'';position:fixed;inset:0;z-index:-2;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(0,255,204,.025) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(191,0,255,.025) 1px,transparent 1px);
+  background-size:42px 42px;
+  mask-image:linear-gradient(to bottom,rgba(0,0,0,.8),transparent 85%);
+}
+body::after{
+  content:'';position:fixed;inset:-40%;z-index:-1;pointer-events:none;
+  background:conic-gradient(from 0deg,transparent,rgba(0,255,204,.035),transparent 30%,rgba(191,0,255,.045),transparent 65%);
+  animation:gameAmbient 30s linear infinite;
+}
+@keyframes gameAmbient{to{transform:rotate(1turn);}}
+#game-wrap{min-height:100dvh;padding-bottom:max(28px,env(safe-area-inset-bottom));}
+.ghdr{
+  min-height:82px;padding:9px clamp(10px,2vw,24px);
+  background:linear-gradient(100deg,rgba(35,5,52,.96),rgba(180,0,115,.9) 48%,rgba(45,4,65,.96));
+  border-bottom:2px solid rgba(0,255,204,.45);
+  box-shadow:0 2px 0 #000,0 10px 32px rgba(0,0,0,.48),0 0 28px rgba(255,0,187,.2);
+  backdrop-filter:blur(16px) saturate(1.4);
+}
+.ghdr::before{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.06),transparent 54%);animation:headerSignal 8s ease-in-out infinite;}
+@keyframes headerSignal{0%,55%{transform:translateX(-100%)}85%,100%{transform:translateX(100%)}}
+.scorebar{display:flex;align-items:center;min-width:0;flex:1;gap:6px;position:relative;z-index:102;}
+.ghdr-logo{height:118px;top:calc(50% - 59px);animation:gameLogoFloat 5s ease-in-out infinite;}
+@keyframes gameLogoFloat{0%,100%{transform:translateX(-50%) translateY(0) rotate(-.4deg)}50%{transform:translateX(-50%) translateY(-4px) rotate(.4deg)}}
+.ghdr-btn{min-height:40px;padding:8px 11px;transition:transform .14s ease,border-color .16s,box-shadow .16s,color .16s;}
+.ghdr-btn:focus-visible,.zoom-btn:focus-visible,.modal button:focus-visible,.score-chip [role="button"]:focus-visible{outline:3px solid #FFD700;outline-offset:3px;}
+.score-chip{min-height:38px;background:linear-gradient(180deg,rgba(8,8,27,.97),rgba(4,4,16,.95));transition:transform .16s ease,border-color .16s,box-shadow .16s;}
+.score-chip:hover{transform:translateY(-1px);border-color:var(--tc,#00FFCC);box-shadow:3px 4px 0 #000,0 0 14px rgba(0,255,204,.16);}
+.chip-score{padding:3px;border-radius:2px;}
+.board-toolbar{
+  max-width:1600px;margin:58px auto 0;padding:8px clamp(12px,2vw,22px);
+  background:transparent;border:0;
+}
+.zoom-btn{width:38px;height:38px;background:rgba(13,13,34,.9);border-color:rgba(0,255,204,.18);transition:transform .14s,border-color .14s,background .14s;}
+.zoom-btn:hover{transform:translateY(-1px);background:rgba(0,255,204,.08);}
+.board-wrap{
+  max-width:1600px;margin:0 auto;padding:clamp(10px,2vw,22px);
+  overflow-x:auto;overscroll-behavior-inline:contain;scrollbar-width:thin;
+  scrollbar-color:rgba(0,255,204,.55) rgba(255,255,255,.06);
+}
+.board{
+  min-width:max(100%,calc(var(--board-cols,4) * 112px));
+  gap:clamp(6px,1vw,11px);padding:clamp(7px,1vw,12px);
+  border:1px solid rgba(191,0,255,.18);
+  background:linear-gradient(145deg,rgba(13,13,34,.72),rgba(5,5,18,.48));
+  box-shadow:0 18px 50px rgba(0,0,0,.28),inset 0 0 32px rgba(0,0,0,.2);
+}
+.board-cell{
+  border-radius:5px;transform:translateY(8px);opacity:0;
+  animation:cellReveal .36s cubic-bezier(.2,.8,.2,1) forwards;
+  animation-delay:calc(var(--cell-i,0) * 22ms);
+}
+@keyframes cellReveal{to{transform:translateY(0);opacity:1}}
+.cat-cell{
+  min-height:calc(66px * var(--bz));padding:12px 9px;
+  background:linear-gradient(145deg,rgba(22,10,48,.96),rgba(7,16,34,.96));
+  border-color:rgba(191,0,255,.72);box-shadow:inset 0 1px rgba(255,255,255,.04),0 5px 16px rgba(0,0,0,.22);
+}
+.q-cell{
+  min-height:calc(82px * var(--bz));isolation:isolate;
+  background:linear-gradient(145deg,rgba(20,20,48,.98),rgba(11,11,31,.98));
+  box-shadow:inset 0 1px rgba(255,255,255,.035),0 7px 18px rgba(0,0,0,.2);
+}
+.q-cell::before{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(115deg,transparent 25%,rgba(0,255,204,.07),transparent 70%);transform:translateX(-110%);transition:transform .5s ease;}
+.q-cell:hover:not(.used){transform:translateY(-3px) scale(1.012);box-shadow:0 9px 24px rgba(0,0,0,.26),0 0 18px rgba(0,255,204,.18);}
+.q-cell:hover:not(.used)::before{transform:translateX(110%);}
+.q-cell:focus-visible{outline:3px solid #FFD700;outline-offset:3px;border-color:var(--primary);}
+.cell-pts{text-shadow:0 0 16px rgba(255,0,187,.46),2px 2px 0 #000;}
+.modal-overlay{padding:clamp(10px,2vw,22px);background:rgba(2,2,12,.82);backdrop-filter:blur(10px) saturate(.8);}
+.modal{
+  width:min(100%,760px);max-height:min(92dvh,900px);
+  border-color:rgba(191,0,255,.9);
+  background:linear-gradient(150deg,rgba(17,17,43,.99),rgba(8,8,28,.99));
+  box-shadow:0 24px 80px rgba(0,0,0,.58),0 0 34px rgba(191,0,255,.18);
+  animation:modalRefined .24s cubic-bezier(.2,.85,.25,1);
+}
+@keyframes modalRefined{from{transform:translateY(14px) scale(.97);opacity:0}to{transform:none;opacity:1}}
+.modal-head{padding:16px clamp(16px,3vw,24px);background:rgba(8,8,28,.74);}
+.modal-body{padding:clamp(16px,3vw,26px);}
+.modal-close{width:42px;height:42px;}
+.q-text{font-size:clamp(18px,2.3vw,25px);line-height:1.42;margin:4px auto 22px;max-width:680px;text-wrap:balance;}
+.mc-grid{gap:11px;margin-bottom:18px;}
+.mc-opt{min-height:62px;padding:13px 15px;font-size:clamp(13px,1.6vw,16px);line-height:1.35;box-shadow:inset 0 1px rgba(255,255,255,.025);transition:transform .14s,border-color .14s,background .14s;}
+.mc-opt:hover:not(:disabled){transform:translateY(-2px);}
+.mc-letter{width:30px;height:30px;}
+.answer-box{padding:15px 17px;margin-bottom:15px;background:linear-gradient(90deg,rgba(0,255,204,.1),rgba(0,255,204,.035));}
+.answer-text{font-size:clamp(15px,2vw,19px);}
+.btn-reveal,.btn-done{min-height:52px;transition:transform .14s,filter .14s,box-shadow .14s;}
+.btn-reveal:hover,.btn-done:hover{transform:translateY(-2px);}
+.outcome-btn,.team-pick-btn{min-height:46px;}
+.drawing-canvas{min-height:220px;}
+.loading-shell{
+  width:min(94vw,760px);padding:clamp(20px,3vw,34px);gap:clamp(13px,1.8vw,20px);
+  border:1px solid rgba(0,255,204,.22);
+  background:
+    linear-gradient(145deg,rgba(13,13,40,.88),rgba(4,4,18,.94)),
+    radial-gradient(circle at 50% 0,rgba(255,0,187,.12),transparent 55%);
+  box-shadow:8px 10px 0 rgba(0,0,0,.42),0 28px 90px rgba(0,0,0,.42),0 0 48px rgba(0,255,204,.055);
+  clip-path:polygon(14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%,0 14px);
+}
+.loading-shell::before{
+  content:'';display:block;position:absolute;left:24px;top:-1px;width:88px;height:3px;
+  background:linear-gradient(90deg,var(--accent),var(--primary));box-shadow:0 0 14px rgba(0,255,204,.5);
+}
+.loading-shell::after{
+  content:'';display:block;position:absolute;right:24px;bottom:-1px;width:88px;height:3px;
+  background:linear-gradient(90deg,var(--primary),var(--accent));box-shadow:0 0 14px rgba(255,0,187,.45);
+}
+.load-logo{width:min(50vw,238px);max-width:none;height:auto;}
+.loading-intro{width:min(100%,620px);display:flex;align-items:center;justify-content:center;gap:9px;min-width:0;}
+.loading-topic{
+  min-width:0;max-width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  color:#fff;font-family:var(--fp);font-size:clamp(6px,.68vw,8px);letter-spacing:1.1px;text-transform:uppercase;
+  text-shadow:0 0 9px rgba(255,0,187,.3);
+}
+.loading-spec{
+  flex:none;padding:5px 7px;border:1px solid rgba(0,255,204,.25);background:rgba(0,255,204,.055);
+  color:var(--primary);font-family:var(--fp);font-size:5px;letter-spacing:.7px;white-space:nowrap;
+}
+.loading-stage{width:min(100%,560px);height:220px;}
+.loading-stage .loading-scene{transform:translateY(10px) scale(var(--scene-from-scale,.96));}
+.loading-stage .loading-scene.is-active{transform:translateY(0) scale(var(--scene-scale,1));}
+.loading-progress{width:min(100%,600px);display:grid;gap:8px;}
+.loading-progress-meta{display:flex;align-items:center;justify-content:space-between;gap:14px;}
+.loading-progress .load-text{margin:0;text-align:left;}
+.generation-percent{
+  color:var(--primary);font-family:var(--fp);font-size:7px;font-variant-numeric:tabular-nums;
+  text-shadow:0 0 10px rgba(0,255,204,.45);
+}
+.loading-progress .load-bar-wrap{width:100%;height:10px;}
+.generation-console{width:min(100%,660px);padding:17px 19px 15px;border-color:rgba(0,255,204,.32);}
+.generation-console-head{font-size:7px;}
+.generation-step-label{font-size:5.5px;}
+.generation-detail{font-size:5.5px;}
+.loading-error-back{min-height:46px;display:inline-flex;align-items:center;justify-content:center;transition:transform .14s,filter .14s,border-color .14s;}
+.loading-error-back:hover{transform:translateY(-2px);}
+.loading-error-back:focus-visible{outline:3px solid #FFD700;outline-offset:3px;}
+#loading.has-error .loading-shell{border-color:rgba(255,68,110,.46);box-shadow:8px 10px 0 rgba(0,0,0,.42),0 28px 90px rgba(0,0,0,.42),0 0 42px rgba(255,68,110,.1);}
+#loading.has-error .loading-progress-meta{justify-content:center;}
+#loading.has-error .generation-percent{display:none;}
+#winner-screen{position:relative;overflow:hidden;background:radial-gradient(circle at 50% 25%,rgba(191,0,255,.18),transparent 35rem);}
+.final-card{transition:transform .18s,box-shadow .18s;}.final-card:hover{transform:translateY(-4px);box-shadow:7px 9px 0 #000,0 0 22px currentColor;}
+button{-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
+
+@media(max-width:880px){
+  .ghdr{
+    display:grid;grid-template-columns:auto auto 1fr auto;
+    grid-template-areas:'back redo gap end' 'scores scores scores scores';
+    min-height:126px;row-gap:9px;padding:8px 10px 10px;
+  }
+  .ghdr>a.ghdr-btn{grid-area:back}.ghdr-btn-redo{grid-area:redo}.ghdr-btn-end{grid-area:end}
+  .scorebar{grid-area:scores;width:100%;overflow-x:auto;justify-content:flex-start;padding:2px 3px 5px;scrollbar-width:thin;}
+  .scorebar-left,.scorebar-right{flex:0 0 auto;justify-content:flex-start;}
+  .logo-spacer{display:none;}
+  .ghdr-logo{height:100px;top:0;transform:translateX(-50%);}
+  @keyframes gameLogoFloat{0%,100%{transform:translateX(-50%) translateY(0) rotate(-.3deg)}50%{transform:translateX(-50%) translateY(-3px) rotate(.3deg)}}
+  .board-toolbar{margin-top:28px;}
+}
+@media(max-width:560px){
+  .ghdr{min-height:118px;grid-template-columns:auto auto 1fr auto;padding-inline:max(8px,env(safe-area-inset-left));}
+  .ghdr-logo{height:84px;}
+  .ghdr-btn{min-width:42px;min-height:42px;padding:7px 9px;justify-content:center;}
+  .ghdr>a.ghdr-btn #lbl-back,.ghdr-btn-redo #lbl-redo{display:none;}
+  .chip-name{font-size:10px;max-width:78px;padding-block:7px;}
+  .chip-score{font-size:11px;}.chip-score-wrap{padding-block:7px;}
+  .board-toolbar{margin-top:18px;padding-inline:12px;}
+  .board-wrap{padding:8px 8px 16px;}
+  .board{min-width:max(100%,calc(var(--board-cols,4) * 106px));padding:7px;}
+  .cat-cell{font-size:calc(12px * var(--bz));min-height:calc(58px * var(--bz));}
+  .q-cell{min-height:calc(72px * var(--bz));}
+  .modal-overlay{padding:0;align-items:flex-end;}
+  .modal{max-width:none;max-height:96dvh;border-width:2px 0 0;border-radius:8px 8px 0 0;padding-bottom:env(safe-area-inset-bottom);}
+  .modal-head{padding:12px 14px;position:sticky;top:0;z-index:5;backdrop-filter:blur(12px);}
+  .modal-body{padding:15px 13px;}
+  .q-text{font-size:18px;line-height:1.35;margin-bottom:16px;}
+  .mc-grid{grid-template-columns:1fr;gap:8px;}
+  .mc-opt{min-height:54px;padding:10px 12px;font-size:14px;}
+  .action-row{position:sticky;bottom:0;padding-top:8px;background:linear-gradient(transparent,rgba(8,8,28,.98) 28%);}
+  .btn-reveal,.btn-done{width:100%;flex-basis:100%;}
+  .loading-shell{width:calc(100vw - 18px);padding:18px 12px 16px;gap:11px;}
+  .load-logo{width:min(58vw,184px);}
+  .loading-intro{gap:7px;}
+  .loading-topic{max-width:68%;font-size:6px;}
+  .loading-spec{font-size:4.5px;padding:4px 6px;}
+  .loading-stage{height:158px;overflow:hidden;}
+  #anim-relay{--scene-scale:.72;--scene-from-scale:.68;}
+  #anim-cradle-stage{--scene-scale:.74;--scene-from-scale:.7;}
+  #anim-orbit{--scene-scale:.68;--scene-from-scale:.64;}
+  .loading-progress{gap:7px;}
+  .loading-progress .load-text{font-size:6px;letter-spacing:2px;}
+  .generation-console{padding:12px 10px 11px;}
+  .generation-steps{gap:2px;}.generation-step-label{font-size:4.5px;}.generation-detail{font-size:4.5px;}
+  .loading-error-actions{width:100%;}.loading-error-back{flex:1;min-width:132px;}
+  .winner-actions{max-width:100%;}.btn-winner{min-height:50px;}
+}
+@media(max-height:620px) and (orientation:landscape){
+  #loading{overflow-y:auto;padding:10px;}
+  .loading-shell{
+    width:min(96vw,940px);min-height:min(360px,calc(100dvh - 20px));padding:13px 18px;gap:8px 20px;
+    display:grid;grid-template-columns:minmax(250px,.85fr) minmax(390px,1.25fr);
+    grid-template-areas:'logo console' 'intro console' 'stage console' 'progress console' 'errors errors';
+    align-content:center;
+  }
+  .load-logo{grid-area:logo;width:116px;justify-self:center;}
+  .loading-intro{grid-area:intro;align-self:center;}
+  .loading-stage{grid-area:stage;height:126px;align-self:center;overflow:hidden;}
+  .loading-progress{grid-area:progress;align-self:start;}
+  .generation-console{grid-area:console;align-self:center;max-width:none;min-height:164px;padding:14px 15px;}
+  .loading-error-actions{grid-area:errors;}
+  #anim-relay{--scene-scale:.62;--scene-from-scale:.58;}
+  #anim-cradle-stage{--scene-scale:.66;--scene-from-scale:.62;}
+  #anim-orbit{--scene-scale:.55;--scene-from-scale:.51;}
+  .generation-steps{margin-top:12px;}.generation-detail{margin-top:12px;}
+  .modal{max-height:100dvh;}.modal-overlay{padding:0;}
+}
+@media(max-width:660px) and (max-height:620px) and (orientation:landscape){
+  .loading-shell{display:flex;width:calc(100vw - 16px);min-height:0;padding:12px;gap:7px;}
+  .load-logo{width:94px;}
+  .loading-stage{height:86px;}
+  .loading-intro{display:none;}
+  .generation-console{width:100%;min-height:0;padding:9px 10px;}
+  .generation-steps{margin-top:8px;}.generation-detail{margin-top:7px;}
+}
+@media(hover:none){
+  .q-cell:hover:not(.used),.mc-opt:hover:not(:disabled),.btn-reveal:hover,.btn-done:hover,.score-chip:hover{transform:none;}
+}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto;}
+  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important;}
+}
+
 </style>
 </head>
 <body>
 
 <!-- LOADING -->
-<div id="loading">
+<div id="loading" role="status" aria-live="polite" aria-label="Generating quiz">
   <div class="loading-shell">
     <img class="load-logo" src="Jamboo-logo-png.png" alt="JamBoo">
+
+    <div class="loading-intro" aria-live="polite">
+      <strong class="loading-topic" id="loading-topic">Preparing quiz</strong>
+      <span class="loading-spec" id="loading-spec">—</span>
+    </div>
 
     <div class="loading-stage">
       <div class="loading-scene is-active" id="anim-relay">
@@ -1324,8 +1574,15 @@ body{
       </div>
     </div>
 
-    <div class="load-bar-wrap"><div class="load-bar"></div></div>
-    <p class="load-text" id="load-text">Generating your game...</p>
+    <div class="loading-progress">
+      <div class="loading-progress-meta">
+        <p class="load-text" id="load-text">Generating your game...</p>
+        <span class="generation-percent" id="generation-percent" aria-hidden="true">0%</span>
+      </div>
+      <div class="load-bar-wrap" id="generation-progress" role="progressbar" aria-labelledby="load-text" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <div class="load-bar"></div>
+      </div>
+    </div>
     <div class="generation-console" id="generation-console">
       <div class="generation-console-head">
         <span class="generation-console-title" id="generation-console-title">Creation pipeline</span>
@@ -1391,17 +1648,19 @@ body{
   <header class="ghdr">
     <a class="ghdr-btn" href="index.html">← <span id="lbl-back">Setup</span></a>
     <button class="ghdr-btn ghdr-btn-redo" id="redo-btn" onclick="redoLastQuestion()" disabled title="Redo last question" aria-label="Redo last question">↶ <span id="lbl-redo">Redo</span></button>
-    <div class="scorebar-left" id="scorebar-left"></div>
-    <div class="logo-spacer"></div>
-    <div class="scorebar-right" id="scorebar-right"></div>
+    <div class="scorebar" aria-label="Team scores">
+      <div class="scorebar-left" id="scorebar-left"></div>
+      <div class="logo-spacer"></div>
+      <div class="scorebar-right" id="scorebar-right"></div>
+    </div>
     <button class="ghdr-btn ghdr-btn-end" onclick="endGame()" id="lbl-end">🏆 End</button>
     <img class="ghdr-logo" src="Jamboo-logo-png.png" alt="JamBoo" onclick="window.location.href='index.html'">
   </header>
 
   <div class="board-toolbar">
-    <button class="zoom-btn" onclick="zoomBoard(-1)" title="Zoom out">−</button>
+    <button class="zoom-btn" onclick="zoomBoard(-1)" title="Zoom out" aria-label="Zoom board out">−</button>
     <span class="zoom-lbl" id="zoom-lbl">100%</span>
-    <button class="zoom-btn" onclick="zoomBoard(1)" title="Zoom in">+</button>
+    <button class="zoom-btn" onclick="zoomBoard(1)" title="Zoom in" aria-label="Zoom board in">+</button>
   </div>
   <div class="board-wrap">
     <div class="board" id="board"></div>
@@ -1411,7 +1670,7 @@ body{
 </div>
 
 <!-- WINNER SCREEN (outside game-wrap so it isn't hidden by endGame) -->
-<div id="winner-screen">
+<div id="winner-screen" role="status" aria-live="polite">
   <div class="winner-title" id="winner-title">🏆</div>
   <div class="winner-subtitle" id="winner-name"></div>
   <div class="winner-pts" id="winner-pts"></div>
@@ -1431,14 +1690,14 @@ body{
 </div>
 
 <!-- QUESTION MODAL -->
-<div class="modal-overlay" id="q-modal">
+<div class="modal-overlay" id="q-modal" role="dialog" aria-modal="true" aria-labelledby="modal-question">
   <div class="modal">
     <div class="modal-head">
       <div>
         <div class="modal-cat" id="modal-cat"></div>
         <div class="modal-pts" id="modal-pts"></div>
       </div>
-      <button class="modal-close" onclick="closeModal()">✕</button>
+      <button class="modal-close" onclick="closeModal()" aria-label="Close question">✕</button>
     </div>
     <div class="modal-body">
       <div class="modal-timer-bar" id="timer-bar-wrap" style="display:none;">
@@ -2077,6 +2336,11 @@ function renderGenerationProgress(percent){
     '--load-progress',
     `${progress.toFixed(1)}%`
   );
+  const roundedProgress=Math.round(progress);
+  const progressLabel=document.getElementById('generation-percent');
+  const progressBar=document.getElementById('generation-progress');
+  if(progressLabel) progressLabel.textContent=`${roundedProgress}%`;
+  if(progressBar) progressBar.setAttribute('aria-valuenow',String(roundedProgress));
 }
 
 function updateGenerationProgress(){
@@ -2161,6 +2425,16 @@ async function boot() {
   lang=cfg.lang||'en';
   teams=cfg.teams.map(t=>({...t,score:0}));
   applyLabels();
+  const loadingTopic=document.getElementById('loading-topic');
+  const loadingSpec=document.getElementById('loading-spec');
+  if(loadingTopic){
+    loadingTopic.textContent=cleanText(cfg.prompt)||'Custom quiz';
+    loadingTopic.title=loadingTopic.textContent;
+  }
+  if(loadingSpec){
+    const questionCount=cfg.numCols*cfg.numRows;
+    loadingSpec.textContent=`${cfg.numCols} × ${cfg.numRows} · ${questionCount}`;
+  }
   document.getElementById('load-text').textContent=GT[lang].generating;
 
   gameData=readCachedGame();
@@ -2221,18 +2495,23 @@ function buildBoard() {
   const rows=gameData.questions[0].length;
   const pts=Array.from({length:rows},(_,i)=>(i+1)*100);
   board.style.gridTemplateColumns=`repeat(${cols},1fr)`;
+  board.style.setProperty('--board-cols',String(cols));
   board.innerHTML='';
-  gameData.categories.forEach(cat=>{
+  gameData.categories.forEach((cat,index)=>{
     const c=document.createElement('div');
     c.className='board-cell cat-cell';c.textContent=cat;
+    c.style.setProperty('--cell-i',String(index));
     board.appendChild(c);
   });
   for(let r=0;r<rows;r++){
     for(let c=0;c<cols;c++){
       const q=gameData.questions[c][r];
-      const cell=document.createElement('div');
+      const cell=document.createElement('button');
+      cell.type='button';
       cell.className='board-cell q-cell';
       cell.dataset.col=c;cell.dataset.row=r;cell.dataset.pts=pts[r];
+      cell.style.setProperty('--cell-i',String(cols+(r*cols)+c));
+      cell.setAttribute('aria-label',`${gameData.categories[c]}, ${pts[r]} points`);
       cell.innerHTML=`<div class="cell-pts">${pts[r]}</div>`;
       cell.onclick=()=>openQuestion(c,r,pts[r],cell);
       board.appendChild(cell);
@@ -2250,12 +2529,21 @@ function renderScorebar() {
     c.className='score-chip';c.id=`sc-${i}`;
     c.style.setProperty('--tc',t.color);
     c.innerHTML=`<div class="chip-name">${t.name}</div><div class="chip-score-wrap"><span class="chip-paren">(</span><span class="chip-score" id="sv-${i}" onclick="editScore(${i})" title="Tap to adjust score">0</span><span class="chip-paren">)</span></div>`;
+    const score=c.querySelector('.chip-score');
+    score.tabIndex=0;
+    score.setAttribute('role','button');
+    score.setAttribute('aria-label',`Adjust ${t.name} score`);
+    score.addEventListener('keydown',event=>{
+      if(event.key==='Enter'||event.key===' '){event.preventDefault();editScore(i);}
+    });
     (i<half?left:right).appendChild(c);
   });
 }
 
 function renderQuestionCell(cell,pts,used){
   cell.classList.toggle('used',used);
+  cell.disabled=used;
+  cell.setAttribute('aria-disabled',String(used));
   cell.innerHTML=used
     ? `<div class="cell-pts" style="opacity:.2">${pts}</div><div class="cell-check">✓</div>`
     : `<div class="cell-pts">${pts}</div>`;
