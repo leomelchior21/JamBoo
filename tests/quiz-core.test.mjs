@@ -112,6 +112,21 @@ test('rejects exact and obvious semantic duplicates', () => {
   );
 });
 
+test('cognitive difficulty ladder adapts to board rows', () => {
+  const mixed = createSlotPlan(spec({ columns: 1, rows: 6, difficulty: 'mixed' }), categories(1));
+  assert.deepEqual(mixed.map(slot => slot.tier), [
+    'foundation', 'connection', 'application', 'reasoning', 'challenge', 'expert',
+  ]);
+  assert.deepEqual(mixed.map(slot => slot.points), [100, 200, 300, 400, 500, 600]);
+
+  const easy = createSlotPlan(spec({ columns: 1, rows: 3, difficulty: 'easy' }), categories(1));
+  assert.deepEqual(easy.map(slot => slot.tier), ['foundation', 'foundation', 'connection']);
+
+  const hard = createSlotPlan(spec({ columns: 1, rows: 3, difficulty: 'hard' }), categories(1));
+  assert.deepEqual(hard.map(slot => slot.tier), ['reasoning', 'challenge', 'expert']);
+  assert.ok(mixed.every(slot => typeof slot.tierSkill === 'string' && slot.tierSkill.length > 0));
+});
+
 test('all supported board dimensions produce exactly one question per slot', () => {
   for (let columns = 1; columns <= 8; columns += 1) {
     for (let rows = 1; rows <= 6; rows += 1) {

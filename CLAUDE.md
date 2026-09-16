@@ -14,6 +14,12 @@
 - **localStorage** bridges config from setup → game (`jamboo_config` key)
 - Test setup page by opening `index.html` directly; game page needs `/api/ai` (use Vercel dev)
 
+## Quiz Generation Pipeline (server)
+- Actions: `quiz-plan` (topic → columns + slots + routing), `quiz-batch` (question batches), `quiz-validate` (final check, supports `missingSlotIds` for partial boards), `quiz-category` (single locked category)
+- Modules: `api/knowledge-router.mjs` (MATH/TIMELESS/HISTORICAL/CURRENT + date/ambiguity normalization), `api/math-questions.mjs` (deterministic arithmetic), `api/search-provider.mjs` (SearchProvider interface, Wikipedia + optional HTTP web search, evidence objects), `api/question-cache.mjs` (verified-question cache with per-route TTL), `api/quiz-planner.mjs` (topic → column planning)
+- Failed slots are reported as `failedSlots` (never abort the whole board); `game.html` retries once then renders remaining gaps as disabled cells
+- Search API keys stay server-side (`SEARCH_API_URL`, `SEARCH_API_KEY`, `SEARCH_API_RESULTS_PATH`); see `.env.example`
+
 ## Design System
 - Fonts: `Press Start 2P` (pixel labels/headers), `Fredoka One` + `Nunito` (game UI)
 - Core palette: `--bg:#07071A`, `--b1:#6600FF`, `--b2:#AA00FF`, `--cyan:#00FFFF`, `--pink:#FF00FF`, `--yellow:#FFD700`

@@ -14,6 +14,34 @@ const COGNITIVE_SKILLS = {
   hard: ['infer', 'analyze', 'apply in a new situation', 'reason in steps', 'evaluate'],
 };
 
+// Internal cognitive ladder. The visible point system stays (rowIndex+1)*100;
+// the tier describes how demanding the thinking is at each board row.
+export const COGNITIVE_LADDER = Object.freeze([
+  Object.freeze({ points: 100, tier: 'foundation', skill: 'direct identification or recall' }),
+  Object.freeze({ points: 200, tier: 'connection', skill: 'connect facts or concepts' }),
+  Object.freeze({ points: 300, tier: 'application', skill: 'apply knowledge' }),
+  Object.freeze({ points: 400, tier: 'reasoning', skill: 'evaluate plausible alternatives' }),
+  Object.freeze({ points: 500, tier: 'challenge', skill: 'combine multiple pieces of information' }),
+  Object.freeze({ points: 600, tier: 'expert', skill: 'difficult but still clear and unambiguous' }),
+]);
+
+const DIFFICULTY_TIER_SPANS = Object.freeze({
+  easy: [0, 1],
+  medium: [0, 2],
+  hard: [3, 5],
+  mixed: [0, 5],
+});
+
+export function cognitiveTierForRow(difficulty, rowIndex, rows) {
+  const span = DIFFICULTY_TIER_SPANS[difficulty] ?? DIFFICULTY_TIER_SPANS.mixed;
+  const start = span[0];
+  const end = span[1];
+  if (!Number.isInteger(rows) || rows <= 1) return COGNITIVE_LADDER[start];
+  const fraction = rowIndex / (rows - 1);
+  const index = Math.min(end, start + Math.floor(fraction * (end - start) + 1e-9));
+  return COGNITIVE_LADDER[index];
+}
+
 export function cleanText(value) {
   return typeof value === 'string' ? value.trim() : '';
 }
@@ -69,6 +97,7 @@ export function createSlotPlan(spec, categories) {
         ? TYPE_CYCLE[(slotIndex + typeOffset) % TYPE_CYCLE.length]
         : spec.questionType;
       const skills = COGNITIVE_SKILLS[difficulty];
+      const tier = cognitiveTierForRow(spec.difficulty, rowIndex, spec.rows);
       return {
         slotId: `${categoryIndex}-${rowIndex}`,
         category: cleanText(category),
@@ -78,6 +107,8 @@ export function createSlotPlan(spec, categories) {
         difficulty,
         type,
         cognitiveSkill: skills[(seedHash + slotIndex) % skills.length],
+        tier: tier.tier,
+        tierSkill: tier.skill,
       };
     })
   );
