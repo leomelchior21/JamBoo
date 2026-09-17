@@ -1,3 +1,7 @@
+import { AITimeoutError, InvalidAIResponseError } from './ai-errors.mjs';
+import { createCallBudget, spendCall } from './ai-provider.mjs';
+import { readBoundedInteger } from './config.mjs';
+import { verifyPythonOutput } from './code-checks.mjs';
 import {
   createSlotPlan,
   hashSeed,
@@ -7,8 +11,7 @@ import {
   validateQuestionForSlot,
 } from './quiz-core.mjs';
 import { batchFormat, parseQuestionList, plannerFormat } from './quiz-formats.mjs';
-import { generateMathQuestion, isMathCategory } from './math-questions.mjs';
-import { InvalidAIResponseError, readBoundedInteger, requestOllama } from './ollama.mjs';
+import { generateMathQuestion, isMathCategory, verifyArithmeticAnswer } from './math-questions.mjs';
 import { buildQuestionMessages } from './quiz-prompts.mjs';
 import {
   buildPlannerInstructions,
@@ -23,13 +26,18 @@ export const QUESTION_BATCH_SIZE = readBoundedInteger(process.env.QUESTION_BATCH
 const MAX_REPAIR_ATTEMPTS = readBoundedInteger(process.env.MAX_REPAIR_ATTEMPTS, 2, 1, 3);
 const MAX_PLAN_ATTEMPTS = 2;
 const MAX_CATEGORY_ROUNDS = MAX_REPAIR_ATTEMPTS + 1;
+const PLAN_MAX_TOKENS = 300;
+const QUESTION_MAX_TOKENS_BASE = 240;
+const QUESTION_MAX_TOKENS_PER_SLOT = 170;
 
-async function generateCategoryPlan(chatUrl, spec, topics, signal) {
+async function generateCategoryPlan(provider, spec, topics, signal, budget) {
   const messages = [
     {
       role: 'system',
       content: buildPlannerInstructions({
         columns: spec.columns,
+        rows: spec.rows,
+        totalSlots: spec.columns * spec.rows,
         language: spec.language,
         topicCount: topics.length,
         style: normalizeTopicVoice(spec.kind) ?? classifyTopicVoice(spec.topic),
@@ -42,16 +50,20 @@ async function generateCategoryPlan(chatUrl, spec, topics, signal) {
   ];
 
   for (let attempt = 1; attempt <= MAX_PLAN_ATTEMPTS; attempt += 1) {
-    const answer = await requestOllama(chatUrl, messages, {
-      format: plannerFormat(spec.columns),
-      signal,
-      numPredict: 260,
+    spendCall(budget);
+    const result = await provider.chat({
+      messages,
+      schema: plannerFormat(spec.columns),
+      maxTokens: PLAN_MAX_TOKENS,
       temperature: attempt === 1 ? 0.25 : 0.5,
       seed: hashSeed(`${spec.seed}:plan:${attempt}`),
+      signal,
+      stage: 'quiz-plan',
+      retry: attempt - 1,
     });
     let value = null;
     try {
-      value = JSON.parse(answer);
+      value = JSON.parse(result.content);
     } catch (_) {
       value = null;
     }
@@ -70,18 +82,19 @@ async function generateCategoryPlan(chatUrl, spec, topics, signal) {
   throw new InvalidAIResponseError('AI returned an invalid category plan');
 }
 
-export async function createQuizPlan(chatUrl, spec, signal) {
+export async function createQuizPlan(provider, spec, signal) {
   const startedAt = Date.now();
   const explicit = Array.isArray(spec.explicitCategories) && spec.explicitCategories.length
     ? spec.explicitCategories
     : explicitCategoriesFromTopic(spec.topic, spec.columns);
   const topics = splitInputTopics(spec.topic);
+  const budget = createCallBudget(MAX_PLAN_ATTEMPTS);
   let categories = explicit;
   let kind = normalizeTopicVoice(spec.kind) ?? classifyTopicVoice(spec.topic);
 
   if (!categories) {
     try {
-      const planned = await generateCategoryPlan(chatUrl, spec, topics, signal);
+      const planned = await generateCategoryPlan(provider, spec, topics, signal, budget);
       categories = planned.categories;
       kind = planned.kind ?? kind;
     } catch (error) {
@@ -96,11 +109,21 @@ export async function createQuizPlan(chatUrl, spec, signal) {
   return { categories, slots, batchSize: QUESTION_BATCH_SIZE, kind };
 }
 
-function validationCandidates(candidates, slot) {
-  return candidates.filter(candidate => candidate?.slotId === slot.slotId);
+function deterministicProblem(question) {
+  if (question.d === 1) return null;
+  const answer = question.a ?? '';
+  const arithmetic = verifyArithmeticAnswer(question.q, answer);
+  if (arithmetic.checked && !arithmetic.valid) {
+    return `arithmetic answer should be ${arithmetic.computed}`;
+  }
+  const code = verifyPythonOutput(question.q, answer);
+  if (code.checked && !code.valid) {
+    return `code output should be ${code.output}`;
+  }
+  return null;
 }
 
-async function generateCategoryQuestions(chatUrl, spec, category, slots, excludedQuestions, signal) {
+async function generateCategoryQuestions(provider, spec, category, slots, excludedQuestions, signal, budget) {
   const promptHistory = [...excludedQuestions];
   const accepted = [];
   const rejected = new Map();
@@ -111,11 +134,11 @@ async function generateCategoryQuestions(chatUrl, spec, category, slots, exclude
     const problems = pending
       .filter(slot => rejected.has(slot.slotId))
       .map(slot => ({ slotId: slot.slotId, reason: rejected.get(slot.slotId) }));
-    let answer;
+    let result;
     try {
-      answer = await requestOllama(
-        chatUrl,
-        buildQuestionMessages({
+      spendCall(budget);
+      result = await provider.chat({
+        messages: buildQuestionMessages({
           topic: spec.topic,
           category,
           language: spec.language,
@@ -123,44 +146,53 @@ async function generateCategoryQuestions(chatUrl, spec, category, slots, exclude
           preCoding: spec.preCoding,
           difficulty: spec.difficulty,
           rows: spec.rows,
+          columns: spec.columns,
+          seed: spec.seed,
           slots: pending,
           excludedQuestions: promptHistory,
           problems,
           round,
         }),
-        {
-          format: batchFormat(pending),
-          signal,
-          numPredict: Math.min(1400, 260 + pending.length * 150),
-          temperature: round === 1 ? 0.55 : 0.8,
-          seed: hashSeed(`${spec.seed}:${category}:${round}`),
-        }
-      );
+        schema: batchFormat(pending),
+        maxTokens: QUESTION_MAX_TOKENS_BASE + pending.length * QUESTION_MAX_TOKENS_PER_SLOT,
+        temperature: round === 1 ? 0.55 : 0.8,
+        seed: hashSeed(`${spec.seed}:${category}:${round}`),
+        signal,
+        stage: 'quiz-category',
+        category,
+        retry: round - 1,
+      });
     } catch (error) {
-      if (!(error instanceof InvalidAIResponseError)) throw error;
-      pending.forEach(slot => rejected.set(slot.slotId, error.message));
+      if (!(error instanceof InvalidAIResponseError) && !(error instanceof AITimeoutError)) throw error;
+      const reason = error instanceof AITimeoutError ? 'AI request timed out' : error.message;
+      pending.forEach(slot => rejected.set(slot.slotId, reason));
       continue;
     }
 
-    const candidates = parseQuestionList(answer);
+    const candidates = parseQuestionList(result.content);
     const matched = new Set();
     for (const slot of pending) {
-      const matches = validationCandidates(candidates, slot);
+      const matches = candidates.filter(candidate => candidate?.slotId === slot.slotId);
       if (matches.length !== 1) {
         rejected.set(slot.slotId, matches.length ? 'duplicate slotId' : 'missing slotId');
         continue;
       }
-      const result = validateQuestionForSlot(matches[0], slot);
-      if (!result.valid) {
-        rejected.set(slot.slotId, result.reason);
+      const validation = validateQuestionForSlot(matches[0], slot);
+      if (!validation.valid) {
+        rejected.set(slot.slotId, validation.reason);
         continue;
       }
-      if (isDuplicateQuestion(result.question.q, promptHistory)) {
+      if (isDuplicateQuestion(validation.question.q, promptHistory)) {
         rejected.set(slot.slotId, 'duplicate question');
         continue;
       }
-      accepted.push(result.question);
-      promptHistory.push(result.question.q);
+      const deterministic = deterministicProblem(validation.question);
+      if (deterministic) {
+        rejected.set(slot.slotId, deterministic);
+        continue;
+      }
+      accepted.push(validation.question);
+      promptHistory.push(validation.question.q);
       matched.add(slot.slotId);
       if (round > 1) repaired += 1;
     }
@@ -192,7 +224,7 @@ function generateMathQuestions(spec, slots, knownPrompts) {
   return { accepted, failures, repairCount: 0 };
 }
 
-export async function generateQuestionBatch(chatUrl, spec, signal) {
+export async function generateQuestionBatch(provider, spec, signal) {
   const startedAt = Date.now();
   const groups = new Map();
   for (const slot of spec.slots) {
@@ -216,28 +248,30 @@ export async function generateQuestionBatch(chatUrl, spec, signal) {
     tasks.push({ category, slots });
   }
 
-  const settled = await Promise.all(tasks.map(async task => {
-    try {
-      return await generateCategoryQuestions(chatUrl, spec, task.category, task.slots, knownPrompts, signal);
-    } catch (error) {
-      if (error instanceof InvalidAIResponseError) {
-        console.warn(`[quiz] category failed id=${spec.generationId} category=${JSON.stringify(task.category)} reason=${JSON.stringify(error.message)}`);
-        return {
-          accepted: [],
-          failures: task.slots.map(slot => ({ slot, reason: error.message })),
-          repairCount: 0,
-        };
-      }
-      throw error;
-    }
-  }));
+  const budget = createCallBudget(tasks.length * MAX_CATEGORY_ROUNDS);
+  const settled = await Promise.allSettled(tasks.map(task =>
+    generateCategoryQuestions(provider, spec, task.category, task.slots, knownPrompts, signal, budget)
+  ));
 
   let repairCount = 0;
-  for (const result of settled) {
-    accepted.push(...result.accepted);
-    failures.push(...result.failures);
-    repairCount += result.repairCount;
-  }
+  let providerError = null;
+  settled.forEach((outcome, index) => {
+    const task = tasks[index];
+    if (outcome.status === 'fulfilled') {
+      accepted.push(...outcome.value.accepted);
+      failures.push(...outcome.value.failures);
+      repairCount += outcome.value.repairCount;
+      return;
+    }
+    const error = outcome.reason;
+    if (error instanceof InvalidAIResponseError) {
+      console.warn(`[quiz] category failed id=${spec.generationId} category=${JSON.stringify(task.category)} reason=${JSON.stringify(error.message)}`);
+      failures.push(...task.slots.map(slot => ({ slot, reason: error.message })));
+      return;
+    }
+    providerError = providerError ?? error;
+  });
+  if (providerError) throw providerError;
 
   const bySlot = new Map();
   const seenPrompts = new Set();
@@ -256,17 +290,20 @@ export async function generateQuestionBatch(chatUrl, spec, signal) {
 
 export function finalizeQuiz(spec) {
   const missingSlotIds = Array.isArray(spec.missingSlotIds) ? spec.missingSlotIds : [];
-  const missing = new Set(missingSlotIds);
-  const slots = missing.size
-    ? spec.slots.filter(slot => !missing.has(slot.slotId))
-    : spec.slots;
-  const result = validateCompleteQuiz(slots, spec.questions);
+  if (missingSlotIds.length) {
+    throw new InvalidAIResponseError(`Quiz is incomplete: ${missingSlotIds.length} slot(s) missing`);
+  }
+  const expectedSlots = spec.columns * spec.rows;
+  if (spec.categories.length !== spec.columns || spec.slots.length !== expectedSlots || spec.questions.length !== expectedSlots) {
+    throw new InvalidAIResponseError('Quiz does not match the configured board dimensions');
+  }
+  const result = validateCompleteQuiz(spec.slots, spec.questions);
   if (!result.valid) throw new InvalidAIResponseError(`Quiz is incomplete: ${result.reason}`);
-  console.info(`[quiz] ready id=${spec.generationId} ${result.questions.length}/${spec.slots.length} missing=${missingSlotIds.length}`);
+  console.info(`[quiz] ready id=${spec.generationId} ${result.questions.length}/${expectedSlots} slots`);
   return {
     ready: true,
     categories: spec.categories,
     questions: result.questions,
-    missingSlotIds,
+    missingSlotIds: [],
   };
 }

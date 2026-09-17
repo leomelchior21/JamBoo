@@ -1,74 +1,94 @@
-const OLLAMA_MODEL = process.env.OLLAMA_MODEL?.trim() || 'qwen3.5:4b';
+import { AIConfigError, AIProviderError, InvalidAIResponseError } from './ai-errors.mjs';
 
-export class InvalidAIResponseError extends Error {}
-export class OllamaResponseError extends Error {}
+const DEFAULT_NUM_CTX = 4096;
 
-export function readBoundedInteger(value, fallback, minimum, maximum) {
-  const parsed = Number.parseInt(value, 10);
-  return Number.isInteger(parsed) && parsed >= minimum && parsed <= maximum ? parsed : fallback;
-}
-
-export function getOllamaEndpoint(pathname) {
-  const baseUrl = process.env.OLLAMA_URL?.trim().replace(/\/+$/, '');
+export function getOllamaEndpoint(pathname, env = process.env) {
+  const baseUrl = env.OLLAMA_URL?.trim().replace(/\/+$/, '');
   if (!baseUrl) return null;
 
   const endpoint = new URL(`${baseUrl}${pathname}`);
   if (endpoint.protocol !== 'https:') {
-    throw new Error('OLLAMA_URL must use HTTPS');
+    throw new AIConfigError('OLLAMA_URL must use HTTPS');
   }
   return endpoint;
 }
 
-export async function requestOllama(chatUrl, messages, {
+export function extractOllamaUsage(data) {
+  const promptTokens = Number.isFinite(data?.prompt_eval_count) ? data.prompt_eval_count : 0;
+  const completionTokens = Number.isFinite(data?.eval_count) ? data.eval_count : 0;
+  return {
+    promptTokens,
+    completionTokens,
+    totalTokens: promptTokens + completionTokens,
+    reasoningTokens: 0,
+    cacheHitTokens: 0,
+    cacheMissTokens: 0,
+  };
+}
+
+export async function callOllama({
+  chatUrl,
+  model,
+  messages,
   format,
-  signal,
-  numPredict = 500,
   temperature = 0.6,
-  topP = 0.92,
+  maxTokens = 500,
   seed,
-} = {}) {
+  signal,
+}) {
   const request = {
-    model: OLLAMA_MODEL,
+    model,
     messages,
     stream: false,
     think: false,
     keep_alive: '30m',
     options: {
-      num_ctx: 4096,
-      num_predict: numPredict,
+      num_ctx: DEFAULT_NUM_CTX,
+      num_predict: maxTokens,
       temperature,
-      top_p: topP,
+      top_p: 0.92,
       repeat_penalty: 1.08,
     },
   };
   if (Number.isInteger(seed)) request.options.seed = seed;
   if (format) request.format = format;
 
-  const upstream = await fetch(chatUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-    },
-    body: JSON.stringify(request),
-    signal,
-  });
+  let upstream;
+  try {
+    upstream = await fetch(chatUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify(request),
+      signal,
+    });
+  } catch (error) {
+    if (signal?.aborted) throw error;
+    throw new AIProviderError('Ollama request failed');
+  }
 
   if (!upstream.ok) {
     console.error(`Ollama returned HTTP ${upstream.status}`);
-    throw new OllamaResponseError();
+    throw new AIProviderError(`Ollama returned HTTP ${upstream.status}`);
   }
 
   let data;
   try {
     data = await upstream.json();
   } catch (_) {
-    throw new InvalidAIResponseError('AI server returned invalid JSON');
+    throw new InvalidAIResponseError('Ollama returned invalid JSON');
   }
 
-  const answer = data?.message?.content;
-  if (typeof answer !== 'string' || !answer.trim()) {
+  const content = data?.message?.content;
+  if (typeof content !== 'string' || !content.trim()) {
     throw new InvalidAIResponseError('AI returned an empty response');
   }
-  return answer.trim();
+
+  return {
+    content: content.trim(),
+    model: typeof data?.model === 'string' ? data.model : null,
+    usage: extractOllamaUsage(data),
+  };
 }

@@ -1,3 +1,4 @@
+import { hashSeed } from './quiz-core.mjs';
 import { resolveTopicVoice, voiceInstruction } from './quiz-voice.mjs';
 
 const DIFFICULTY_SCALES = Object.freeze({
@@ -6,6 +7,24 @@ const DIFFICULTY_SCALES = Object.freeze({
   hard: ['medium', 'hard', 'very hard'],
   mixed: ['very easy', 'easy', 'medium', 'hard', 'very hard', 'expert'],
 });
+
+const VARIATION_HINTS = Object.freeze([
+  'favour famous firsts and milestones',
+  'favour records, numbers and comparisons',
+  'favour key people and their roles',
+  'favour places, origins and timelines',
+  'favour definitions, meanings and how things work',
+  'favour everyday examples and real-life applications',
+  'favour surprising but well-documented details',
+]);
+
+export function variationHints(seed, category) {
+  const start = hashSeed(`${seed}:${category}`);
+  return [
+    VARIATION_HINTS[start % VARIATION_HINTS.length],
+    VARIATION_HINTS[(start + 3) % VARIATION_HINTS.length],
+  ];
+}
 
 export function rowDifficultyLabels(difficulty, rows) {
   const scale = DIFFICULTY_SCALES[difficulty] ?? DIFFICULTY_SCALES.mixed;
@@ -31,6 +50,8 @@ export function buildQuestionMessages({
   preCoding = false,
   difficulty = 'mixed',
   rows = 6,
+  columns = 1,
+  seed = '',
   slots,
   excludedQuestions = [],
   problems = [],
@@ -38,6 +59,7 @@ export function buildQuestionMessages({
 }) {
   const voice = voiceInstruction(resolveTopicVoice(style, topic), { preCoding });
   const labels = rowDifficultyLabels(difficulty, rows);
+  const hints = variationHints(`${seed}:${topic}:${round}`, category);
   const slotLines = slots
     .map((slot, index) =>
       `${index + 1}. slotId=${slot.slotId} | row ${slot.rowIndex + 1} | ${slot.points} points | ${labels[slot.rowIndex] ?? slot.difficulty} | ${slot.type} | thinking: ${slot.tierSkill ?? slot.cognitiveSkill}`
@@ -54,6 +76,12 @@ export function buildQuestionMessages({
 BOARD TOPIC: ${JSON.stringify(topic)}
 LOCKED CATEGORY: ${JSON.stringify(category)}
 Write every question, answer and option in ${language}.
+
+BOARD CONTRACT (fixed by the game, never change it)
+- The board has exactly ${columns} categories and ${rows} rows (${columns * rows} question slots).
+- This request fills exactly ${slots.length} slots of the locked category: ${slots.map(slot => slot.slotId).join(', ')}.
+- Fill exactly the listed slots. Never add, remove, merge, rename, reorder or resize anything.
+- Variation hint for this attempt: prefer ${hints[0]} and ${hints[1]} while staying on topic.
 
 RULES FOR EVERY QUESTION
 1. Accuracy first. Use only facts you are completely sure about. If you are not certain, pick another fact or ask what something means. Never invent names, dates, numbers, titles or events.

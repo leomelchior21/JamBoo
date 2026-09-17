@@ -1551,7 +1551,7 @@ const GT = {
     sameTeams:'↺ Same Teams, New Game', home:'⌂ Home',
     pts:'pts', generating:'Generating your game...',
     errorGen:'Error generating game. Please go back and try again.',
-    aiOffline:'AI server offline. Start Ollama and the tunnel, then try again.', backToSetup:'Back to setup',
+    aiOffline:'AI server offline. Check the AI configuration and try again.', backToSetup:'Back to setup',
     noConfig:'No game config found. Please go back to setup.',
     calculating:'CALCULATING...',
     creationPipeline:'Creation pipeline',
@@ -1579,7 +1579,7 @@ const GT = {
     sameTeams:'↺ Mesmos Times, Novo Jogo', home:'⌂ Início',
     pts:'pontos', generating:'Gerando seu jogo...',
     errorGen:'Erro ao gerar o jogo. Volte e tente novamente.',
-    aiOffline:'Servidor de IA offline. Inicie o Ollama e o túnel e tente novamente.', backToSetup:'Voltar ao início',
+    aiOffline:'Servidor de IA offline. Verifique a configuração da IA e tente novamente.', backToSetup:'Voltar ao início',
     noConfig:'Configuração não encontrada. Volte ao início.',
     calculating:'CALCULANDO...',
     creationPipeline:'Linha de criação',
@@ -1607,7 +1607,7 @@ const GT = {
     sameTeams:'↺ Mismos Equipos, Nuevo Juego', home:'⌂ Inicio',
     pts:'puntos', generating:'Generando tu juego...',
     errorGen:'Error al generar el juego. Vuelve e intenta de nuevo.',
-    aiOffline:'Servidor de IA sin conexión. Inicia Ollama y el túnel e inténtalo de nuevo.', backToSetup:'Volver al inicio',
+    aiOffline:'Servidor de IA sin conexión. Verifica la configuración de la IA e inténtalo de nuevo.', backToSetup:'Volver al inicio',
     noConfig:'Configuración no encontrada. Vuelve al inicio.',
     calculating:'CALCULANDO...',
     creationPipeline:'Línea de creación',
@@ -1643,7 +1643,7 @@ let generationStartedAt=0;
 let generationProgressStep=0;
 let generationRequest=null;
 const GENERATION_API_URL='/api/ai';
-const GENERATION_PROVIDER='jamboo-engine-v12';
+const GENERATION_PROVIDER='jamboo-engine-v13-deepseek';
 const GAME_CACHE_KEY='jamboo_game_cache_v4';
 const GENERATION_SIMULATION_MS=120000;
 const MAX_QUESTION_ROUNDS=2;

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
+process.env.QUIZ_AI_PROVIDER = 'local';
 process.env.OLLAMA_URL = 'https://ollama.test';
 process.env.QUESTION_BATCH_SIZE = '6';
 process.env.MAX_REPAIR_ATTEMPTS = '2';
@@ -50,6 +51,39 @@ function answerForRequest(request, index) {
   return index === 0
     ? { slotId, q: 'Which planet is known as the Red Planet?', a: 'Mars', x: ['Venus', 'Earth', 'Mercury'] }
     : { slotId, q: 'Which planet is the largest in the Solar System?', a: 'Jupiter', x: ['Saturn', 'Neptune', 'Venus'] };
+}
+
+const FIXTURE_THEMES = [
+  'quasar', 'pulsar', 'nebula', 'comet', 'meteor', 'asteroid', 'galaxy', 'planet',
+  'moon', 'star', 'orbit', 'rocket', 'probe', 'satellite', 'eclipse', 'crater',
+  'telescope', 'observatory', 'aurora', 'gravity', 'plasma', 'cosmos', 'universe', 'supernova',
+  'wormhole', 'blackhole', 'constellation', 'zodiac', 'solstice', 'equinox', 'redshift', 'lightyear',
+  'astronaut', 'spacewalk', 'launchpad', 'thruster', 'capsule', 'rover', 'lander', 'antenna',
+  'solarwind', 'magnetosphere', 'ionosphere', 'exoplanet', 'asterism', 'heliosphere', 'parallax', 'albedo',
+];
+
+function themeForSlot(slotId) {
+  const [column, row] = slotId.split('-').map(Number);
+  return FIXTURE_THEMES[(column * 6 + row) % FIXTURE_THEMES.length];
+}
+
+function questionsFromRequest(request) {
+  return (request.format?.properties?.qs?.prefixItems ?? []).map(item => {
+    const slotId = item.properties.slotId.enum[0];
+    const theme = themeForSlot(slotId);
+    if (item.properties.x) {
+      return {
+        slotId,
+        q: `Which ${theme} option matches slot ${slotId}?`,
+        a: `Right ${theme}`,
+        x: [`Wrong ${theme} A`, `Wrong ${theme} B`, `Wrong ${theme} C`],
+      };
+    }
+    if (item.properties.d) {
+      return { slotId, q: `Draw the ${theme} idea for slot ${slotId}.`, a: `Criteria ${theme}`, d: 1 };
+    }
+    return { slotId, q: `What ${theme} value belongs to slot ${slotId}?`, a: `Answer ${theme}` };
+  });
 }
 
 const baseQuiz = {
@@ -381,7 +415,7 @@ test('final validation marks only a complete draft ready', { concurrency: false 
   assert.equal(finalized.questions.length, 2);
 });
 
-test('final validation accepts missing slots for a partial board', { concurrency: false }, async () => {
+test('final validation refuses to commit a partial board', { concurrency: false }, async () => {
   globalThis.fetch = async () => { throw new Error('should not call Ollama'); };
   const questions = [
     { slotId: '0-0', q: 'Which planet is known as the Red Planet?', a: 'Mars', o: ['Mars', 'Venus', 'Earth', 'Jupiter'], i: 0 },
@@ -390,11 +424,8 @@ test('final validation accepts missing slots for a partial board', { concurrency
     action: 'quiz-validate',
     quiz: { ...baseQuiz, categories: ['Solar System'], questions, missingSlotIds: ['0-1'] },
   });
-  assert.equal(res.statusCode, 200);
-  const finalized = JSON.parse(res.body.answer);
-  assert.equal(finalized.ready, true);
-  assert.deepEqual(finalized.missingSlotIds, ['0-1']);
-  assert.equal(finalized.questions.length, 1);
+  assert.equal(res.statusCode, 502);
+  assert.equal(res.body.code, 'INVALID_AI_RESPONSE');
 });
 
 test('final validation rejects an undocumented missing slot', { concurrency: false }, async () => {
@@ -424,4 +455,257 @@ test('rejects malformed quiz requests', { concurrency: false }, async () => {
   assert.equal(res.statusCode, 400);
   const unknown = await callApi({ action: 'quiz-magic', quiz: baseQuiz });
   assert.equal(unknown.statusCode, 400);
+});
+
+test('computes arithmetic answers instead of trusting the model', { concurrency: false }, async () => {
+  let calls = 0;
+  globalThis.fetch = async (_url, init) => {
+    calls += 1;
+    const request = JSON.parse(init.body);
+    const slotId = slotIdsFromRequest(request)[0];
+    return ollamaResponse({ qs: [{ slotId, q: 'What is 2 + 3?', a: '6' }] });
+  };
+  const res = await callApi({
+    action: 'quiz-batch',
+    quiz: {
+      ...baseQuiz,
+      columns: 1,
+      rows: 1,
+      questionType: 'open',
+      topic: 'Warm-up questions',
+      categories: ['Brain Teasers'],
+      slotIds: ['0-0'],
+      excludedQuestions: [],
+    },
+  });
+  assert.equal(res.statusCode, 200);
+  assert.equal(calls, 3);
+  const batch = JSON.parse(res.body.answer);
+  assert.deepEqual(batch.questions, []);
+  assert.deepEqual(batch.failedSlots, ['0-0']);
+});
+
+test('accepts arithmetic answers that match the computed result', { concurrency: false }, async () => {
+  globalThis.fetch = async (_url, init) => {
+    const request = JSON.parse(init.body);
+    const slotId = slotIdsFromRequest(request)[0];
+    return ollamaResponse({ qs: [{ slotId, q: 'What is 7 × 6?', a: '42' }] });
+  };
+  const res = await callApi({
+    action: 'quiz-batch',
+    quiz: {
+      ...baseQuiz,
+      columns: 1,
+      rows: 1,
+      questionType: 'open',
+      topic: 'Warm-up questions',
+      categories: ['Brain Teasers'],
+      slotIds: ['0-0'],
+      excludedQuestions: [],
+    },
+  });
+  assert.equal(res.statusCode, 200);
+  const batch = JSON.parse(res.body.answer);
+  assert.deepEqual(batch.failedSlots, []);
+  assert.equal(batch.questions[0].a, '42');
+});
+
+test('computes simple print outputs instead of trusting the model', { concurrency: false }, async () => {
+  let calls = 0;
+  globalThis.fetch = async (_url, init) => {
+    calls += 1;
+    const request = JSON.parse(init.body);
+    const slotId = slotIdsFromRequest(request)[0];
+    return ollamaResponse({ qs: [{ slotId, q: 'What does print(x) output after x = 7?', a: '9' }] });
+  };
+  const res = await callApi({
+    action: 'quiz-batch',
+    quiz: {
+      ...baseQuiz,
+      columns: 1,
+      rows: 1,
+      questionType: 'open',
+      topic: 'Python variables',
+      kind: 'code',
+      categories: ['Assignment basics'],
+      slotIds: ['0-0'],
+      excludedQuestions: [],
+    },
+  });
+  assert.equal(res.statusCode, 200);
+  assert.equal(calls, 3);
+  assert.deepEqual(JSON.parse(res.body.answer).failedSlots, ['0-0']);
+});
+
+test('shares one in-flight generation for identical requests', { concurrency: false }, async () => {
+  let calls = 0;
+  globalThis.fetch = async (_url, init) => {
+    calls += 1;
+    const request = JSON.parse(init.body);
+    const slotId = slotIdsFromRequest(request)[0];
+    return ollamaResponse({ qs: [{ slotId, q: 'Which planet is known as the Red Planet?', a: 'Mars', x: ['Venus', 'Earth', 'Mercury'] }] });
+  };
+  const quiz = {
+    ...baseQuiz,
+    columns: 1,
+    rows: 1,
+    categories: ['Solar System'],
+    slotIds: ['0-0'],
+    excludedQuestions: [],
+  };
+  const [first, second] = await Promise.all([
+    callApi({ action: 'quiz-batch', quiz }),
+    callApi({ action: 'quiz-batch', quiz }),
+  ]);
+  assert.equal(calls, 1);
+  assert.equal(first.statusCode, 200);
+  assert.deepEqual(first.body, second.body);
+});
+
+test('generates a complete maximum board end to end', { concurrency: false }, async () => {
+  globalThis.fetch = async (_url, init) => ollamaResponse({ qs: questionsFromRequest(JSON.parse(init.body)) });
+  const spec = {
+    ...baseQuiz,
+    topic: 'Alpha, Beta, Gamma, Delta, Epsilon, Zeta, Eta, Theta',
+    columns: 8,
+    rows: 6,
+    difficulty: 'mixed',
+    questionType: 'mixed',
+  };
+  const planRes = await callApi({ action: 'quiz-plan', quiz: spec });
+  assert.equal(planRes.statusCode, 200);
+  const plan = JSON.parse(planRes.body.answer);
+  assert.equal(plan.categories.length, 8);
+  assert.equal(plan.slots.length, 48);
+
+  const questions = [];
+  for (let offset = 0; offset < plan.slots.length; offset += plan.batchSize) {
+    const slotIds = plan.slots.slice(offset, offset + plan.batchSize).map(slot => slot.slotId);
+    const batchRes = await callApi({
+      action: 'quiz-batch',
+      quiz: {
+        ...spec,
+        categories: plan.categories,
+        kind: plan.kind,
+        slotIds,
+        excludedQuestions: questions.map(question => question.q),
+      },
+    });
+    assert.equal(batchRes.statusCode, 200);
+    const batch = JSON.parse(batchRes.body.answer);
+    assert.deepEqual(batch.failedSlots, []);
+    questions.push(...batch.questions);
+  }
+
+  const validateRes = await callApi({
+    action: 'quiz-validate',
+    quiz: { ...spec, categories: plan.categories, questions, missingSlotIds: [] },
+  });
+  assert.equal(validateRes.statusCode, 200);
+  const finalized = JSON.parse(validateRes.body.answer);
+  assert.equal(finalized.questions.length, 48);
+  assert.equal(new Set(finalized.questions.map(question => question.slotId)).size, 48);
+  plan.slots.forEach(slot => {
+    const question = finalized.questions.find(candidate => candidate.slotId === slot.slotId);
+    assert.ok(question, `missing ${slot.slotId}`);
+    if (slot.type === 'multiple') assert.equal(question.o.length, 4);
+    if (slot.type === 'open') assert.equal(typeof question.a, 'string');
+    if (slot.type === 'drawing') assert.equal(question.d, 1);
+  });
+});
+
+test('mixed difficulty and mixed types follow the planned slots', { concurrency: false }, async () => {
+  globalThis.fetch = async (_url, init) => ollamaResponse({ qs: questionsFromRequest(JSON.parse(init.body)) });
+  const spec = { ...baseQuiz, topic: 'Planets', columns: 1, rows: 6, difficulty: 'mixed', questionType: 'mixed' };
+  const planRes = await callApi({ action: 'quiz-plan', quiz: spec });
+  assert.equal(planRes.statusCode, 200);
+  const plan = JSON.parse(planRes.body.answer);
+  assert.deepEqual(plan.slots.map(slot => slot.difficulty), ['easy', 'easy', 'medium', 'medium', 'hard', 'hard']);
+  assert.deepEqual(plan.slots.map(slot => slot.points), [100, 200, 300, 400, 500, 600]);
+  assert.deepEqual(new Set(plan.slots.map(slot => slot.type)), new Set(['multiple', 'open', 'drawing']));
+
+  const batchRes = await callApi({
+    action: 'quiz-batch',
+    quiz: {
+      ...spec,
+      categories: plan.categories,
+      kind: plan.kind,
+      slotIds: plan.slots.map(slot => slot.slotId),
+      excludedQuestions: [],
+    },
+  });
+  assert.equal(batchRes.statusCode, 200);
+  const batch = JSON.parse(batchRes.body.answer);
+  assert.deepEqual(batch.failedSlots, []);
+  plan.slots.forEach(slot => {
+    const question = batch.questions.find(candidate => candidate.slotId === slot.slotId);
+    assert.ok(question, `missing ${slot.slotId}`);
+    if (slot.type === 'multiple') assert.equal(question.o.length, 4);
+    if (slot.type === 'open') assert.equal(typeof question.a, 'string');
+    if (slot.type === 'drawing') assert.equal(question.d, 1);
+  });
+});
+
+test('a provider outage fails clearly without a partial quiz', { concurrency: false }, async () => {
+  globalThis.fetch = async () => { throw new Error('network down'); };
+  const planRes = await callApi({
+    action: 'quiz-plan',
+    quiz: { ...baseQuiz, topic: 'Minecraft', columns: 2 },
+  });
+  assert.equal(planRes.statusCode, 502);
+  assert.equal(planRes.body.answer, undefined);
+
+  const batchRes = await callApi({
+    action: 'quiz-batch',
+    quiz: {
+      ...baseQuiz,
+      columns: 1,
+      rows: 1,
+      categories: ['Solar System'],
+      slotIds: ['0-0'],
+      excludedQuestions: [],
+    },
+  });
+  assert.equal(batchRes.statusCode, 502);
+  assert.equal(batchRes.body.answer, undefined);
+});
+
+test('uses the DeepSeek provider by default with thinking disabled', { concurrency: false }, async () => {
+  const previousProvider = process.env.QUIZ_AI_PROVIDER;
+  const previousKey = process.env.DEEPSEEK_API_KEY;
+  try {
+    delete process.env.QUIZ_AI_PROVIDER;
+    process.env.DEEPSEEK_API_KEY = 'test-key';
+    const requests = [];
+    globalThis.fetch = async (url, init) => {
+      requests.push({ url: String(url), body: JSON.parse(init.body) });
+      return {
+        ok: true,
+        status: 200,
+        async json() {
+          return {
+            model: 'deepseek-flash',
+            choices: [{ message: { content: JSON.stringify({ kind: 'science', categories: ['Origins', 'Planets'] }) } }],
+            usage: { prompt_tokens: 10, completion_tokens: 5, total_tokens: 15 },
+          };
+        },
+      };
+    };
+    const res = await callApi({
+      action: 'quiz-plan',
+      quiz: { ...baseQuiz, topic: 'Solar System', columns: 2 },
+    });
+    assert.equal(res.statusCode, 200);
+    assert.equal(requests.length, 1);
+    assert.equal(requests[0].url, 'https://api.deepseek.com/chat/completions');
+    assert.equal(requests[0].body.model, 'deepseek-flash');
+    assert.deepEqual(requests[0].body.thinking, { type: 'disabled' });
+    assert.deepEqual(requests[0].body.response_format, { type: 'json_object' });
+    assert.deepEqual(JSON.parse(res.body.answer).categories, ['Origins', 'Planets']);
+  } finally {
+    if (previousProvider === undefined) delete process.env.QUIZ_AI_PROVIDER;
+    else process.env.QUIZ_AI_PROVIDER = previousProvider;
+    if (previousKey === undefined) delete process.env.DEEPSEEK_API_KEY;
+    else process.env.DEEPSEEK_API_KEY = previousKey;
+  }
 });

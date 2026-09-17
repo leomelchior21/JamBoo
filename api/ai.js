@@ -1,3 +1,7 @@
+import { AIConfigError, AIProviderError, AITimeoutError, AIBudgetError, InvalidAIResponseError } from './ai-errors.mjs';
+import { createQuizProvider } from './ai-provider.mjs';
+import { readBoundedInteger } from './config.mjs';
+import { MAX_CATEGORY_LENGTH } from './quiz-topics.mjs';
 import { DIFFICULTIES, QUESTION_TYPES, QUIZ_LIMITS, createSlotPlan, normalizeText } from './quiz-core.mjs';
 import {
   QUESTION_BATCH_SIZE,
@@ -5,20 +9,37 @@ import {
   finalizeQuiz,
   generateQuestionBatch,
 } from './quiz-engine.mjs';
-import {
-  InvalidAIResponseError,
-  OllamaResponseError,
-  getOllamaEndpoint,
-  readBoundedInteger,
-} from './ollama.mjs';
-import { MAX_CATEGORY_LENGTH } from './quiz-topics.mjs';
 import { normalizeTopicVoice } from './quiz-voice.mjs';
 
-const CHAT_TIMEOUT_MS = readBoundedInteger(process.env.OLLAMA_TIMEOUT_MS, 140000, 5000, 145000);
+const CHAT_TIMEOUT_MS = readBoundedInteger(
+  process.env.QUIZ_AI_TIMEOUT_MS ?? process.env.OLLAMA_TIMEOUT_MS,
+  140000,
+  5000,
+  145000
+);
 const MAX_TOPIC_LENGTH = 4000;
 const MAX_EXCLUDED_LENGTH = 180;
 const QUIZ_ACTIONS = ['quiz-plan', 'quiz-batch', 'quiz-validate'];
 const QUIZ_LANGUAGES = ['English', 'Portuguese', 'Spanish'];
+
+const inFlightGenerations = new Map();
+
+function generationKey(quizRequest) {
+  const slotIds = Array.isArray(quizRequest.slots)
+    ? quizRequest.slots.map(slot => slot.slotId).join(',')
+    : '';
+  return `${quizRequest.generationId}|${quizRequest.action}|${slotIds}`;
+}
+
+function singleFlight(key, run) {
+  const existing = inFlightGenerations.get(key);
+  if (existing) return existing;
+  const promise = run().finally(() => {
+    inFlightGenerations.delete(key);
+  });
+  inFlightGenerations.set(key, promise);
+  return promise;
+}
 
 function parseBody(body) {
   if (typeof body !== 'string') return body || {};
@@ -136,15 +157,15 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Invalid quiz request' });
   }
 
-  let chatUrl;
+  let provider;
   try {
-    chatUrl = getOllamaEndpoint('/api/chat');
-  } catch (_) {
-    console.error('Invalid OLLAMA_URL configuration');
+    provider = createQuizProvider();
+  } catch (error) {
+    console.error('Invalid quiz AI provider configuration');
     return res.status(503).json({ error: 'AI server unavailable' });
   }
-  if (!chatUrl) {
-    console.error('OLLAMA_URL is not configured');
+  if (!provider.configured) {
+    console.error(`Quiz AI provider is not configured (${provider.name})`);
     return res.status(503).json({ error: 'AI server unavailable' });
   }
 
@@ -152,19 +173,24 @@ export default async function handler(req, res) {
   const timeout = setTimeout(() => controller.abort(), CHAT_TIMEOUT_MS);
 
   try {
-    let answer;
-    if (quizRequest.action === 'quiz-plan') {
-      answer = await createQuizPlan(chatUrl, quizRequest, controller.signal);
-    } else if (quizRequest.action === 'quiz-batch') {
-      answer = await generateQuestionBatch(chatUrl, quizRequest, controller.signal);
-    } else {
-      answer = finalizeQuiz(quizRequest);
-    }
+    const answer = await singleFlight(generationKey(quizRequest), async () => {
+      if (quizRequest.action === 'quiz-plan') {
+        return createQuizPlan(provider, quizRequest, controller.signal);
+      }
+      if (quizRequest.action === 'quiz-batch') {
+        return generateQuestionBatch(provider, quizRequest, controller.signal);
+      }
+      return finalizeQuiz(quizRequest);
+    });
 
     return res.status(200).json({ answer: JSON.stringify(answer) });
   } catch (error) {
     if (error?.name === 'AbortError' || controller.signal.aborted) {
-      console.error('Ollama request timed out');
+      console.error('Quiz generation request timed out');
+      return res.status(504).json({ error: 'AI server unavailable' });
+    }
+    if (error instanceof AITimeoutError) {
+      console.error(`AI provider timed out: ${error.message}`);
       return res.status(504).json({ error: 'AI server unavailable' });
     }
     if (error instanceof InvalidAIResponseError) {
@@ -173,11 +199,23 @@ export default async function handler(req, res) {
         code: 'INVALID_AI_RESPONSE',
       });
     }
-    if (error instanceof OllamaResponseError) {
+    if (error instanceof AIBudgetError) {
+      console.error(error.message);
+      return res.status(502).json({
+        error: 'AI generation budget exceeded',
+        code: 'AI_BUDGET_EXCEEDED',
+      });
+    }
+    if (error instanceof AIConfigError) {
+      console.error('Invalid quiz AI provider configuration');
+      return res.status(503).json({ error: 'AI server unavailable' });
+    }
+    if (error instanceof AIProviderError) {
+      console.error(`AI provider error: ${error.message}`);
       return res.status(502).json({ error: 'AI server unavailable' });
     }
 
-    console.error('Unable to reach Ollama', error);
+    console.error('Quiz generation failed', error);
     return res.status(502).json({ error: 'AI server unavailable' });
   } finally {
     clearTimeout(timeout);

@@ -15,12 +15,13 @@
 - Test setup page by opening `index.html` directly; game page needs `/api/ai` (use Vercel dev)
 
 ## Quiz Generation Pipeline (server)
-- Actions: `quiz-plan` (topic → categories + slots + voice kind), `quiz-batch` (question batches), `quiz-validate` (final check, supports `missingSlotIds` for partial boards)
-- Modules: `api/quiz-engine.mjs` (orchestration, retries, parallel category generation), `api/quiz-core.mjs` (slot plan, question validation, answer integrity, dedupe), `api/quiz-topics.mjs` (comma/prose topic parsing, planner prompt, deterministic fallbacks), `api/quiz-prompts.mjs` (question-writing rules + row recipes), `api/quiz-formats.mjs` (Ollama JSON schemas), `api/quiz-voice.mjs` (celebrity/games/sports/music/movies/history/science/geography/code/math/general flavour), `api/math-questions.mjs` (deterministic arithmetic with story contexts), `api/ollama.mjs` (transport)
-- The model writes questions from its own stable knowledge; risky prompts (`latest`, `current`, rankings) are rejected in code, and answers must be short labels instead of copied sentences
-- Multiple choice is generated as `a` + 3 `x` distractors; the server shuffles the 4 options and owns the correct index
-- Failed slots are reported as `failedSlots` (never abort the whole board); `game.html` retries once then renders remaining gaps as disabled cells
-- Generation speed: server runs independent category groups in parallel; `game.html` runs up to `BATCH_CONCURRENCY` batch requests at once and retries duplicates
+- `game.html` is authoritative for the board: it sends the exact columns/rows/difficulty/question type and the server plans every slot deterministically (`api/quiz-core.mjs`). The AI never decides board dimensions, scoring or question types.
+- Actions: `quiz-plan` (topic → categories + slots + voice kind), `quiz-batch` (question batches), `quiz-validate` (final check). Partial boards are never committed: `quiz-validate` fails when any slot is missing.
+- Providers (`api/ai-provider.mjs`): DeepSeek is the default generator (`api/deepseek.mjs`, model `deepseek-flash`, `thinking: {type:"disabled"}`, OpenAI-compatible `/chat/completions`); the Ollama integration is preserved as `LocalModelProvider` (`api/ollama.mjs`) behind `QUIZ_AI_PROVIDER=local`. `ALLOW_LOCAL_AI_FALLBACK=true` is the only way DeepSeek failures may fall back to local.
+- Modules: `api/quiz-engine.mjs` (orchestration, bounded retries, per-category parallel generation, call budgets), `api/quiz-topics.mjs` (comma/prose topic parsing, planner prompt, deterministic fallbacks), `api/quiz-prompts.mjs` (question rules, board contract, variation hints), `api/quiz-formats.mjs` (JSON schemas; DeepSeek receives the schema as prompt text), `api/quiz-voice.mjs` (topic flavours), `api/math-questions.mjs` (deterministic arithmetic), `api/code-checks.mjs` (deterministic `print()` output checks)
+- All AI output is validated in code: schema/shape, exact slot count, duplicates, unstable-fact prompts, answer giveaways, and arithmetic/print answers are recomputed server-side. Multiple choice arrives as `a` + 3 `x` distractors and the server owns the shuffled correct index.
+- Every provider request logs `[ai-usage]` JSON with provider, model, stage, category, retry, tokens and duration; API keys are never logged.
+- Generation speed: server runs independent category groups in parallel; `game.html` runs up to `BATCH_CONCURRENCY` batch requests at once and retries duplicates.
 
 ## Design System
 - Fonts: `Press Start 2P` (pixel labels/headers), `Fredoka One` + `Nunito` (game UI)
@@ -37,7 +38,7 @@
 1. User configures game on `index.html`, clicks Start
 2. Config saved to `localStorage` as `jamboo_config`
 3. Redirects to `game.html`
-4. `game.html` reads config and POSTs to `/api/ai`; the Vercel Function forwards the request to `${OLLAMA_URL}/api/chat`
+4. `game.html` reads config and POSTs to `/api/ai`; the Vercel Function generates content through the configured provider (DeepSeek by default, Ollama via `QUIZ_AI_PROVIDER=local`)
 5. When all cells answered or teacher clicks End, a 3-second mystery countdown screen appears (`#mystery-screen`), then the winner screen is revealed with confetti
 
 ## Same Teams, New Game
