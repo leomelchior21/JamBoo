@@ -1646,8 +1646,9 @@ const GENERATION_API_URL='/api/ai';
 const GENERATION_PROVIDER='jamboo-engine-v13-deepseek';
 const GAME_CACHE_KEY='jamboo_game_cache_v4';
 const GENERATION_SIMULATION_MS=120000;
-const MAX_QUESTION_ROUNDS=2;
-const BATCH_CONCURRENCY=2;
+const MAX_QUESTION_ROUNDS=3;
+const BATCH_CONCURRENCY=3;
+const QUIZ_REQUEST_TIMEOUT_MS=150000;
 
 function cleanText(value){
   return String(value ?? '').trim();
@@ -1860,16 +1861,23 @@ function parseExplicitCategories(topic,expectedCount){
 }
 
 async function requestQuizAction(body,signal){
+  const controller=new AbortController();
+  const relay=()=>controller.abort();
+  if(signal) signal.addEventListener('abort',relay,{once:true});
+  const timer=setTimeout(()=>controller.abort(),QUIZ_REQUEST_TIMEOUT_MS);
   let res;
   try{
     res=await fetch(GENERATION_API_URL,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify(body),
-      signal
+      signal:controller.signal
     });
   }catch(error){
     throw new Error('AI server unavailable',{cause:error});
+  }finally{
+    clearTimeout(timer);
+    if(signal) signal.removeEventListener('abort',relay);
   }
   if(!res.ok){
     let apiError=`API ${res.status}`;

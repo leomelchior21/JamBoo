@@ -29,8 +29,14 @@ const MAX_CATEGORY_ROUNDS = MAX_REPAIR_ATTEMPTS + 1;
 const PLAN_MAX_TOKENS = 300;
 const QUESTION_MAX_TOKENS_BASE = 240;
 const QUESTION_MAX_TOKENS_PER_SLOT = 170;
+const MIN_PROVIDER_CALL_MS = 35000;
+const OUT_OF_TIME_REASON = 'AI server ran out of time';
 
-async function generateCategoryPlan(provider, spec, topics, signal, budget) {
+function hasCallBudget(deadlineAt) {
+  return !deadlineAt || deadlineAt - Date.now() >= MIN_PROVIDER_CALL_MS;
+}
+
+async function generateCategoryPlan(provider, spec, topics, signal, budget, deadlineAt) {
   const messages = [
     {
       role: 'system',
@@ -50,6 +56,7 @@ async function generateCategoryPlan(provider, spec, topics, signal, budget) {
   ];
 
   for (let attempt = 1; attempt <= MAX_PLAN_ATTEMPTS; attempt += 1) {
+    if (!hasCallBudget(deadlineAt)) break;
     spendCall(budget);
     const result = await provider.chat({
       messages,
@@ -82,7 +89,7 @@ async function generateCategoryPlan(provider, spec, topics, signal, budget) {
   throw new InvalidAIResponseError('AI returned an invalid category plan');
 }
 
-export async function createQuizPlan(provider, spec, signal) {
+export async function createQuizPlan(provider, spec, signal, deadlineAt) {
   const startedAt = Date.now();
   const explicit = Array.isArray(spec.explicitCategories) && spec.explicitCategories.length
     ? spec.explicitCategories
@@ -94,7 +101,7 @@ export async function createQuizPlan(provider, spec, signal) {
 
   if (!categories) {
     try {
-      const planned = await generateCategoryPlan(provider, spec, topics, signal, budget);
+      const planned = await generateCategoryPlan(provider, spec, topics, signal, budget, deadlineAt);
       categories = planned.categories;
       kind = planned.kind ?? kind;
     } catch (error) {
@@ -123,7 +130,7 @@ function deterministicProblem(question) {
   return null;
 }
 
-async function generateCategoryQuestions(provider, spec, category, slots, excludedQuestions, signal, budget) {
+async function generateCategoryQuestions(provider, spec, category, slots, excludedQuestions, signal, budget, deadlineAt) {
   const promptHistory = [...excludedQuestions];
   const accepted = [];
   const rejected = new Map();
@@ -131,6 +138,10 @@ async function generateCategoryQuestions(provider, spec, category, slots, exclud
   let repaired = 0;
 
   for (let round = 1; round <= MAX_CATEGORY_ROUNDS && pending.length; round += 1) {
+    if (!hasCallBudget(deadlineAt)) {
+      pending.forEach(slot => rejected.set(slot.slotId, OUT_OF_TIME_REASON));
+      break;
+    }
     const problems = pending
       .filter(slot => rejected.has(slot.slotId))
       .map(slot => ({ slotId: slot.slotId, reason: rejected.get(slot.slotId) }));
@@ -230,7 +241,7 @@ function generateMathQuestions(spec, slots, knownPrompts) {
   return { accepted, failures, repairCount: 0 };
 }
 
-export async function generateQuestionBatch(provider, spec, signal) {
+export async function generateQuestionBatch(provider, spec, signal, deadlineAt) {
   const startedAt = Date.now();
   const groups = new Map();
   for (const slot of spec.slots) {
@@ -256,7 +267,7 @@ export async function generateQuestionBatch(provider, spec, signal) {
 
   const budget = createCallBudget(tasks.length * MAX_CATEGORY_ROUNDS);
   const settled = await Promise.allSettled(tasks.map(task =>
-    generateCategoryQuestions(provider, spec, task.category, task.slots, knownPrompts, signal, budget)
+    generateCategoryQuestions(provider, spec, task.category, task.slots, knownPrompts, signal, budget, deadlineAt)
   ));
 
   let repairCount = 0;

@@ -8,6 +8,8 @@ process.env.MAX_REPAIR_ATTEMPTS = '2';
 
 const { default: handler } = await import('../api/ai.js');
 const { solveArithmetic } = await import('../api/math-questions.mjs');
+const { generateQuestionBatch } = await import('../api/quiz-engine.mjs');
+const { createSlotPlan } = await import('../api/quiz-core.mjs');
 
 function responseRecorder() {
   return {
@@ -723,6 +725,36 @@ test('a provider outage fails clearly without a partial quiz', { concurrency: fa
   });
   assert.equal(validateRes.statusCode, 502);
   assert.equal(validateRes.body.code, 'INVALID_AI_RESPONSE');
+});
+
+test('a spent request budget reports failed slots instead of calling the provider', { concurrency: false }, async () => {
+  let calls = 0;
+  const provider = {
+    name: 'stub',
+    model: 'stub',
+    configured: true,
+    async chat() {
+      calls += 1;
+      return { content: '{"qs":[]}', usage: null };
+    },
+  };
+  const spec = {
+    topic: 'Planets',
+    language: 'English',
+    columns: 1,
+    rows: 2,
+    difficulty: 'easy',
+    questionType: 'multiple',
+    seed: 'deadline-seed',
+    generationId: 'deadline-generation',
+    categories: ['Solar System'],
+    excludedQuestions: [],
+  };
+  spec.slots = createSlotPlan(spec, spec.categories);
+  const batch = await generateQuestionBatch(provider, spec, undefined, Date.now() - 1);
+  assert.equal(calls, 0);
+  assert.deepEqual(batch.questions, []);
+  assert.deepEqual(batch.failedSlots, ['0-0', '0-1']);
 });
 
 test('uses the DeepSeek provider by default with thinking disabled', { concurrency: false }, async () => {

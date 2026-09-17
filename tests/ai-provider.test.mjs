@@ -112,6 +112,32 @@ test('DeepSeek requests are OpenAI-compatible with thinking disabled', async () 
   });
 });
 
+test('DeepSeek stays on 4.1 Flash even when DEEPSEEK_MODEL names another model', async () => {
+  const warnings = [];
+  const originalWarn = console.warn;
+  console.warn = (...args) => warnings.push(args.join(' '));
+  try {
+    let sentModel = null;
+    globalThis.fetch = async (_url, init) => {
+      sentModel = JSON.parse(init.body).model;
+      return deepseekResponse('{"qs":[]}');
+    };
+
+    const pro = new DeepSeekProvider({ DEEPSEEK_API_KEY: 'test-key', DEEPSEEK_MODEL: 'deepseek-v4-pro' });
+    assert.equal(pro.model, 'deepseek-flash');
+    assert.equal(warnings.length, 1);
+    assert.match(warnings[0], /deepseek-v4-pro/);
+    await pro.chat({ messages: [{ role: 'user', content: 'json' }] });
+    assert.equal(sentModel, 'deepseek-flash');
+
+    const legacy = new DeepSeekProvider({ DEEPSEEK_API_KEY: 'test-key', DEEPSEEK_MODEL: 'deepseek-v4-flash' });
+    assert.equal(legacy.model, 'deepseek-flash');
+    assert.equal(warnings.length, 1);
+  } finally {
+    console.warn = originalWarn;
+  }
+});
+
 test('usage logs carry tokens, stage and retry but never the API key', async () => {
   const provider = new DeepSeekProvider({ DEEPSEEK_API_KEY: 'super-secret-key' });
   globalThis.fetch = async () => deepseekResponse('{"qs":[]}');
@@ -254,6 +280,22 @@ test('DeepSeek provider aborts on its request timeout', async () => {
       error.name = 'AbortError';
       reject(error);
     });
+  });
+  await assert.rejects(() => provider.chat({ messages: [{ role: 'user', content: 'json' }] }), AITimeoutError);
+});
+
+test('DeepSeek timeout covers reading the response body, not just the headers', async () => {
+  const provider = new DeepSeekProvider({ DEEPSEEK_API_KEY: 'test-key', DEEPSEEK_TIMEOUT_MS: '500' });
+  globalThis.fetch = (_url, init) => Promise.resolve({
+    ok: true,
+    status: 200,
+    json: () => new Promise((_resolve, reject) => {
+      init.signal.addEventListener('abort', () => {
+        const error = new Error('aborted');
+        error.name = 'AbortError';
+        reject(error);
+      });
+    }),
   });
   await assert.rejects(() => provider.chat({ messages: [{ role: 'user', content: 'json' }] }), AITimeoutError);
 });

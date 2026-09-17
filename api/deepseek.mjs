@@ -5,6 +5,24 @@ export const DEFAULT_DEEPSEEK_MODEL = 'deepseek-flash';
 export const DEFAULT_DEEPSEEK_TIMEOUT_MS = 30000;
 export const MAX_DEEPSEEK_OUTPUT_TOKENS = 8000;
 
+// JamBoo only serves DeepSeek-V4.1-Flash. Legacy Flash names are accepted and
+// normalized; anything else (for example deepseek-v4-pro) is ignored so a
+// stale DEEPSEEK_MODEL can never move the quiz generator off Flash.
+const DEEPSEEK_FLASH_ALIASES = new Set([
+  'deepseek-flash',
+  'deepseek-v4-flash',
+  'deepseek-v4-flash-0731',
+  'deepseek-chat',
+]);
+
+export function isDeepSeekFlashModel(requested) {
+  return DEEPSEEK_FLASH_ALIASES.has(String(requested ?? '').trim().toLowerCase());
+}
+
+export function resolveDeepSeekModel() {
+  return DEFAULT_DEEPSEEK_MODEL;
+}
+
 export function deepseekEndpoint(baseUrl) {
   const base = String(baseUrl ?? '').trim().replace(/\/+$/, '') || DEFAULT_DEEPSEEK_BASE_URL;
   const endpoint = new URL(`${base}/chat/completions`);
@@ -90,47 +108,51 @@ export async function callDeepSeek({
     controller.abort();
   }, timeoutMs);
 
-  let upstream;
   try {
-    upstream = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify(createRequestBody({ model, messages, temperature, maxTokens, thinkingParam, responseFormat })),
-      signal: controller.signal,
-    });
-  } catch (error) {
-    if (timedOut) throw new AITimeoutError(`DeepSeek timed out after ${timeoutMs}ms`);
-    if (signal?.aborted) throw error;
-    throw new AIProviderError('DeepSeek request failed', { retryable: true });
+    let upstream;
+    try {
+      upstream = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify(createRequestBody({ model, messages, temperature, maxTokens, thinkingParam, responseFormat })),
+        signal: controller.signal,
+      });
+    } catch (error) {
+      if (timedOut) throw new AITimeoutError(`DeepSeek timed out after ${timeoutMs}ms`);
+      if (signal?.aborted) throw error;
+      throw new AIProviderError('DeepSeek request failed', { retryable: true });
+    }
+
+    if (!upstream.ok) {
+      const detail = await readUpstreamError(upstream);
+      throw providerHttpError('DeepSeek', upstream.status, detail);
+    }
+
+    let data;
+    try {
+      data = await upstream.json();
+    } catch (error) {
+      if (timedOut) throw new AITimeoutError(`DeepSeek timed out after ${timeoutMs}ms`);
+      if (signal?.aborted) throw error;
+      throw new InvalidAIResponseError('DeepSeek returned invalid JSON');
+    }
+
+    const content = readMessageContent(data?.choices?.[0]?.message);
+    if (!content.trim()) {
+      throw new InvalidAIResponseError('DeepSeek returned an empty response');
+    }
+
+    return {
+      content: content.trim(),
+      model: typeof data?.model === 'string' ? data.model : null,
+      usage: extractDeepSeekUsage(data?.usage),
+    };
   } finally {
     clearTimeout(timer);
     signal?.removeEventListener('abort', relay);
   }
-
-  if (!upstream.ok) {
-    const detail = await readUpstreamError(upstream);
-    throw providerHttpError('DeepSeek', upstream.status, detail);
-  }
-
-  let data;
-  try {
-    data = await upstream.json();
-  } catch (_) {
-    throw new InvalidAIResponseError('DeepSeek returned invalid JSON');
-  }
-
-  const content = readMessageContent(data?.choices?.[0]?.message);
-  if (!content.trim()) {
-    throw new InvalidAIResponseError('DeepSeek returned an empty response');
-  }
-
-  return {
-    content: content.trim(),
-    model: typeof data?.model === 'string' ? data.model : null,
-    usage: extractDeepSeekUsage(data?.usage),
-  };
 }

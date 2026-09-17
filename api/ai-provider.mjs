@@ -1,11 +1,12 @@
 import { AIBudgetError, AIConfigError, AIProviderError, InvalidAIResponseError } from './ai-errors.mjs';
 import { readBoundedInteger, readBoundedNumber, readFlag } from './config.mjs';
 import {
-  DEFAULT_DEEPSEEK_MODEL,
   DEFAULT_DEEPSEEK_TIMEOUT_MS,
   MAX_DEEPSEEK_OUTPUT_TOKENS,
   callDeepSeek,
   deepseekEndpoint,
+  isDeepSeekFlashModel,
+  resolveDeepSeekModel,
 } from './deepseek.mjs';
 import { callOllama, getOllamaEndpoint } from './ollama.mjs';
 
@@ -131,7 +132,11 @@ function withSchemaInstruction(messages, schema) {
 
 export class DeepSeekProvider extends AIProvider {
   constructor(env = process.env) {
-    super({ name: 'deepseek', model: env.DEEPSEEK_MODEL?.trim() || DEFAULT_DEEPSEEK_MODEL });
+    const requestedModel = env.DEEPSEEK_MODEL?.trim() || '';
+    super({ name: 'deepseek', model: resolveDeepSeekModel() });
+    if (requestedModel && !isDeepSeekFlashModel(requestedModel)) {
+      console.warn(`[ai] DEEPSEEK_MODEL=${requestedModel} is not a DeepSeek 4.1 Flash name; using ${this.model}`);
+    }
     this.apiKey = env.DEEPSEEK_API_KEY?.trim() || '';
     this.timeoutMs = readBoundedInteger(env.DEEPSEEK_TIMEOUT_MS, DEFAULT_DEEPSEEK_TIMEOUT_MS, 500, 120000);
     this.temperature = readBoundedNumber(env.DEEPSEEK_TEMPERATURE, 0.2, 0, 1);

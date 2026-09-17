@@ -17,6 +17,7 @@ const CHAT_TIMEOUT_MS = readBoundedInteger(
   5000,
   145000
 );
+const RESPONSE_MARGIN_MS = 5000;
 const MAX_TOPIC_LENGTH = 4000;
 const MAX_EXCLUDED_LENGTH = 180;
 const QUIZ_ACTIONS = ['quiz-plan', 'quiz-batch', 'quiz-validate'];
@@ -169,16 +170,18 @@ export default async function handler(req, res) {
     return res.status(503).json({ error: 'AI server unavailable' });
   }
 
+  const startedAt = Date.now();
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), CHAT_TIMEOUT_MS);
+  const deadlineAt = startedAt + Math.max(5000, CHAT_TIMEOUT_MS - RESPONSE_MARGIN_MS);
 
   try {
     const answer = await singleFlight(generationKey(quizRequest), async () => {
       if (quizRequest.action === 'quiz-plan') {
-        return createQuizPlan(provider, quizRequest, controller.signal);
+        return createQuizPlan(provider, quizRequest, controller.signal, deadlineAt);
       }
       if (quizRequest.action === 'quiz-batch') {
-        return generateQuestionBatch(provider, quizRequest, controller.signal);
+        return generateQuestionBatch(provider, quizRequest, controller.signal, deadlineAt);
       }
       return finalizeQuiz(quizRequest);
     });
@@ -186,11 +189,11 @@ export default async function handler(req, res) {
     return res.status(200).json({ answer: JSON.stringify(answer) });
   } catch (error) {
     if (error?.name === 'AbortError' || controller.signal.aborted) {
-      console.error('Quiz generation request timed out');
+      console.error(`Quiz generation request timed out after ${Date.now() - startedAt}ms`);
       return res.status(504).json({ error: 'AI server unavailable' });
     }
     if (error instanceof AITimeoutError) {
-      console.error(`AI provider timed out: ${error.message}`);
+      console.error(`AI provider timed out after ${Date.now() - startedAt}ms: ${error.message}`);
       return res.status(504).json({ error: 'AI server unavailable' });
     }
     if (error instanceof InvalidAIResponseError) {
