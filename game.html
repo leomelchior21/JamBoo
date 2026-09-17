@@ -496,18 +496,18 @@ body{
 #game-wrap.ready{display:block;}
 
 /* ═══════════════════════════════════════════
-   HEADER  (brand + team scores together)
+   HEADER  (centered logo popping out, teams on both sides)
 ═══════════════════════════════════════════ */
 .ghdr{
   position:sticky;top:0;z-index:100;
-  display:flex;align-items:center;gap:clamp(10px,1.8vw,18px);
-  padding:8px clamp(10px,2vw,22px);
-  min-height:66px;
+  display:flex;align-items:center;
+  padding:7px clamp(10px,2vw,22px);
+  min-height:88px;
   background:linear-gradient(100deg,rgba(35,5,52,.97),rgba(180,0,115,.92) 48%,rgba(45,4,65,.97));
   border-bottom:2px solid rgba(0,255,204,.45);
   box-shadow:0 2px 0 #000,0 10px 32px rgba(0,0,0,.48),0 0 28px rgba(255,0,187,.2);
   backdrop-filter:blur(16px) saturate(1.4);
-  overflow:hidden;
+  overflow:visible;
 }
 
 /* pixel scanline on header */
@@ -519,20 +519,32 @@ body{
   );
 }
 
-/* logo, inline with the team chips */
+/* big neon logo centered over the header, floating above and below it */
 .ghdr-brand{
+  position:absolute;left:50%;top:calc(50% + 42px);
+  transform:translate(-50%,-50%);
   display:flex;align-items:center;justify-content:center;
-  flex:none;position:relative;z-index:102;text-decoration:none;
+  z-index:103;text-decoration:none;pointer-events:auto;
 }
+.ghdr-brand::after{
+  content:'';position:absolute;inset:8% 14%;z-index:-1;
+  background:radial-gradient(circle,rgba(255,0,187,.4),transparent 68%);
+  filter:blur(20px);opacity:.75;
+  transition:opacity .2s ease,transform .2s ease;
+}
+.ghdr-brand:hover::after{opacity:1;transform:scale(1.08);}
 .ghdr-logo{
-  height:clamp(40px,5vw,54px);width:auto;display:block;cursor:pointer;
+  height:clamp(104px,12vw,156px);width:auto;display:block;cursor:pointer;
   image-rendering:pixelated;
-  filter:drop-shadow(0 3px 10px rgba(0,0,0,.75)) drop-shadow(0 0 10px rgba(191,0,255,.5));
-  transition:transform .18s ease,filter .18s ease;
+  animation:logoHeaderFloat 5s ease-in-out infinite,logoNeon 2.8s ease-in-out infinite;
 }
-.ghdr-logo:hover{
-  transform:scale(1.07) rotate(-2deg);
-  filter:drop-shadow(0 3px 10px rgba(0,0,0,.75)) drop-shadow(0 0 16px var(--primary));
+@keyframes logoHeaderFloat{
+  0%,100%{transform:translateY(0) rotate(-.6deg);}
+  50%    {transform:translateY(-7px) rotate(.6deg);}
+}
+@keyframes logoNeon{
+  0%,100%{filter:drop-shadow(0 8px 18px rgba(0,0,0,.85)) drop-shadow(0 0 12px rgba(191,0,255,.6)) drop-shadow(0 0 26px rgba(0,255,204,.22));}
+  50%    {filter:drop-shadow(0 8px 18px rgba(0,0,0,.85)) drop-shadow(0 0 20px rgba(255,0,187,.85)) drop-shadow(0 0 42px rgba(0,255,204,.4));}
 }
 .ghdr-brand:focus-visible{outline:3px solid #FFD700;outline-offset:3px;}
 
@@ -567,17 +579,21 @@ body{
 .ghdr-btn-end:hover{border-color:var(--danger);color:var(--danger);box-shadow:3px 3px 0 #000,0 0 8px rgba(255,68,68,.25);}
 
 /* ═══════════════════════════════════════════
-   SCOREBOARD  (single scrollable row of team chips)
+   SCOREBOARD  (teams split on both sides of the centered logo)
 ═══════════════════════════════════════════ */
 .scorebar{
-  display:flex;align-items:center;gap:7px;flex:1;min-width:0;
-  overflow-x:auto;overflow-y:visible;padding:3px 2px 6px;
-  scrollbar-width:thin;scrollbar-color:rgba(0,255,204,.45) transparent;
+  display:flex;align-items:center;gap:clamp(6px,1vw,12px);flex:1;min-width:0;
   position:relative;z-index:102;
 }
-.scorebar::-webkit-scrollbar{height:5px;}
-.scorebar::-webkit-scrollbar-thumb{background:rgba(0,255,204,.4);}
-.scorebar::-webkit-scrollbar-track{background:transparent;}
+.scorebar-left,.scorebar-right{
+  display:flex;align-items:center;gap:7px;flex:1;min-width:0;
+  overflow-x:auto;overflow-y:visible;padding:4px 2px;
+  scrollbar-width:none;
+}
+.scorebar-left{justify-content:flex-end;}
+.scorebar-right{justify-content:flex-start;}
+.scorebar-left::-webkit-scrollbar,.scorebar-right::-webkit-scrollbar{display:none;}
+.logo-spacer{width:clamp(128px,16vw,196px);flex:none;}
 
 /* ── SCORE CHIP: horizontal "NAME (SCORE)" pill ── */
 .score-chip{
@@ -680,41 +696,54 @@ body{
 }
 
 /* ═══════════════════════════════════════════
-   BOARD
-═══════════════════════════════════════════ */
-/* ═══════════════════════════════════════════
    BOTTOM BANNER  (nav + zoom controls)
 ═══════════════════════════════════════════ */
 .gbottom{
   position:fixed;left:0;right:0;bottom:0;z-index:140;
   display:flex;align-items:center;justify-content:center;
   gap:clamp(6px,1.4vw,14px);flex-wrap:nowrap;
-  padding:9px clamp(10px,2vw,22px) calc(9px + env(safe-area-inset-bottom));
-  background:linear-gradient(180deg,rgba(9,9,31,.88),rgba(4,4,16,.99));
-  border-top:2px solid rgba(255,0,187,.5);
-  box-shadow:0 -2px 0 #000,0 -12px 40px rgba(0,0,0,.5),0 0 26px rgba(255,0,187,.14);
-  backdrop-filter:blur(14px) saturate(1.3);
+  padding:6px clamp(10px,2vw,22px) calc(6px + env(safe-area-inset-bottom));
+  background:linear-gradient(180deg,rgba(58,14,102,.96),rgba(20,7,54,.99));
+  border-top:2px solid #00FFCC;
+  box-shadow:0 -2px 0 #000,0 -10px 34px rgba(0,0,0,.45),0 0 24px rgba(0,255,204,.4),0 0 54px rgba(255,0,187,.22);
+  backdrop-filter:blur(14px) saturate(1.5);
   overflow-x:auto;scrollbar-width:none;
 }
 .gbottom::-webkit-scrollbar{display:none;}
 .gbottom>*{flex:0 0 auto;}
+.gbottom .ghdr-btn{
+  min-height:37px;padding:5px 10px;
+  background:linear-gradient(180deg,rgba(48,18,86,.96),rgba(22,9,52,.96));
+  border-color:rgba(0,255,204,.55);
+  color:rgba(255,255,255,.92);
+  box-shadow:3px 3px 0 #000,0 0 10px rgba(0,255,204,.16);
+}
+.gbottom .ghdr-btn:hover{
+  border-color:#00FFCC;color:#00FFCC;
+  box-shadow:3px 3px 0 #000,0 0 14px rgba(0,255,204,.45);
+}
+.gbottom .ghdr-btn-end{border-color:rgba(255,0,187,.65);}
+.gbottom .ghdr-btn-end:hover{border-color:#FF2D95;color:#FF2D95;box-shadow:3px 3px 0 #000,0 0 14px rgba(255,0,187,.5);}
 .zoom-group{
   display:flex;align-items:center;gap:3px;
-  padding:3px 5px;background:rgba(6,6,20,.9);
-  border:2px solid rgba(0,255,204,.22);box-shadow:3px 3px 0 #000;
+  padding:2px 5px;background:linear-gradient(180deg,rgba(20,34,64,.96),rgba(10,16,40,.96));
+  border:2px solid rgba(0,255,204,.45);box-shadow:3px 3px 0 #000,0 0 10px rgba(0,255,204,.16);
 }
 .zoom-btn{
-  width:34px;height:34px;
-  background:rgba(13,13,34,.9);border:2px solid rgba(255,255,255,.15);
+  width:30px;height:30px;
+  background:rgba(16,26,54,.95);border:2px solid rgba(0,255,204,.35);
   border-radius:var(--radius);
-  color:var(--text);font-size:18px;font-weight:bold;
+  color:#dff;font-size:16px;font-weight:bold;
   cursor:pointer;display:flex;align-items:center;justify-content:center;
-  transition:border-color .12s,background .12s,transform .12s;line-height:1;
+  transition:border-color .12s,background .12s,transform .12s,color .12s;line-height:1;
 }
-.zoom-btn:hover{border-color:var(--primary);background:rgba(0,255,204,.08);transform:translateY(-1px);}
+.zoom-btn:hover{border-color:var(--primary);background:rgba(0,255,204,.14);color:#00FFCC;transform:translateY(-1px);}
 .zoom-btn:active{transform:translateY(1px);}
-.zoom-lbl{font-family:var(--fp);font-size:8px;color:var(--text2);min-width:46px;text-align:center;letter-spacing:.5px;}
+.zoom-lbl{font-family:var(--fp);font-size:8px;color:rgba(255,255,255,.9);min-width:42px;text-align:center;letter-spacing:.5px;text-shadow:0 0 8px rgba(0,255,204,.4);}
 
+/* ═══════════════════════════════════════════
+   BOARD
+═══════════════════════════════════════════ */
 .board-wrap{padding:16px;overflow-x:auto;}
 .board{display:grid;gap:8px;min-width:400px;}
 .board-cell{
@@ -1029,7 +1058,6 @@ body{
   .chip-name{font-size:10px;max-width:60px;padding:5px 3px 5px 7px;}
   .chip-score{font-size:11px;}
   .chip-score-wrap{padding:5px 7px 5px 3px;}
-  .ghdr-logo{height:36px;}
 }
 
 @media(max-height:760px){
@@ -1114,12 +1142,11 @@ body::after{
   animation:gameAmbient 30s linear infinite;
 }
 @keyframes gameAmbient{to{transform:rotate(1turn);}}
-#game-wrap{min-height:100dvh;padding-bottom:calc(82px + env(safe-area-inset-bottom));}
-.ghdr{min-height:64px;padding:8px clamp(10px,2vw,24px);}
+#game-wrap{min-height:100dvh;padding-bottom:calc(72px + env(safe-area-inset-bottom));}
+.ghdr{min-height:88px;padding:8px clamp(10px,2vw,24px);}
 .ghdr::before{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.06),transparent 54%);animation:headerSignal 8s ease-in-out infinite;}
 @keyframes headerSignal{0%,55%{transform:translateX(-100%)}85%,100%{transform:translateX(100%)}}
-.ghdr-brand{flex:none;}
-.ghdr-logo{height:clamp(42px,5vw,56px);}
+.ghdr-logo{height:clamp(104px,12vw,156px);}
 .ghdr-btn{min-height:40px;padding:8px 11px;transition:transform .14s ease,border-color .16s,box-shadow .16s,color .16s;}
 .ghdr-btn:focus-visible,.zoom-btn:focus-visible,.modal button:focus-visible,.score-chip [role="button"]:focus-visible{outline:3px solid #FFD700;outline-offset:3px;}
 .score-chip{min-height:38px;background:linear-gradient(180deg,rgba(8,8,27,.97),rgba(4,4,16,.95));transition:transform .16s ease,border-color .16s,box-shadow .16s;}
@@ -1127,10 +1154,8 @@ body::after{
 .chip-score{padding:3px;border-radius:2px;}
 .gbottom{max-width:1600px;margin:0 auto;left:0;right:0;}
 .gbottom .ghdr-btn{min-width:44px;justify-content:center;}
-.zoom-group{transition:border-color .16s;}
-.zoom-group:hover{border-color:rgba(0,255,204,.45);}
 .board-wrap{
-  max-width:1600px;margin:0 auto;padding:clamp(10px,2vw,22px);
+  max-width:1600px;margin:0 auto;padding:clamp(52px,6vw,84px) clamp(10px,2vw,22px) clamp(10px,2vw,22px);
   overflow-x:auto;overscroll-behavior-inline:contain;scrollbar-width:thin;
   scrollbar-color:rgba(0,255,204,.55) rgba(255,255,255,.06);
 }
@@ -1244,24 +1269,27 @@ body::after{
 button{-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
 
 @media(max-width:880px){
-  .ghdr{min-height:60px;gap:10px;}
-  .ghdr-logo{height:clamp(38px,7vw,46px);}
+  .ghdr{min-height:74px;}
+  .ghdr-logo{height:clamp(96px,17vw,120px);}
+  .logo-spacer{width:clamp(112px,24vw,150px);}
   .chip-name{max-width:74px;}
-  .board-wrap{padding:12px;}
+  .board-wrap{padding:clamp(48px,8vw,72px) 12px 12px;}
   .gbottom{gap:8px;}
 }
 @media(max-width:560px){
-  .ghdr{min-height:56px;padding-inline:max(8px,env(safe-area-inset-left));}
-  .ghdr-logo{height:36px;}
-  .ghdr-btn{min-width:42px;min-height:42px;padding:7px 9px;justify-content:center;}
+  .ghdr{min-height:62px;padding-inline:max(8px,env(safe-area-inset-left));}
+  .ghdr-logo{height:88px;}
+  .logo-spacer{width:clamp(94px,26vw,118px);}
+  .ghdr-btn{min-width:42px;min-height:38px;padding:6px 9px;justify-content:center;}
   .gctl-back #lbl-back,.ghdr-btn-redo #lbl-redo{display:none;}
-  .chip-name{font-size:10px;max-width:78px;padding-block:7px;}
-  .chip-score{font-size:11px;}.chip-score-wrap{padding-block:7px;}
-  .gbottom{gap:6px;justify-content:safe center;padding:8px max(8px,env(safe-area-inset-left)) calc(8px + env(safe-area-inset-bottom));}
+  .score-chip{flex-shrink:1;min-width:54px;}
+  .chip-name{font-size:9px;max-width:56px;padding:5px 2px 5px 6px;}
+  .chip-score{font-size:10px;}.chip-score-wrap{padding:5px 6px 5px 3px;gap:0;}
+  .gbottom{gap:6px;justify-content:safe center;padding:6px max(8px,env(safe-area-inset-left)) calc(6px + env(safe-area-inset-bottom));}
   .zoom-group{padding:2px 4px;}
-  .zoom-btn{width:32px;height:32px;}
+  .zoom-btn{width:30px;height:30px;}
   .zoom-lbl{min-width:40px;font-size:7px;}
-  .board-wrap{padding:8px 8px 20px;}
+  .board-wrap{padding:58px 8px 20px;}
   .board{min-width:max(100%,calc(var(--board-cols,4) * 106px));padding:7px;}
   .cat-cell{font-size:calc(12px * var(--bz));min-height:calc(58px * var(--bz));}
   .q-cell{min-height:calc(72px * var(--bz));}
@@ -1291,10 +1319,10 @@ button{-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
   .winner-actions{max-width:100%;}.btn-winner{min-height:50px;}
 }
 @media(max-width:400px){
-  #game-wrap{padding-bottom:calc(126px + env(safe-area-inset-bottom));}
-  .gbottom{flex-wrap:wrap;row-gap:7px;}
+  #game-wrap{padding-bottom:calc(118px + env(safe-area-inset-bottom));}
+  .gbottom{flex-wrap:wrap;row-gap:6px;}
   .zoom-lbl{display:none;}
-  .zoom-group{padding:3px 4px;}
+  .zoom-group{padding:2px 4px;}
 }
 @media(max-height:620px) and (orientation:landscape){
   #loading{overflow-y:auto;padding:10px;}
@@ -1417,10 +1445,14 @@ button{-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
 <div id="game-wrap">
 
   <header class="ghdr">
+    <div class="scorebar" aria-label="Team scores">
+      <div class="scorebar-left" id="scorebar-left"></div>
+      <div class="logo-spacer" aria-hidden="true"></div>
+      <div class="scorebar-right" id="scorebar-right"></div>
+    </div>
     <a class="ghdr-brand" href="index.html" aria-label="JamBoo home">
       <img class="ghdr-logo" src="Jamboo-logo-png.png" alt="JamBoo">
     </a>
-    <div class="scorebar" id="scorebar" aria-label="Team scores"></div>
   </header>
 
   <div class="board-wrap">
@@ -1527,7 +1559,7 @@ const GT = {
     generationDetails:[
       'Reading the topic, level, and language',
       'Designing distinct category angles',
-      'Generating one locked category at a time',
+      'Generating question batches in parallel',
       'Validating answers and choices',
       'Checking duplicates and consistency',
       'Assembling your game board'
@@ -1555,7 +1587,7 @@ const GT = {
     generationDetails:[
       'Lendo o tema, o nível e o idioma',
       'Planejando categorias diferentes',
-      'Gerando uma categoria fixa por vez',
+      'Gerando lotes de perguntas em paralelo',
       'Validando respostas e alternativas',
       'Conferindo repetições e consistência',
       'Montando o tabuleiro do jogo'
@@ -1583,7 +1615,7 @@ const GT = {
     generationDetails:[
       'Leyendo el tema, el nivel y el idioma',
       'Diseñando categorías diferentes',
-      'Generando una categoría fija a la vez',
+      'Generando lotes de preguntas en paralelo',
       'Validando respuestas y opciones',
       'Revisando repeticiones y consistencia',
       'Preparando el tablero del juego'
@@ -1611,10 +1643,11 @@ let generationStartedAt=0;
 let generationProgressStep=0;
 let generationRequest=null;
 const GENERATION_API_URL='/api/ai';
-const GENERATION_PROVIDER='ollama-routed-evidence-v10';
+const GENERATION_PROVIDER='ollama-styled-parallel-v11';
 const GAME_CACHE_KEY='jamboo_game_cache_v4';
 const GENERATION_SIMULATION_MS=120000;
 const MAX_QUESTION_ROUNDS=2;
+const BATCH_CONCURRENCY=2;
 
 function cleanText(value){
   return String(value ?? '').trim();
@@ -1903,7 +1936,8 @@ async function planQuiz(spec,signal){
   ){
     throw new Error('AI returned an invalid board plan');
   }
-  return {categories,slots,batchSize:plan.batchSize};
+  const kind=typeof plan.kind==='string' && plan.kind ? plan.kind : undefined;
+  return {categories,slots,batchSize:plan.batchSize,kind};
 }
 
 async function generateQuestionBatch(spec,categories,slotIds,excludedQuestions,signal,attempt){
@@ -2023,40 +2057,56 @@ async function generateGame(){
   const generationId=createGenerationToken();
   const spec=buildQuizSpec(seed,generationId);
   try{
-    const {categories,slots,batchSize}=await planQuiz(spec,controller.signal);
+    const {categories,slots,batchSize,kind}=await planQuiz(spec,controller.signal);
+    if(kind) spec.kind=kind;
     const slotById=new Map(slots.map(slot=>[slot.slotId,slot]));
     const generated=new Map();
+    const generatedPrompts=new Set();
     const excludedQuestions=[];
     let firstError=null;
     let pendingSlots=slots;
 
-    // Generate in batches. Failed slots are retried in a later round and only
-    // the remaining gaps are reported as missing, so one bad question never
-    // discards the whole board.
+    // Generate in batches, a few at a time. Failed or duplicate slots are
+    // retried in a later round and only the remaining gaps are reported as
+    // missing, so one bad question never discards the whole board.
     for(let round=1;round<=MAX_QUESTION_ROUNDS && pendingSlots.length;round++){
       const failedSlotIds=[];
+      const batches=[];
       for(let offset=0;offset<pendingSlots.length;offset+=batchSize){
-        const batchSlots=pendingSlots.slice(offset,offset+batchSize);
-        try{
-          const batch=await generateQuestionBatch(
-            spec,
-            categories,
-            batchSlots.map(slot=>slot.slotId),
-            excludedQuestions,
-            controller.signal,
-            round
-          );
-          batch.questions.forEach(question=>{
-            generated.set(question.slotId,question);
-            excludedQuestions.push(cleanText(question.q ?? question.question));
-          });
-          failedSlotIds.push(...batch.failedSlots);
-        }catch(error){
-          firstError=firstError||error;
-          console.warn('Question batch failed',error);
-          failedSlotIds.push(...batchSlots.map(slot=>slot.slotId));
-        }
+        batches.push(pendingSlots.slice(offset,offset+batchSize));
       }
+      let nextBatchIndex=0;
+      const worker=async()=>{
+        while(nextBatchIndex<batches.length){
+          const batchSlots=batches[nextBatchIndex++];
+          try{
+            const batch=await generateQuestionBatch(
+              spec,
+              categories,
+              batchSlots.map(slot=>slot.slotId),
+              excludedQuestions,
+              controller.signal,
+              round
+            );
+            batch.questions.forEach(question=>{
+              const promptKey=normalizeAnswerKey(question.q ?? question.question);
+              if(!promptKey || generatedPrompts.has(promptKey)){
+                failedSlotIds.push(question.slotId);
+                return;
+              }
+              generatedPrompts.add(promptKey);
+              generated.set(question.slotId,question);
+              excludedQuestions.push(cleanText(question.q ?? question.question));
+            });
+            failedSlotIds.push(...batch.failedSlots);
+          }catch(error){
+            firstError=firstError||error;
+            console.warn('Question batch failed',error);
+            failedSlotIds.push(...batchSlots.map(slot=>slot.slotId));
+          }
+        }
+      };
+      await Promise.all(Array.from({length:Math.min(BATCH_CONCURRENCY,batches.length)},worker));
       pendingSlots=failedSlotIds.map(slotId=>slotById.get(slotId)).filter(Boolean);
     }
 
@@ -2339,8 +2389,10 @@ function buildBoard() {
 }
 
 function renderScorebar() {
-  const scorebar=document.getElementById('scorebar');
-  scorebar.innerHTML='';
+  const left=document.getElementById('scorebar-left');
+  const right=document.getElementById('scorebar-right');
+  left.innerHTML='';right.innerHTML='';
+  const half=Math.ceil(teams.length/2);
   teams.forEach((t,i)=>{
     const c=document.createElement('div');
     c.className='score-chip';c.id=`sc-${i}`;
@@ -2353,7 +2405,7 @@ function renderScorebar() {
     score.addEventListener('keydown',event=>{
       if(event.key==='Enter'||event.key===' '){event.preventDefault();editScore(i);}
     });
-    scorebar.appendChild(c);
+    (i<half?left:right).appendChild(c);
   });
 }
 

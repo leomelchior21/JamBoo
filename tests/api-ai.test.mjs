@@ -406,6 +406,80 @@ test('quiz plan expands fewer topics and groups more topics', { concurrency: fal
   assert.equal(JSON.parse(grouped.body.answer).categories.length, 2);
 });
 
+test('quiz plan returns the model-classified topic kind', { concurrency: false }, async () => {
+  globalThis.fetch = async () => ollamaResponse({ kind: 'celebrity', categories: ['Career'] });
+  const res = await callApi({
+    action: 'quiz-plan',
+    quiz: { ...baseQuiz, topic: 'Olivia Rodrigo', categories: undefined },
+  });
+  assert.equal(res.statusCode, 200);
+  const plan = JSON.parse(res.body.answer);
+  assert.equal(plan.kind, 'celebrity');
+  assert.deepEqual(plan.categories, ['Career']);
+});
+
+test('question batches follow the requested topic style', { concurrency: false }, async () => {
+  const systems = [];
+  globalThis.fetch = async (_url, init) => {
+    const request = JSON.parse(init.body);
+    systems.push(request.messages[0].content);
+    const slotIds = [...request.messages[1].content.matchAll(/slotId=([\w-]+)/g)].map(match => match[1]);
+    return ollamaResponse({
+      qs: slotIds.map(slotId => ({
+        slotId,
+        q: `Which game feature belongs to slot ${slotId}?`,
+        o: ['Build mode', 'Taxes', 'Photosynthesis', 'Law'],
+        i: 0,
+      })),
+    });
+  };
+
+  const res = await callApi({
+    action: 'quiz-batch',
+    quiz: {
+      ...baseQuiz,
+      topic: 'Roblox',
+      kind: 'games',
+      categories: ['Game history'],
+      slotIds: ['0-0'],
+      excludedQuestions: [],
+    },
+  });
+  assert.equal(res.statusCode, 200);
+  assert.match(systems[0], /game trivia/);
+  assert.equal(JSON.parse(res.body.answer).questions.length, 1);
+});
+
+test('topic style falls back to deterministic keywords', { concurrency: false }, async () => {
+  const systems = [];
+  globalThis.fetch = async (_url, init) => {
+    const request = JSON.parse(init.body);
+    systems.push(request.messages[0].content);
+    const slotIds = [...request.messages[1].content.matchAll(/slotId=([\w-]+)/g)].map(match => match[1]);
+    return ollamaResponse({
+      qs: slotIds.map(slotId => ({
+        slotId,
+        q: `Which Minecraft feature belongs to slot ${slotId}?`,
+        o: ['Creeper', 'Taxes', 'Photosynthesis', 'Law'],
+        i: 0,
+      })),
+    });
+  };
+
+  const res = await callApi({
+    action: 'quiz-batch',
+    quiz: {
+      ...baseQuiz,
+      topic: 'Minecraft',
+      categories: ['Game history'],
+      slotIds: ['0-0'],
+      excludedQuestions: [],
+    },
+  });
+  assert.equal(res.statusCode, 200);
+  assert.match(systems[0], /game trivia/);
+});
+
 test('locked-category math requests are computed in code', { concurrency: false }, async () => {
   let calls = 0;
   globalThis.fetch = async () => { calls += 1; throw new Error('the model must not be used for math'); };

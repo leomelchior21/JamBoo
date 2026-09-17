@@ -52,3 +52,15 @@ test('planner instructions expand fewer topics and group more topics', () => {
   assert.equal(topicRelation(6, 4), 'group');
   assert.equal(topicRelation(4, 4), 'direct');
 });
+
+test('planner instructions carry the topic style angles', () => {
+  const celebrity = buildPlannerInstructions({ columns: 4, language: 'English', topicCount: 1, style: 'celebrity' });
+  assert.match(celebrity, /Style rule: this board is celebrity content/);
+  assert.match(celebrity, /career milestones/);
+
+  const games = buildPlannerInstructions({ columns: 4, language: 'English', topicCount: 1, style: 'games' });
+  assert.match(games, /game history/);
+
+  const general = buildPlannerInstructions({ columns: 4, language: 'English', topicCount: 1, style: 'general' });
+  assert.doesNotMatch(general, /Style rule/);
+});

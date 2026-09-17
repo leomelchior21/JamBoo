@@ -15,9 +15,10 @@
 - Test setup page by opening `index.html` directly; game page needs `/api/ai` (use Vercel dev)
 
 ## Quiz Generation Pipeline (server)
-- Actions: `quiz-plan` (topic → columns + slots + routing), `quiz-batch` (question batches), `quiz-validate` (final check, supports `missingSlotIds` for partial boards), `quiz-category` (single locked category)
-- Modules: `api/knowledge-router.mjs` (MATH/TIMELESS/HISTORICAL/CURRENT + date/ambiguity normalization), `api/math-questions.mjs` (deterministic arithmetic), `api/search-provider.mjs` (SearchProvider interface, Wikipedia + optional HTTP web search, evidence objects), `api/question-cache.mjs` (verified-question cache with per-route TTL), `api/quiz-planner.mjs` (topic → column planning)
+- Actions: `quiz-plan` (topic → columns + slots + routing + kind), `quiz-batch` (question batches), `quiz-validate` (final check, supports `missingSlotIds` for partial boards), `quiz-category` (single locked category)
+- Modules: `api/knowledge-router.mjs` (MATH/TIMELESS/HISTORICAL/CURRENT + date/ambiguity normalization), `api/topic-style.mjs` (celebrity/games/sports/code/math/general question flavours), `api/math-questions.mjs` (deterministic arithmetic), `api/search-provider.mjs` (SearchProvider interface, Wikipedia + optional HTTP web search, evidence objects), `api/question-cache.mjs` (verified-question cache with per-route TTL), `api/quiz-planner.mjs` (topic → column planning)
 - Failed slots are reported as `failedSlots` (never abort the whole board); `game.html` retries once then renders remaining gaps as disabled cells
+- Generation speed: server runs independent category groups in parallel; `game.html` runs up to `BATCH_CONCURRENCY` batch requests at once and retries duplicates
 - Search API keys stay server-side (`SEARCH_API_URL`, `SEARCH_API_KEY`, `SEARCH_API_RESULTS_PATH`); see `.env.example`
 
 ## Design System
