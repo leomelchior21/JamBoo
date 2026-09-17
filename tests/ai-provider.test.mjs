@@ -112,6 +112,35 @@ test('DeepSeek requests are OpenAI-compatible with thinking disabled', async () 
   });
 });
 
+test('a malformed DEEPSEEK_API_KEY is rejected and never echoed back', async () => {
+  const provider = new DeepSeekProvider({ DEEPSEEK_API_KEY: 'sk-secret-one\nsk-secret-one' });
+  assert.equal(provider.configured, false);
+  assert.match(provider.configError.message, /whitespace/);
+
+  globalThis.fetch = async () => { throw new Error('the provider must not call the API with a broken key'); };
+  await assert.rejects(() => provider.chat({ messages: [{ role: 'user', content: 'json' }] }), error => {
+    assert.doesNotMatch(error.message, /sk-secret/);
+    return true;
+  });
+
+  const probe = await provider.probe();
+  assert.equal(probe.ready, false);
+  assert.doesNotMatch(probe.detail, /sk-secret/);
+});
+
+test('probe failures never leak credentials', async () => {
+  const provider = new DeepSeekProvider({ DEEPSEEK_API_KEY: 'sk-live-abcdef123456' });
+  globalThis.fetch = async () => {
+    const error = new TypeError('Headers.append: "Bearer sk-live-abcdef123456 sk-live-abcdef123456"');
+    error.cause = { code: 'UND_ERR_INVALID_ARG', message: 'Bearer sk-live-abcdef123456' };
+    throw error;
+  };
+  const probe = await provider.probe();
+  assert.equal(probe.ready, false);
+  assert.match(probe.detail, /\[redacted\]/);
+  assert.doesNotMatch(probe.detail, /sk-live/);
+});
+
 test('DeepSeek stays on 4.1 Flash even when DEEPSEEK_MODEL names another model', async () => {
   const warnings = [];
   const originalWarn = console.warn;

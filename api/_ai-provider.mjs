@@ -23,12 +23,18 @@ export function normalizeUsage(usage) {
   return { ...EMPTY_USAGE, ...(usage ?? {}) };
 }
 
+const SECRET_PATTERN = /(?:sk-|Bearer\s+)[A-Za-z0-9._-]+/gi;
+
+function redactSecrets(value) {
+  return String(value ?? '').replace(SECRET_PATTERN, '[redacted]').replace(/\s+/g, ' ').trim();
+}
+
 function describeNetworkError(error) {
   const cause = error?.cause;
   const nested = Array.isArray(cause?.errors) ? cause.errors.find(item => item?.code) ?? cause.errors[0] : null;
   const detail = nested ?? cause ?? error;
   const code = detail?.code ?? detail?.name ?? 'error';
-  const message = String(detail?.message ?? '').replace(/\s+/g, ' ').trim().slice(0, 120);
+  const message = redactSecrets(detail?.message).slice(0, 120);
   return message ? `${code}: ${message}` : code;
 }
 
@@ -162,11 +168,13 @@ export class DeepSeekProvider extends AIProvider {
     }
     if (!this.apiKey) {
       this.configError = this.configError ?? new AIConfigError('DEEPSEEK_API_KEY is not configured');
+    } else if (/\s/.test(this.apiKey)) {
+      this.configError = this.configError ?? new AIConfigError('DEEPSEEK_API_KEY contains whitespace or line breaks; paste the key once');
     }
   }
 
   get configured() {
-    return Boolean(this.apiKey && this.endpoint);
+    return Boolean(this.apiKey && this.endpoint && !this.configError);
   }
 
   async generate({ messages, schema, maxTokens, signal }) {
