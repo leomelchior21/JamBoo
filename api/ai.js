@@ -1,15 +1,15 @@
-import { AIConfigError, AIProviderError, AITimeoutError, AIBudgetError, InvalidAIResponseError } from './ai-errors.mjs';
-import { createQuizProvider } from './ai-provider.mjs';
-import { readBoundedInteger } from './config.mjs';
-import { MAX_CATEGORY_LENGTH } from './quiz-topics.mjs';
-import { DIFFICULTIES, QUESTION_TYPES, QUIZ_LIMITS, createSlotPlan, normalizeText } from './quiz-core.mjs';
+import { AIConfigError, AIProviderError, AITimeoutError, AIBudgetError, InvalidAIResponseError } from './_ai-errors.mjs';
+import { createQuizProvider } from './_ai-provider.mjs';
+import { readBoundedInteger } from './_config.mjs';
+import { MAX_CATEGORY_LENGTH } from './_quiz-topics.mjs';
+import { DIFFICULTIES, QUESTION_TYPES, QUIZ_LIMITS, createSlotPlan, normalizeText } from './_quiz-core.mjs';
 import {
   QUESTION_BATCH_SIZE,
   createQuizPlan,
   finalizeQuiz,
   generateQuestionBatch,
-} from './quiz-engine.mjs';
-import { normalizeTopicVoice } from './quiz-voice.mjs';
+} from './_quiz-engine.mjs';
+import { normalizeTopicVoice } from './_quiz-voice.mjs';
 
 const CHAT_TIMEOUT_MS = readBoundedInteger(
   process.env.QUIZ_AI_TIMEOUT_MS ?? process.env.OLLAMA_TIMEOUT_MS,

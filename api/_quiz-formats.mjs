@@ -1,4 +1,4 @@
-import { TOPIC_VOICES } from './quiz-voice.mjs';
+import { TOPIC_VOICES } from './_quiz-voice.mjs';
 
 const QUESTION_TEXT = { type: 'string', minLength: 8, maxLength: 180 };
 const ANSWER_TEXT = { type: 'string', minLength: 1, maxLength: 60 };

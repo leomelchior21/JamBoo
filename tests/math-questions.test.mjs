@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { generateMathQuestion, isMathCategory, solveArithmetic, verifyArithmeticAnswer } from '../api/math-questions.mjs';
+import { generateMathQuestion, isMathCategory, solveArithmetic, verifyArithmeticAnswer } from '../api/_math-questions.mjs';
 
 test('solves pure arithmetic deterministically', () => {
   assert.equal(solveArithmetic('6 × 7'), '42');

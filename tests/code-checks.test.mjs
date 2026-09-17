@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { verifyPythonOutput } from '../api/code-checks.mjs';
+import { verifyPythonOutput } from '../api/_code-checks.mjs';
 
 test('computes simple print outputs from inline assignments', () => {
   assert.deepEqual(

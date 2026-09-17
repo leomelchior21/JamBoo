@@ -1,4 +1,4 @@
-import { AIConfigError, AIProviderError, AITimeoutError, InvalidAIResponseError, providerHttpError } from './ai-errors.mjs';
+import { AIConfigError, AIProviderError, AITimeoutError, InvalidAIResponseError, providerHttpError } from './_ai-errors.mjs';
 
 export const DEFAULT_DEEPSEEK_BASE_URL = 'https://api.deepseek.com';
 export const DEFAULT_DEEPSEEK_MODEL = 'deepseek-flash';

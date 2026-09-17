@@ -8,7 +8,7 @@ import {
   isValidCategoryList,
   splitInputTopics,
   topicRelation,
-} from '../api/quiz-topics.mjs';
+} from '../api/_quiz-topics.mjs';
 
 test('keeps a single topic as one input topic', () => {
   assert.deepEqual(splitInputTopics('Olivia Rodrigo'), ['Olivia Rodrigo']);

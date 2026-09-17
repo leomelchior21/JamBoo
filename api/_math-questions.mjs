@@ -1,4 +1,4 @@
-import { hashSeed } from './quiz-core.mjs';
+import { hashSeed } from './_quiz-core.mjs';
 
 const MATH_CATEGORY_PATTERN = /\b(?:math|maths|mathematics|arithmetic|addition|subtraction|multiplication|division|fractions?|decimals?|percentages?|percent|algebra|geometry|equations?|times tables?|mental math|calculo|matematica|matematicas|aritmetica|sumas?|somas?|restas?|subtracoes?|multiplicaciones?|multiplicacoes?|divisiones?|divisoes?|fracciones?|fracoes?|porcentajes?|porcentagens?|geometria|ecuaciones?|equacoes?|algebras?)\b/i;
 

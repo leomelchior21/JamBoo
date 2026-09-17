@@ -1,5 +1,5 @@
-import { normalizeText } from './quiz-core.mjs';
-import { normalizeTopicVoice, voiceAngles } from './quiz-voice.mjs';
+import { normalizeText } from './_quiz-core.mjs';
+import { normalizeTopicVoice, voiceAngles } from './_quiz-voice.mjs';
 
 export const MAX_CATEGORY_LENGTH = 50;
 

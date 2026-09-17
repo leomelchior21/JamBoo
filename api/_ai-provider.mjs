@@ -1,5 +1,5 @@
-import { AIBudgetError, AIConfigError, AIProviderError, InvalidAIResponseError } from './ai-errors.mjs';
-import { readBoundedInteger, readBoundedNumber, readFlag } from './config.mjs';
+import { AIBudgetError, AIConfigError, AIProviderError, InvalidAIResponseError } from './_ai-errors.mjs';
+import { readBoundedInteger, readBoundedNumber, readFlag } from './_config.mjs';
 import {
   DEFAULT_DEEPSEEK_TIMEOUT_MS,
   MAX_DEEPSEEK_OUTPUT_TOKENS,
@@ -7,8 +7,8 @@ import {
   deepseekEndpoint,
   isDeepSeekFlashModel,
   resolveDeepSeekModel,
-} from './deepseek.mjs';
-import { callOllama, getOllamaEndpoint } from './ollama.mjs';
+} from './_deepseek.mjs';
+import { callOllama, getOllamaEndpoint } from './_ollama.mjs';
 
 const EMPTY_USAGE = Object.freeze({
   promptTokens: 0,

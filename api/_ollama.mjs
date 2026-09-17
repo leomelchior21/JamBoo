@@ -1,4 +1,4 @@
-import { AIConfigError, AIProviderError, InvalidAIResponseError, providerHttpError } from './ai-errors.mjs';
+import { AIConfigError, AIProviderError, InvalidAIResponseError, providerHttpError } from './_ai-errors.mjs';
 
 const DEFAULT_NUM_CTX = 4096;
 

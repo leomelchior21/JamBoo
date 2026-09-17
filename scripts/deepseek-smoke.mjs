@@ -65,7 +65,7 @@ const questionType = ['multiple', 'open', 'drawing', 'mixed'].includes(readArg('
   ? readArg('type', 'mixed')
   : 'mixed';
 
-const { createQuizProvider } = await import('../api/ai-provider.mjs');
+const { createQuizProvider } = await import('../api/_ai-provider.mjs');
 const { default: handler } = await import('../api/ai.js');
 
 function fail(message) {

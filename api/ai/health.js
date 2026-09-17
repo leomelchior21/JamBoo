@@ -1,4 +1,4 @@
-import { createQuizProvider } from '../ai-provider.mjs';
+import { createQuizProvider } from '../_ai-provider.mjs';
 
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL?.trim() || 'qwen3.5:4b';
 const configuredTimeout = Number.parseInt(process.env.OLLAMA_HEALTH_TIMEOUT_MS, 10);

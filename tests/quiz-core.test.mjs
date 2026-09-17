@@ -6,7 +6,7 @@ import {
   isDuplicateQuestion,
   validateCompleteQuiz,
   validateQuestionForSlot,
-} from '../api/quiz-core.mjs';
+} from '../api/_quiz-core.mjs';
 
 const categories = count => Array.from({ length: count }, (_, index) => `Category ${index + 1}`);
 const spec = overrides => ({

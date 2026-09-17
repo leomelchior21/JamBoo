@@ -7,9 +7,9 @@ process.env.QUESTION_BATCH_SIZE = '6';
 process.env.MAX_REPAIR_ATTEMPTS = '2';
 
 const { default: handler } = await import('../api/ai.js');
-const { solveArithmetic } = await import('../api/math-questions.mjs');
-const { generateQuestionBatch } = await import('../api/quiz-engine.mjs');
-const { createSlotPlan } = await import('../api/quiz-core.mjs');
+const { solveArithmetic } = await import('../api/_math-questions.mjs');
+const { generateQuestionBatch } = await import('../api/_quiz-engine.mjs');
+const { createSlotPlan } = await import('../api/_quiz-core.mjs');
 
 function responseRecorder() {
   return {

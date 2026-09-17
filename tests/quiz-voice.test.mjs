@@ -8,7 +8,7 @@ import {
   resolveTopicVoice,
   voiceAngles,
   voiceInstruction,
-} from '../api/quiz-voice.mjs';
+} from '../api/_quiz-voice.mjs';
 
 test('classifies game, sport, code, math, music, movie, history, science and geography topics', () => {
   assert.equal(classifyTopicVoice('Roblox'), 'games');

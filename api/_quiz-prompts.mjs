@@ -1,5 +1,5 @@
-import { hashSeed } from './quiz-core.mjs';
-import { resolveTopicVoice, voiceInstruction } from './quiz-voice.mjs';
+import { hashSeed } from './_quiz-core.mjs';
+import { resolveTopicVoice, voiceInstruction } from './_quiz-voice.mjs';
 
 const DIFFICULTY_SCALES = Object.freeze({
   easy: ['very easy', 'easy'],

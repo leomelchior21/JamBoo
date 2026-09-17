@@ -1,7 +1,7 @@
-import { AIProviderError, AITimeoutError, InvalidAIResponseError } from './ai-errors.mjs';
-import { createCallBudget, spendCall } from './ai-provider.mjs';
-import { readBoundedInteger } from './config.mjs';
-import { verifyPythonOutput } from './code-checks.mjs';
+import { AIProviderError, AITimeoutError, InvalidAIResponseError } from './_ai-errors.mjs';
+import { createCallBudget, spendCall } from './_ai-provider.mjs';
+import { readBoundedInteger } from './_config.mjs';
+import { verifyPythonOutput } from './_code-checks.mjs';
 import {
   createSlotPlan,
   hashSeed,
@@ -9,18 +9,18 @@ import {
   normalizeText,
   validateCompleteQuiz,
   validateQuestionForSlot,
-} from './quiz-core.mjs';
-import { batchFormat, parseQuestionList, plannerFormat } from './quiz-formats.mjs';
-import { generateMathQuestion, isMathCategory, verifyArithmeticAnswer } from './math-questions.mjs';
-import { buildQuestionMessages } from './quiz-prompts.mjs';
+} from './_quiz-core.mjs';
+import { batchFormat, parseQuestionList, plannerFormat } from './_quiz-formats.mjs';
+import { generateMathQuestion, isMathCategory, verifyArithmeticAnswer } from './_math-questions.mjs';
+import { buildQuestionMessages } from './_quiz-prompts.mjs';
 import {
   buildPlannerInstructions,
   explicitCategoriesFromTopic,
   fallbackCategories,
   isValidCategoryList,
   splitInputTopics,
-} from './quiz-topics.mjs';
-import { classifyTopicVoice, normalizeTopicVoice } from './quiz-voice.mjs';
+} from './_quiz-topics.mjs';
+import { classifyTopicVoice, normalizeTopicVoice } from './_quiz-voice.mjs';
 
 export const QUESTION_BATCH_SIZE = readBoundedInteger(process.env.QUESTION_BATCH_SIZE, 6, 1, 8);
 const MAX_REPAIR_ATTEMPTS = readBoundedInteger(process.env.MAX_REPAIR_ATTEMPTS, 1, 1, 3);

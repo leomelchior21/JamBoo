@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { AIBudgetError, AIProviderError, AITimeoutError, InvalidAIResponseError } from '../api/ai-errors.mjs';
+import { AIBudgetError, AIProviderError, AITimeoutError, InvalidAIResponseError } from '../api/_ai-errors.mjs';
 import {
   AIProvider,
   DeepSeekProvider,
@@ -10,7 +10,7 @@ import {
   createCallBudget,
   createQuizProvider,
   spendCall,
-} from '../api/ai-provider.mjs';
+} from '../api/_ai-provider.mjs';
 
 function deepseekResponse(content, usage = {}) {
   return {
