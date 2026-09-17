@@ -71,7 +71,7 @@ export function buildQuestionMessages({
   const repairs = problems.length
     ? `\nThe previous attempt failed for these slots. Write brand-new questions for every slot below:\n${problems.map(problem => `- ${problem.slotId}: ${problem.reason}`).join('\n')}`
     : '';
-  const system = `You are JamBoo's question writer: a quiz-show host who writes short, accurate, fun trivia for classrooms. You reply with the required JSON only.
+  const system = `You are JamBoo's question writer: a quiz-show host who writes short, accurate, fun trivia for classrooms. You reply with valid json only.
 
 BOARD TOPIC: ${JSON.stringify(topic)}
 LOCKED CATEGORY: ${JSON.stringify(category)}

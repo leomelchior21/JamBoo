@@ -6,12 +6,13 @@ const HEALTH_TIMEOUT_MS = Number.isInteger(configuredTimeout) && configuredTimeo
   ? configuredTimeout
   : 5000;
 
-function providerStatus() {
+async function providerStatus() {
   try {
     const provider = createQuizProvider();
-    return { provider: provider.name, aiReady: provider.configured };
+    const probe = await provider.probe();
+    return { provider: provider.name, aiReady: probe.ready, aiDetail: probe.detail };
   } catch (_) {
-    return { provider: null, aiReady: false };
+    return { provider: null, aiReady: false, aiDetail: 'invalid-configuration' };
   }
 }
 
@@ -34,7 +35,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const status = providerStatus();
+  const status = await providerStatus();
 
   let tagsUrl;
   try {

@@ -74,6 +74,10 @@ export class AIProvider {
   async generate() {
     throw new AIConfigError('AI provider is not implemented');
   }
+
+  async probe() {
+    return { ready: this.configured, detail: this.configured ? 'configured' : 'not-configured' };
+  }
 }
 
 export class LocalModelProvider extends AIProvider {
@@ -95,6 +99,11 @@ export class LocalModelProvider extends AIProvider {
     return Boolean(this.chatUrl);
   }
 
+  async probe() {
+    if (!this.chatUrl) return { ready: false, detail: this.configError?.message ?? 'not-configured' };
+    return { ready: true, detail: 'configured' };
+  }
+
   async generate({ messages, schema, maxTokens, temperature, seed, signal }) {
     if (!this.chatUrl) throw this.configError;
     return callOllama({
@@ -112,7 +121,7 @@ export class LocalModelProvider extends AIProvider {
 
 function withSchemaInstruction(messages, schema) {
   if (!schema) return messages;
-  const instruction = `OUTPUT JSON SCHEMA (reply with one JSON object matching this schema exactly; no markdown, no prose, no extra fields):\n${JSON.stringify(schema)}`;
+  const instruction = `Reply with one JSON object only (valid json, no markdown, no prose, no extra fields) matching this schema exactly:\n${JSON.stringify(schema)}`;
   const [first, ...rest] = messages;
   if (first?.role === 'system') {
     return [{ ...first, content: `${first.content}\n\n${instruction}` }, ...rest];
@@ -127,7 +136,9 @@ export class DeepSeekProvider extends AIProvider {
     this.timeoutMs = readBoundedInteger(env.DEEPSEEK_TIMEOUT_MS, DEFAULT_DEEPSEEK_TIMEOUT_MS, 500, 120000);
     this.temperature = readBoundedNumber(env.DEEPSEEK_TEMPERATURE, 0.2, 0, 1);
     this.maxTokens = readBoundedInteger(env.DEEPSEEK_MAX_TOKENS, 4000, 256, MAX_DEEPSEEK_OUTPUT_TOKENS);
-    this.thinkingParam = env.DEEPSEEK_DISABLE_THINKING_PARAM === 'reasoning_effort' ? 'reasoning_effort' : 'thinking';
+    const thinkingParam = String(env.DEEPSEEK_DISABLE_THINKING_PARAM ?? '').trim().toLowerCase();
+    this.thinkingParam = thinkingParam === 'reasoning_effort' || thinkingParam === 'none' ? thinkingParam : 'thinking';
+    this.responseFormat = String(env.DEEPSEEK_RESPONSE_FORMAT ?? '').trim().toLowerCase() === 'none' ? 'none' : 'json_object';
     this.configError = null;
     try {
       this.endpoint = deepseekEndpoint(env.DEEPSEEK_BASE_URL);
@@ -155,8 +166,28 @@ export class DeepSeekProvider extends AIProvider {
       maxTokens: Math.min(maxTokens ?? this.maxTokens, this.maxTokens),
       timeoutMs: this.timeoutMs,
       thinkingParam: this.thinkingParam,
+      responseFormat: this.responseFormat,
       signal,
     });
+  }
+
+  async probe() {
+    if (!this.configured) return { ready: false, detail: this.configError?.message ?? 'not-configured' };
+    const url = new URL(this.endpoint.href);
+    url.pathname = url.pathname.replace(/\/chat\/completions\/?$/, '/models');
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 4000);
+    try {
+      const response = await fetch(url, {
+        headers: { Accept: 'application/json', Authorization: `Bearer ${this.apiKey}` },
+        signal: controller.signal,
+      });
+      return { ready: response.ok, detail: response.ok ? 'ok' : `HTTP ${response.status}` };
+    } catch (_) {
+      return { ready: false, detail: 'unreachable' };
+    } finally {
+      clearTimeout(timer);
+    }
   }
 }
 
@@ -173,6 +204,15 @@ export class FallbackProvider extends AIProvider {
 
   chat(options) {
     return this.generate(options);
+  }
+
+  async probe() {
+    const primary = await this.primary.probe();
+    if (primary.ready) return primary;
+    const fallback = await this.fallback.probe();
+    return fallback.ready
+      ? { ready: true, detail: `${this.primary.name}:${primary.detail}; ${this.fallback.name}:ok` }
+      : { ready: false, detail: `${this.primary.name}:${primary.detail}; ${this.fallback.name}:${fallback.detail}` };
   }
 
   async generate(options) {

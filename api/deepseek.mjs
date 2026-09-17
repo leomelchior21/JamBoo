@@ -38,21 +38,35 @@ export function extractDeepSeekUsage(usage) {
   };
 }
 
-function createRequestBody({ model, messages, temperature, maxTokens, thinkingParam }) {
+function createRequestBody({ model, messages, temperature, maxTokens, thinkingParam, responseFormat }) {
   const body = {
     model,
     messages,
     temperature,
     max_tokens: maxTokens,
     stream: false,
-    response_format: { type: 'json_object' },
   };
+  if (responseFormat !== 'none') {
+    body.response_format = { type: 'json_object' };
+  }
   if (thinkingParam === 'reasoning_effort') {
     body.reasoning_effort = 'none';
-  } else {
+  } else if (thinkingParam !== 'none') {
     body.thinking = { type: 'disabled' };
   }
   return body;
+}
+
+async function readUpstreamError(upstream) {
+  try {
+    const body = await upstream.json();
+    const message = body?.error?.message ?? body?.message ?? '';
+    return typeof message === 'string'
+      ? message.replace(/\s+/g, ' ').trim().slice(0, 200)
+      : '';
+  } catch (_) {
+    return '';
+  }
 }
 
 export async function callDeepSeek({
@@ -64,6 +78,7 @@ export async function callDeepSeek({
   maxTokens,
   timeoutMs = DEFAULT_DEEPSEEK_TIMEOUT_MS,
   thinkingParam = 'thinking',
+  responseFormat = 'json_object',
   signal,
 }) {
   const controller = new AbortController();
@@ -84,7 +99,7 @@ export async function callDeepSeek({
         Accept: 'application/json',
         Authorization: `Bearer ${apiKey}`,
       },
-      body: JSON.stringify(createRequestBody({ model, messages, temperature, maxTokens, thinkingParam })),
+      body: JSON.stringify(createRequestBody({ model, messages, temperature, maxTokens, thinkingParam, responseFormat })),
       signal: controller.signal,
     });
   } catch (error) {
@@ -97,7 +112,8 @@ export async function callDeepSeek({
   }
 
   if (!upstream.ok) {
-    throw new AIProviderError(`DeepSeek returned HTTP ${upstream.status}`);
+    const detail = await readUpstreamError(upstream);
+    throw new AIProviderError(detail ? `DeepSeek HTTP ${upstream.status}: ${detail}` : `DeepSeek HTTP ${upstream.status}`);
   }
 
   let data;

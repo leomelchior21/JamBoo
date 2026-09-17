@@ -97,7 +97,8 @@ test('DeepSeek requests are OpenAI-compatible with thinking disabled', async () 
   assert.deepEqual(captured[0].body.thinking, { type: 'disabled' });
   assert.equal(captured[0].body.reasoning_effort, undefined);
   assert.deepEqual(captured[0].body.response_format, { type: 'json_object' });
-  assert.match(captured[0].body.messages[0].content, /OUTPUT JSON SCHEMA/);
+  assert.match(captured[0].body.messages[0].content, /Reply with one JSON object only/);
+  assert.match(captured[0].body.messages[0].content, /valid json/);
   assert.match(captured[0].body.messages[0].content, /"properties"/);
   assert.equal(result.content, '{"qs":[]}');
   assert.equal(result.model, 'deepseek-flash-2026');
@@ -165,6 +166,53 @@ test('supports the reasoning_effort equivalent for disabling thinking', async ()
   await provider.chat({ messages: [{ role: 'user', content: 'json' }] });
   assert.equal(body.reasoning_effort, 'none');
   assert.equal(body.thinking, undefined);
+});
+
+test('optional DeepSeek parameters can be omitted as an escape hatch', async () => {
+  const provider = new DeepSeekProvider({
+    DEEPSEEK_API_KEY: 'test-key',
+    DEEPSEEK_DISABLE_THINKING_PARAM: 'none',
+    DEEPSEEK_RESPONSE_FORMAT: 'none',
+  });
+  let body = null;
+  globalThis.fetch = async (_url, init) => {
+    body = JSON.parse(init.body);
+    return deepseekResponse('{"qs":[]}');
+  };
+  await provider.chat({ messages: [{ role: 'user', content: 'json' }] });
+  assert.equal(body.thinking, undefined);
+  assert.equal(body.reasoning_effort, undefined);
+  assert.equal(body.response_format, undefined);
+});
+
+test('upstream error details are surfaced without secrets', async () => {
+  const provider = new DeepSeekProvider({ DEEPSEEK_API_KEY: 'test-key' });
+  globalThis.fetch = async () => ({
+    ok: false,
+    status: 402,
+    async json() { return { error: { message: 'Insufficient Balance' } }; },
+  });
+  await assert.rejects(
+    () => provider.chat({ messages: [{ role: 'user', content: 'json' }] }),
+    error => error instanceof AIProviderError && /HTTP 402: Insufficient Balance/.test(error.message)
+  );
+});
+
+test('DeepSeek probe reports readiness and HTTP failures', async () => {
+  const provider = new DeepSeekProvider({ DEEPSEEK_API_KEY: 'test-key' });
+  const urls = [];
+  globalThis.fetch = async url => {
+    urls.push(String(url));
+    return { ok: true, status: 200 };
+  };
+  assert.deepEqual(await provider.probe(), { ready: true, detail: 'ok' });
+  assert.equal(urls[0], 'https://api.deepseek.com/models');
+
+  globalThis.fetch = async () => ({ ok: false, status: 401 });
+  assert.deepEqual(await provider.probe(), { ready: false, detail: 'HTTP 401' });
+
+  const unconfigured = new DeepSeekProvider({});
+  assert.equal((await unconfigured.probe()).ready, false);
 });
 
 test('DeepSeek provider reports upstream failures and empty content', async () => {
