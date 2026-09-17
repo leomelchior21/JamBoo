@@ -21,6 +21,7 @@
 - Modules: `api/quiz-engine.mjs` (orchestration, bounded retries, per-category parallel generation, call budgets), `api/quiz-topics.mjs` (comma/prose topic parsing, planner prompt, deterministic fallbacks), `api/quiz-prompts.mjs` (question rules, board contract, variation hints), `api/quiz-formats.mjs` (JSON schemas; DeepSeek receives the schema as prompt text), `api/quiz-voice.mjs` (topic flavours), `api/math-questions.mjs` (deterministic arithmetic), `api/code-checks.mjs` (deterministic `print()` output checks)
 - All AI output is validated in code: schema/shape, exact slot count, duplicates, unstable-fact prompts, answer giveaways, and arithmetic/print answers are recomputed server-side. Multiple choice arrives as `a` + 3 `x` distractors and the server owns the shuffled correct index.
 - Every provider request logs `[ai-usage]` JSON with provider, model, stage, category, retry, tokens and duration; API keys are never logged.
+- Live smoke test for the default provider only (no Ollama fallback): `npm run test:deepseek` (reads `DEEPSEEK_API_KEY` from env or `.env.local`; options `--topic --columns --rows --lang --difficulty --type`). It runs plan → batches → atomic validate and prints per-question output plus token usage; it does not run as part of `npm test`.
 - Generation speed: server runs independent category groups in parallel; `game.html` runs up to `BATCH_CONCURRENCY` batch requests at once and retries duplicates.
 
 ## Design System
