@@ -97,6 +97,56 @@ test('rejects answer choices that are too long for the game card', () => {
   assert.equal(result.reason, 'answer option too long');
 });
 
+test('builds shuffled four-option questions from an answer and three distractors', () => {
+  const [slot] = createSlotPlan(spec({ columns: 1, rows: 1, questionType: 'multiple' }), categories(1));
+  const result = validateQuestionForSlot({
+    slotId: slot.slotId,
+    q: 'Which planet is known as the Red Planet?',
+    a: 'Mars',
+    x: ['Venus', 'Earth', 'Jupiter'],
+  }, slot);
+  assert.equal(result.valid, true);
+  assert.equal(result.question.o.length, 4);
+  assert.deepEqual(new Set(result.question.o), new Set(['Mars', 'Venus', 'Earth', 'Jupiter']));
+  assert.equal(result.question.o[result.question.i], 'Mars');
+  assert.equal(result.question.a, 'Mars');
+});
+
+test('rejects filler options such as all of the above', () => {
+  const [slot] = createSlotPlan(spec({ columns: 1, rows: 1, questionType: 'multiple' }), categories(1));
+  const result = validateQuestionForSlot({
+    slotId: slot.slotId,
+    q: 'Which planet is known as the Red Planet?',
+    a: 'Mars',
+    x: ['Venus', 'All of the above', 'Jupiter'],
+  }, slot);
+  assert.equal(result.valid, false);
+  assert.equal(result.reason, 'banned answer option');
+});
+
+test('rejects questions that reveal their own answer', () => {
+  const [slot] = createSlotPlan(spec({ columns: 1, rows: 1, questionType: 'multiple' }), categories(1));
+  const result = validateQuestionForSlot({
+    slotId: slot.slotId,
+    q: 'Which planet is Mars in our solar system?',
+    a: 'Mars',
+    x: ['Venus', 'Earth', 'Jupiter'],
+  }, slot);
+  assert.equal(result.valid, false);
+  assert.equal(result.reason, 'answer revealed in question');
+});
+
+test('rejects questions about changing facts', () => {
+  const [slot] = createSlotPlan(spec({ columns: 1, rows: 1, questionType: 'open' }), categories(1));
+  const result = validateQuestionForSlot({
+    slotId: slot.slotId,
+    q: 'What is the latest version of Python?',
+    a: '3.12',
+  }, slot);
+  assert.equal(result.valid, false);
+  assert.equal(result.reason, 'question uses a changing fact');
+});
+
 test('does not accept a quiz with a missing slot', () => {
   const plan = createSlotPlan(spec({ columns: 2, rows: 2 }), categories(2));
   const result = validateCompleteQuiz(plan, plan.slice(0, -1).map(validQuestion));

@@ -15,11 +15,12 @@
 - Test setup page by opening `index.html` directly; game page needs `/api/ai` (use Vercel dev)
 
 ## Quiz Generation Pipeline (server)
-- Actions: `quiz-plan` (topic → columns + slots + routing + kind), `quiz-batch` (question batches), `quiz-validate` (final check, supports `missingSlotIds` for partial boards), `quiz-category` (single locked category)
-- Modules: `api/knowledge-router.mjs` (MATH/TIMELESS/HISTORICAL/CURRENT + date/ambiguity normalization), `api/topic-style.mjs` (celebrity/games/sports/code/math/general question flavours), `api/math-questions.mjs` (deterministic arithmetic), `api/search-provider.mjs` (SearchProvider interface, Wikipedia + optional HTTP web search, evidence objects), `api/question-cache.mjs` (verified-question cache with per-route TTL), `api/quiz-planner.mjs` (topic → column planning)
+- Actions: `quiz-plan` (topic → categories + slots + voice kind), `quiz-batch` (question batches), `quiz-validate` (final check, supports `missingSlotIds` for partial boards)
+- Modules: `api/quiz-engine.mjs` (orchestration, retries, parallel category generation), `api/quiz-core.mjs` (slot plan, question validation, answer integrity, dedupe), `api/quiz-topics.mjs` (comma/prose topic parsing, planner prompt, deterministic fallbacks), `api/quiz-prompts.mjs` (question-writing rules + row recipes), `api/quiz-formats.mjs` (Ollama JSON schemas), `api/quiz-voice.mjs` (celebrity/games/sports/music/movies/history/science/geography/code/math/general flavour), `api/math-questions.mjs` (deterministic arithmetic with story contexts), `api/ollama.mjs` (transport)
+- The model writes questions from its own stable knowledge; risky prompts (`latest`, `current`, rankings) are rejected in code, and answers must be short labels instead of copied sentences
+- Multiple choice is generated as `a` + 3 `x` distractors; the server shuffles the 4 options and owns the correct index
 - Failed slots are reported as `failedSlots` (never abort the whole board); `game.html` retries once then renders remaining gaps as disabled cells
 - Generation speed: server runs independent category groups in parallel; `game.html` runs up to `BATCH_CONCURRENCY` batch requests at once and retries duplicates
-- Search API keys stay server-side (`SEARCH_API_URL`, `SEARCH_API_KEY`, `SEARCH_API_RESULTS_PATH`); see `.env.example`
 
 ## Design System
 - Fonts: `Press Start 2P` (pixel labels/headers), `Fredoka One` + `Nunito` (game UI)

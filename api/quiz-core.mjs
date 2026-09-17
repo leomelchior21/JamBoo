@@ -8,14 +8,14 @@ const MAX_MC_OPTION_LENGTH = 60;
 const MAX_MC_OPTION_WORDS = 8;
 const MAX_ANSWER_LENGTH = 80;
 const MAX_ANSWER_WORDS = 12;
+const MAX_PROMPT_LENGTH = 200;
+
 const COGNITIVE_SKILLS = {
   easy: ['recognize', 'recall', 'identify', 'classify'],
   medium: ['explain', 'compare', 'connect facts', 'sequence', 'apply'],
   hard: ['infer', 'analyze', 'apply in a new situation', 'reason in steps', 'evaluate'],
 };
 
-// Internal cognitive ladder. The visible point system stays (rowIndex+1)*100;
-// the tier describes how demanding the thinking is at each board row.
 export const COGNITIVE_LADDER = Object.freeze([
   Object.freeze({ points: 100, tier: 'foundation', skill: 'direct identification or recall' }),
   Object.freeze({ points: 200, tier: 'connection', skill: 'connect facts or concepts' }),
@@ -31,6 +31,10 @@ const DIFFICULTY_TIER_SPANS = Object.freeze({
   hard: [3, 5],
   mixed: [0, 5],
 });
+
+const UNSTABLE_PROMPT_PATTERN = /\b(?:current(?:ly)?|latest|today|tonight|nowadays|right now|this (?:year|month|week)|recent(?:ly)?|upcoming|so far|as of|atualmente|atual|hoje|agora|este (?:ano|mes)|mais recente|ultimo|ultima|actualmente|actual|hoy|ahora|mas reciente)\b/;
+
+const BANNED_OPTION_PATTERN = /^(?:all|none|both|todos?|todas?|nenhum|nenhuma|ningun|ninguna)\b/;
 
 export function cognitiveTierForRow(difficulty, rowIndex, rows) {
   const span = DIFFICULTY_TIER_SPANS[difficulty] ?? DIFFICULTY_TIER_SPANS.mixed;
@@ -63,6 +67,14 @@ export function hashSeed(value) {
     hash = Math.imul(hash, 16777619);
   }
   return hash >>> 0;
+}
+
+function createRng(seed) {
+  let state = seed >>> 0 || 1;
+  return () => {
+    state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
+    return state / 4294967296;
+  };
 }
 
 function mixedDifficulty(rowIndex, rows) {
@@ -114,6 +126,71 @@ export function createSlotPlan(spec, categories) {
   );
 }
 
+export function isUnstablePrompt(prompt) {
+  return UNSTABLE_PROMPT_PATTERN.test(normalizeText(prompt));
+}
+
+export function isAnswerRevealed(prompt, answer) {
+  const answerKey = normalizeText(answer);
+  const words = answerKey.split(' ').filter(Boolean);
+  if (!answerKey || answerKey.length < 4 || words.length > 6) return false;
+  return ` ${normalizeText(prompt)} `.includes(` ${answerKey} `);
+}
+
+function isBannedOption(option) {
+  const key = normalizeText(option);
+  return !key || (BANNED_OPTION_PATTERN.test(key) && key.split(' ').length <= 5);
+}
+
+function optionProblem(options) {
+  for (const option of options) {
+    if (!option) return 'blank answer option';
+    if (option.length > MAX_MC_OPTION_LENGTH || option.split(/\s+/).length > MAX_MC_OPTION_WORDS) {
+      return 'answer option too long';
+    }
+  }
+  if (new Set(options.map(normalizeText)).size !== options.length) return 'duplicate answer option';
+  if (options.some(isBannedOption)) return 'banned answer option';
+  return null;
+}
+
+function shuffleOptions(options, seed) {
+  const rng = createRng(seed);
+  for (let index = options.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(rng() * (index + 1));
+    [options[index], options[swapIndex]] = [options[swapIndex], options[index]];
+  }
+  return options;
+}
+
+function buildMultipleChoice(question, seed) {
+  const answer = cleanText(question.a ?? question.answer);
+  const givenOptions = question.o ?? question.options;
+  const rawIndex = question.i ?? question.correctIndex;
+  const givenIndex = Number.isInteger(rawIndex) ? rawIndex : Number.parseInt(rawIndex, 10);
+  const distractors = question.x ?? question.distractors;
+
+  if (Array.isArray(givenOptions) && givenOptions.length === 4) {
+    const options = givenOptions.map(cleanText);
+    if (answer) {
+      const index = options.findIndex(option => normalizeText(option) === normalizeText(answer));
+      if (index < 0) return null;
+      if (Number.isInteger(givenIndex) && givenIndex >= 0 && givenIndex < 4 && givenIndex !== index) return null;
+      return { options, index };
+    }
+    if (!Number.isInteger(givenIndex) || givenIndex < 0 || givenIndex >= 4) return null;
+    return { options, index: givenIndex };
+  }
+
+  if (answer && Array.isArray(distractors) && distractors.length === 3) {
+    const options = shuffleOptions([answer, ...distractors.map(cleanText)], seed);
+    const index = options.findIndex(option => normalizeText(option) === normalizeText(answer));
+    return index < 0 ? null : { options, index };
+  }
+
+  return null;
+}
+
 export function validateQuestionForSlot(question, slot) {
   if (!question || typeof question !== 'object' || Array.isArray(question)) {
     return { valid: false, reason: 'missing question object' };
@@ -123,46 +200,48 @@ export function validateQuestionForSlot(question, slot) {
   }
   const prompt = cleanText(question.q ?? question.question);
   if (!prompt) return { valid: false, reason: 'blank question' };
+  if (prompt.length > MAX_PROMPT_LENGTH) return { valid: false, reason: 'question too long' };
 
-  const options = question.o ?? question.options;
-  const answer = cleanText(question.a ?? question.answer);
-  const rawIndex = question.i ?? question.correctIndex;
-  const answerIndex = Number.isInteger(rawIndex) ? rawIndex : Number.parseInt(rawIndex, 10);
   const drawing = question.d === 1 || question.d === true || question.isDrawing === true;
+  const answer = cleanText(question.a ?? question.answer);
+  const rawOptions = question.o ?? question.options;
+  const rawIndex = question.i ?? question.correctIndex;
 
   if (slot.type === 'multiple') {
     if (drawing) return { valid: false, reason: 'wrong question type' };
-    if (!Array.isArray(options) || options.length !== 4 || options.some(option => !cleanText(option))) {
-      return { valid: false, reason: 'multiple choice requires four options' };
+    const choice = buildMultipleChoice(question, hashSeed(`${slot.slotId}:${prompt}`));
+    if (!choice) return { valid: false, reason: 'multiple choice requires four options' };
+    const problem = optionProblem(choice.options);
+    if (problem) return { valid: false, reason: problem };
+    if (isAnswerRevealed(prompt, choice.options[choice.index])) {
+      return { valid: false, reason: 'answer revealed in question' };
     }
-    if (new Set(options.map(normalizeText)).size !== 4) {
-      return { valid: false, reason: 'duplicate answer option' };
-    }
-    if (options.some(option => cleanText(option).length > MAX_MC_OPTION_LENGTH || cleanText(option).split(/\s+/).length > MAX_MC_OPTION_WORDS)) {
-      return { valid: false, reason: 'answer option too long' };
-    }
-    if (!Number.isInteger(answerIndex) || answerIndex < 0 || answerIndex > 3) {
-      return { valid: false, reason: 'invalid answerIndex' };
-    }
+    if (isUnstablePrompt(prompt)) return { valid: false, reason: 'question uses a changing fact' };
     return {
       valid: true,
-      question: { slotId: slot.slotId, q: prompt, o: options.map(cleanText), i: answerIndex },
+      question: {
+        slotId: slot.slotId,
+        q: prompt,
+        o: choice.options,
+        i: choice.index,
+        a: choice.options[choice.index],
+      },
     };
   }
 
-  if (Array.isArray(options) || rawIndex !== undefined) {
+  if (Array.isArray(rawOptions) || rawIndex !== undefined || Array.isArray(question.x)) {
     return { valid: false, reason: 'wrong question type' };
   }
   if (!answer) return { valid: false, reason: 'blank expected answer' };
   if (answer.length > MAX_ANSWER_LENGTH || answer.split(/\s+/).length > MAX_ANSWER_WORDS) {
     return { valid: false, reason: 'expected answer too long' };
   }
-  if (slot.type === 'drawing' && !drawing) {
-    return { valid: false, reason: 'drawing marker missing' };
+  if (slot.type === 'drawing' && !drawing) return { valid: false, reason: 'drawing marker missing' };
+  if (slot.type === 'open' && drawing) return { valid: false, reason: 'wrong question type' };
+  if (slot.type !== 'drawing' && isAnswerRevealed(prompt, answer)) {
+    return { valid: false, reason: 'answer revealed in question' };
   }
-  if (slot.type === 'open' && drawing) {
-    return { valid: false, reason: 'wrong question type' };
-  }
+  if (isUnstablePrompt(prompt)) return { valid: false, reason: 'question uses a changing fact' };
   return {
     valid: true,
     question: slot.type === 'drawing'

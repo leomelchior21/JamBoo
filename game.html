@@ -1643,11 +1643,11 @@ let generationStartedAt=0;
 let generationProgressStep=0;
 let generationRequest=null;
 const GENERATION_API_URL='/api/ai';
-const GENERATION_PROVIDER='ollama-styled-parallel-v11';
+const GENERATION_PROVIDER='jamboo-engine-v12';
 const GAME_CACHE_KEY='jamboo_game_cache_v4';
 const GENERATION_SIMULATION_MS=120000;
 const MAX_QUESTION_ROUNDS=2;
-const BATCH_CONCURRENCY=2;
+const BATCH_CONCURRENCY=3;
 
 function cleanText(value){
   return String(value ?? '').trim();

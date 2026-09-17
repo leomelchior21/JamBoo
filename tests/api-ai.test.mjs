@@ -32,12 +32,24 @@ function ollamaResponse(content) {
   };
 }
 
-function jsonResponse(content) {
+function ollamaRaw(content) {
   return {
     ok: true,
     status: 200,
-    async json() { return content; },
+    async json() { return { message: { content } }; },
   };
+}
+
+function slotIdsFromRequest(request) {
+  return (request.format?.properties?.qs?.prefixItems ?? [])
+    .map(item => item.properties.slotId.enum[0]);
+}
+
+function answerForRequest(request, index) {
+  const slotId = slotIdsFromRequest(request)[index];
+  return index === 0
+    ? { slotId, q: 'Which planet is known as the Red Planet?', a: 'Mars', x: ['Venus', 'Earth', 'Mercury'] }
+    : { slotId, q: 'Which planet is the largest in the Solar System?', a: 'Jupiter', x: ['Saturn', 'Neptune', 'Venus'] };
 }
 
 const baseQuiz = {
@@ -49,141 +61,242 @@ const baseQuiz = {
   questionType: 'multiple',
   seed: 'test-seed',
   generationId: 'test-generation',
-  categories: ['Solar System'],
 };
 
-test('quiz plan returns code-created slots and configured batch size', { concurrency: false }, async () => {
-  globalThis.fetch = async () => ollamaResponse({ categories: ['Solar System'] });
-  const res = await callApi({ action: 'quiz-plan', quiz: { ...baseQuiz, categories: undefined } });
+test('a comma topic list that matches the board becomes categories without a model call', { concurrency: false }, async () => {
+  globalThis.fetch = async () => { throw new Error('the model must not be called'); };
+  const res = await callApi({
+    action: 'quiz-plan',
+    quiz: { ...baseQuiz, topic: 'SpaceX, Mars', columns: 2 },
+  });
   assert.equal(res.statusCode, 200);
   const plan = JSON.parse(res.body.answer);
-  assert.deepEqual(plan.slots.map(slot => slot.slotId), ['0-0', '0-1']);
-  assert.deepEqual(plan.slots.map(slot => slot.points), [100, 200]);
+  assert.deepEqual(plan.categories, ['SpaceX', 'Mars']);
+  assert.deepEqual(plan.slots.map(slot => slot.slotId), ['0-0', '0-1', '1-0', '1-1']);
+  assert.deepEqual(plan.slots.map(slot => slot.points), [100, 200, 100, 200]);
   assert.equal(plan.batchSize, 6);
+  assert.equal(typeof plan.kind, 'string');
 });
 
-test('uses safe generic categories when category JSON cannot be generated', { concurrency: false }, async () => {
+test('client supplied categories skip planning entirely', { concurrency: false }, async () => {
+  globalThis.fetch = async () => { throw new Error('the model must not be called'); };
+  const res = await callApi({
+    action: 'quiz-plan',
+    quiz: { ...baseQuiz, columns: 2, explicitCategories: ['Solar System', 'Deep Space'] },
+  });
+  assert.equal(res.statusCode, 200);
+  const plan = JSON.parse(res.body.answer);
+  assert.deepEqual(plan.categories, ['Solar System', 'Deep Space']);
+});
+
+test('plans headings with the model and keeps the classified kind', { concurrency: false }, async () => {
   let calls = 0;
   globalThis.fetch = async () => {
     calls += 1;
-    return ollamaResponse({ categories: ['Repeated', 'Repeated'] });
+    return ollamaResponse({ kind: 'games', categories: ['Origins', 'Characters'] });
   };
   const res = await callApi({
     action: 'quiz-plan',
-    quiz: { ...baseQuiz, topic: 'An unusual teacher-defined topic', columns: 2, categories: undefined },
+    quiz: { ...baseQuiz, topic: 'Minecraft', columns: 2 },
   });
   assert.equal(res.statusCode, 200);
   const plan = JSON.parse(res.body.answer);
-  assert.equal(calls, 2);
-  assert.deepEqual(plan.categories, ['Overview', 'Key Elements']);
-  assert.equal(plan.slots.length, 4);
+  assert.equal(calls, 1);
+  assert.deepEqual(plan.categories, ['Origins', 'Characters']);
+  assert.equal(plan.kind, 'games');
 });
 
-test('repairs only a malformed slot and preserves the valid result', { concurrency: false }, async () => {
-  const calls = [];
-  globalThis.fetch = async (_url, init) => {
-    calls.push(JSON.parse(init.body));
-    if (calls.length === 1) {
-      return ollamaResponse({ qs: [
-        { slotId: '0-0', q: 'Which planet is known as the Red Planet?', o: ['Mars', 'Venus', 'Earth', 'Jupiter'], i: 0 },
-        { slotId: '0-1', q: 'Which planet has visible rings?', o: ['Saturn', 'Saturn', 'Mars', 'Earth'], i: 0 },
-      ] });
-    }
-    return ollamaResponse({ qs: [
-      { slotId: '0-1', q: 'Which planet is famous for its broad ring system?', o: ['Earth', 'Mars', 'Saturn', 'Venus'], i: 2 },
-    ] });
+test('repairs an unusable category plan on the second attempt', { concurrency: false }, async () => {
+  let calls = 0;
+  globalThis.fetch = async () => {
+    calls += 1;
+    return calls === 1
+      ? ollamaRaw('I cannot answer that.')
+      : ollamaResponse({ kind: 'general', categories: ['Origins', 'Chemistry'] });
   };
+  const res = await callApi({
+    action: 'quiz-plan',
+    quiz: { ...baseQuiz, topic: 'Minecraft', columns: 2 },
+  });
+  assert.equal(res.statusCode, 200);
+  assert.equal(calls, 2);
+  assert.deepEqual(JSON.parse(res.body.answer).categories, ['Origins', 'Chemistry']);
+});
 
+test('falls back to deterministic categories when the model cannot plan', { concurrency: false }, async () => {
+  globalThis.fetch = async () => ollamaResponse({ categories: ['Overview', 'Overview'] });
+  const res = await callApi({
+    action: 'quiz-plan',
+    quiz: { ...baseQuiz, topic: 'An unusual teacher-defined topic', columns: 2 },
+  });
+  assert.equal(res.statusCode, 200);
+  const plan = JSON.parse(res.body.answer);
+  assert.equal(plan.categories.length, 2);
+  assert.equal(plan.categories[0], 'An unusual teacher-defined topic');
+  assert.match(plan.categories[1], /^An unusual teacher-defined topic: /);
+});
+
+test('builds complete multiple-choice questions from answers and distractors', { concurrency: false }, async () => {
+  globalThis.fetch = async (_url, init) => {
+    const request = JSON.parse(init.body);
+    return ollamaResponse({ qs: [answerForRequest(request, 0), answerForRequest(request, 1)] });
+  };
   const res = await callApi({
     action: 'quiz-batch',
-    quiz: { ...baseQuiz, slotIds: ['0-0', '0-1'], excludedQuestions: [] },
+    quiz: { ...baseQuiz, categories: ['Solar System'], slotIds: ['0-0', '0-1'], excludedQuestions: [] },
   });
   assert.equal(res.statusCode, 200);
   const batch = JSON.parse(res.body.answer);
-  assert.equal(calls.length, 2);
-  assert.equal(batch.repaired, 1);
-  assert.equal(batch.questions[0].q, 'Which planet is known as the Red Planet?');
-  assert.equal(batch.questions[1].slotId, '0-1');
+  assert.deepEqual(batch.failedSlots, []);
+  assert.equal(batch.questions.length, 2);
+  batch.questions.forEach(question => {
+    assert.equal(question.o.length, 4);
+    assert.equal(new Set(question.o).size, 4);
+    assert.equal(question.o[question.i], question.a);
+  });
+  assert.equal(batch.questions[0].a, 'Mars');
 });
 
-test('detects a missing model result and generates only that slot', { concurrency: false }, async () => {
-  const requestedSchemas = [];
+test('repairs only the rejected slot and keeps the valid one', { concurrency: false }, async () => {
+  let calls = 0;
   globalThis.fetch = async (_url, init) => {
+    calls += 1;
     const request = JSON.parse(init.body);
-    requestedSchemas.push(request.format.properties.qs);
-    if (requestedSchemas.length === 1) {
+    const slotIds = slotIdsFromRequest(request);
+    if (calls === 1) {
       return ollamaResponse({ qs: [
-        { slotId: '0-0', q: 'Which planet is closest to the Sun?', o: ['Mercury', 'Mars', 'Earth', 'Neptune'], i: 0 },
+        { slotId: slotIds[0], q: 'Which planet is known as the Red Planet?', a: 'Mars', x: ['Venus', 'Earth', 'Mercury'] },
+        { slotId: slotIds[1], q: 'Which planet is known for its rings?', a: 'Saturn', x: ['Saturn', 'Mars', 'Earth'] },
       ] });
     }
     return ollamaResponse({ qs: [
-      { slotId: '0-1', q: 'Which planet is the largest in the Solar System?', o: ['Mars', 'Jupiter', 'Earth', 'Venus'], i: 1 },
+      { slotId: slotIds[0], q: 'Which planet is famous for its broad ring system?', a: 'Saturn', x: ['Earth', 'Mars', 'Venus'] },
     ] });
   };
-
   const res = await callApi({
     action: 'quiz-batch',
-    quiz: { ...baseQuiz, slotIds: ['0-0', '0-1'], excludedQuestions: [] },
+    quiz: { ...baseQuiz, categories: ['Solar System'], slotIds: ['0-0', '0-1'], excludedQuestions: [] },
   });
   assert.equal(res.statusCode, 200);
-  assert.equal(requestedSchemas.length, 2);
-  assert.equal(requestedSchemas[1].minItems, 1);
-  assert.equal(JSON.parse(res.body.answer).questions.length, 2);
+  const batch = JSON.parse(res.body.answer);
+  assert.equal(calls, 2);
+  assert.equal(batch.repaired, 1);
+  assert.deepEqual(batch.failedSlots, []);
+  assert.equal(batch.questions[0].a, 'Mars');
+  assert.equal(batch.questions[1].a, 'Saturn');
 });
 
-test('final validation refuses an incomplete draft', { concurrency: false }, async () => {
-  globalThis.fetch = async () => { throw new Error('should not call Ollama'); };
+test('a permanently failed slot is reported without blocking the board', { concurrency: false }, async () => {
+  let calls = 0;
+  globalThis.fetch = async (_url, init) => {
+    calls += 1;
+    const request = JSON.parse(init.body);
+    const slotId = slotIdsFromRequest(request)[0];
+    return ollamaResponse({ qs: [
+      { slotId, q: 'Which planet is known as the Red Planet?', a: 'Mars', x: ['Mars', 'Mars', 'Earth'] },
+    ] });
+  };
   const res = await callApi({
-    action: 'quiz-validate',
+    action: 'quiz-batch',
+    quiz: { ...baseQuiz, columns: 1, rows: 1, categories: ['Solar System'], slotIds: ['0-0'], excludedQuestions: [] },
+  });
+  assert.equal(res.statusCode, 200);
+  assert.equal(calls, 3);
+  const batch = JSON.parse(res.body.answer);
+  assert.deepEqual(batch.questions, []);
+  assert.deepEqual(batch.failedSlots, ['0-0']);
+});
+
+test('rejects questions already used in another batch', { concurrency: false }, async () => {
+  let calls = 0;
+  globalThis.fetch = async (_url, init) => {
+    calls += 1;
+    const request = JSON.parse(init.body);
+    const slotId = slotIdsFromRequest(request)[0];
+    return ollamaResponse({ qs: [
+      { slotId, q: 'Which planet is known as the Red Planet?', a: 'Mars', x: ['Venus', 'Earth', 'Mercury'] },
+    ] });
+  };
+  const res = await callApi({
+    action: 'quiz-batch',
     quiz: {
       ...baseQuiz,
-      questions: [
-        { slotId: '0-0', q: 'Which planet is known as the Red Planet?', o: ['Mars', 'Venus', 'Earth', 'Jupiter'], i: 0 },
-      ],
+      columns: 1,
+      rows: 1,
+      categories: ['Solar System'],
+      slotIds: ['0-0'],
+      excludedQuestions: ['Which planet is known as the Red Planet?'],
     },
   });
-  assert.equal(res.statusCode, 502);
-  assert.equal(res.body.code, 'INVALID_AI_RESPONSE');
-});
-
-test('final validation marks only a complete draft ready', { concurrency: false }, async () => {
-  globalThis.fetch = async () => { throw new Error('should not call Ollama'); };
-  const questions = [
-    { slotId: '0-0', q: 'Which planet is known as the Red Planet?', o: ['Mars', 'Venus', 'Earth', 'Jupiter'], i: 0 },
-    { slotId: '0-1', q: 'Which planet is famous for a broad ring system?', o: ['Earth', 'Mars', 'Saturn', 'Venus'], i: 2 },
-  ];
-  const res = await callApi({ action: 'quiz-validate', quiz: { ...baseQuiz, questions } });
   assert.equal(res.statusCode, 200);
-  const finalized = JSON.parse(res.body.answer);
-  assert.equal(finalized.ready, true);
-  assert.equal(finalized.questions.length, 2);
+  assert.equal(calls, 3);
+  assert.deepEqual(JSON.parse(res.body.answer).failedSlots, ['0-0']);
 });
 
-test('returns a useful fast failure when Ollama is unavailable', { concurrency: false }, async () => {
-  globalThis.fetch = async () => { throw new Error('offline'); };
+test('rejects changing-fact questions in code', { concurrency: false }, async () => {
+  globalThis.fetch = async (_url, init) => {
+    const request = JSON.parse(init.body);
+    const slotId = slotIdsFromRequest(request)[0];
+    return ollamaResponse({ qs: [
+      { slotId, q: 'Who is the latest champion of this tournament?', a: 'Nova', x: ['Orion', 'Vega', 'Lyra'] },
+    ] });
+  };
   const res = await callApi({
-    action: 'quiz-plan',
-    quiz: { ...baseQuiz, categories: undefined },
-  });
-  assert.equal(res.statusCode, 502);
-  assert.equal(res.body.error, 'AI server unavailable');
-});
-
-test('quiz plan routes categories through the knowledge router', { concurrency: false }, async () => {
-  globalThis.fetch = async () => ollamaResponse({ categories: ['Multiplication', 'SpaceX missions in 2025'] });
-  const res = await callApi({
-    action: 'quiz-plan',
-    quiz: { ...baseQuiz, columns: 2, categories: undefined },
+    action: 'quiz-batch',
+    quiz: { ...baseQuiz, columns: 1, rows: 1, categories: ['Champions'], slotIds: ['0-0'], excludedQuestions: [] },
   });
   assert.equal(res.statusCode, 200);
-  const plan = JSON.parse(res.body.answer);
-  assert.deepEqual(plan.routing.map(entry => entry.route), ['math', 'historical']);
-  assert.equal(plan.routing[1].eventFrom, '2025-01-01');
-  assert.equal(plan.routing[1].eventTo, '2025-12-31');
-  assert.equal(plan.routing[0].query, null);
+  const batch = JSON.parse(res.body.answer);
+  assert.deepEqual(batch.questions, []);
+  assert.deepEqual(batch.failedSlots, ['0-0']);
 });
 
-test('math slots are computed in code without calling the model', { concurrency: false }, async () => {
+test('rejects answers that do not match the requested slot type', { concurrency: false }, async () => {
+  globalThis.fetch = async (_url, init) => {
+    const request = JSON.parse(init.body);
+    const slotId = slotIdsFromRequest(request)[0];
+    return ollamaResponse({ qs: [
+      { slotId, q: 'Name the largest planet in the Solar System.', a: 'Jupiter' },
+    ] });
+  };
+  const res = await callApi({
+    action: 'quiz-batch',
+    quiz: { ...baseQuiz, columns: 1, rows: 1, questionType: 'multiple', categories: ['Planets'], slotIds: ['0-0'], excludedQuestions: [] },
+  });
+  assert.equal(res.statusCode, 200);
+  assert.deepEqual(JSON.parse(res.body.answer).failedSlots, ['0-0']);
+});
+
+test('generates one model call per category in a mixed batch', { concurrency: false }, async () => {
+  let calls = 0;
+  globalThis.fetch = async (_url, init) => {
+    calls += 1;
+    const request = JSON.parse(init.body);
+    const slotId = slotIdsFromRequest(request)[0];
+    const question = request.messages[0].content.includes('LOCKED CATEGORY: "Planets"')
+      ? { slotId, q: 'Which planet is known as the Red Planet?', a: 'Mars', x: ['Venus', 'Earth', 'Mercury'] }
+      : { slotId, q: 'What is the closest star to Earth?', a: 'The Sun', x: ['Sirius', 'Polaris', 'Vega'] };
+    return ollamaResponse({ qs: [question] });
+  };
+  const res = await callApi({
+    action: 'quiz-batch',
+    quiz: {
+      ...baseQuiz,
+      columns: 2,
+      rows: 1,
+      categories: ['Planets', 'Stars'],
+      slotIds: ['0-0', '1-0'],
+      excludedQuestions: [],
+    },
+  });
+  assert.equal(res.statusCode, 200);
+  assert.equal(calls, 2);
+  const batch = JSON.parse(res.body.answer);
+  assert.deepEqual(batch.failedSlots, []);
+  assert.equal(batch.questions.length, 2);
+});
+
+test('math categories are computed in code without calling the model', { concurrency: false }, async () => {
   let calls = 0;
   globalThis.fetch = async () => { calls += 1; throw new Error('the model must not be used for math'); };
   const res = await callApi({
@@ -201,104 +314,81 @@ test('math slots are computed in code without calling the model', { concurrency:
   assert.equal(res.statusCode, 200);
   assert.equal(calls, 0);
   const batch = JSON.parse(res.body.answer);
-  assert.equal(batch.questions.length, 2);
   assert.deepEqual(batch.failedSlots, []);
+  assert.equal(batch.questions.length, 2);
   batch.questions.forEach(question => {
     assert.equal(question.o.length, 4);
     assert.equal(new Set(question.o).size, 4);
-    assert.equal(question.o[question.i], solveArithmetic(question.q));
+    assert.equal(question.o[question.i], question.a);
+    assert.ok(Number.isFinite(Number(question.a)));
   });
 });
 
-test('a permanently failed slot is reported without blocking the board', { concurrency: false }, async () => {
-  globalThis.fetch = async () => ollamaResponse({
-    qs: [{ slotId: '0-0', q: 'Which planet is known as the Red Planet?', o: ['Mars', 'Mars', 'Earth', 'Jupiter'], i: 0 }],
-  });
-  const res = await callApi({
-    action: 'quiz-batch',
-    quiz: { ...baseQuiz, slotIds: ['0-0'], excludedQuestions: [] },
-  });
-  assert.equal(res.statusCode, 200);
-  const batch = JSON.parse(res.body.answer);
-  assert.deepEqual(batch.questions, []);
-  assert.deepEqual(batch.failedSlots, ['0-0']);
-});
-
-test('historical categories generate questions from retrieved evidence', { concurrency: false }, async () => {
-  const ollamaRequests = [];
-  globalThis.fetch = async (url, init) => {
-    if (String(url).includes('wikipedia.org')) {
-      return jsonResponse({
-        query: {
-          pages: [{
-            index: 1,
-            title: 'Starship',
-            extract: 'In 2025, SpaceX launched Starship Flight 8 from Starbase in Texas. The flight reached space and returned to a controlled splashdown.',
-            fullurl: 'https://en.wikipedia.org/wiki/Starship',
-          }],
-        },
-      });
-    }
+test('question prompts carry the classified voice', { concurrency: false }, async () => {
+  const systems = [];
+  globalThis.fetch = async (_url, init) => {
     const request = JSON.parse(init.body);
-    ollamaRequests.push(request);
-    return ollamaResponse({
-      qs: [{ q: 'Which company launched Starship Flight 8 in 2025?', a: 'SpaceX', x: ['Blue Origin', 'NASA', 'Roscosmos'], s: 1 }],
-    });
+    systems.push(request.messages[0].content);
+    const slotId = slotIdsFromRequest(request)[0];
+    return ollamaResponse({ qs: [
+      { slotId, q: 'Which block explodes when a player gets too close?', a: 'Creeper', x: ['Zombie', 'Skeleton', 'Slime'] },
+    ] });
   };
-
   const res = await callApi({
     action: 'quiz-batch',
     quiz: {
       ...baseQuiz,
-      topic: 'SpaceX',
       columns: 1,
       rows: 1,
-      categories: ['SpaceX missions in 2025'],
+      topic: 'Roblox',
+      kind: 'games',
+      categories: ['Game history'],
       slotIds: ['0-0'],
       excludedQuestions: [],
     },
   });
   assert.equal(res.statusCode, 200);
-  const batch = JSON.parse(res.body.answer);
-  assert.equal(batch.questions.length, 1);
-  assert.equal(batch.questions[0].q, 'Which company launched Starship Flight 8 in 2025?');
-  assert.equal(batch.questions[0].o[batch.questions[0].i], 'SpaceX');
-  assert.equal(ollamaRequests.length, 1);
-  const systemPrompt = ollamaRequests[0].messages[0].content;
-  assert.match(systemPrompt, /In 2025, SpaceX launched Starship Flight 8 from Starbase in Texas\./);
-  assert.match(systemPrompt, /tied to the FACT's own period and metric/);
+  assert.match(systems[0], /gamer trivia-night energy/);
+  assert.match(systems[0], /Stable facts only/);
 });
 
-test('current categories without a live search provider fail safely', { concurrency: false }, async () => {
-  let calls = 0;
-  globalThis.fetch = async () => { calls += 1; throw new Error('should not be called'); };
+test('final validation refuses an incomplete draft', { concurrency: false }, async () => {
+  globalThis.fetch = async () => { throw new Error('should not call Ollama'); };
   const res = await callApi({
-    action: 'quiz-batch',
+    action: 'quiz-validate',
     quiz: {
       ...baseQuiz,
-      topic: 'Olympics',
-      columns: 1,
-      rows: 1,
-      categories: ['Latest medal records'],
-      slotIds: ['0-0'],
-      excludedQuestions: [],
+      categories: ['Solar System'],
+      questions: [
+        { slotId: '0-0', q: 'Which planet is known as the Red Planet?', a: 'Mars', o: ['Mars', 'Venus', 'Earth', 'Jupiter'], i: 0 },
+      ],
     },
   });
+  assert.equal(res.statusCode, 502);
+  assert.equal(res.body.code, 'INVALID_AI_RESPONSE');
+});
+
+test('final validation marks only a complete draft ready', { concurrency: false }, async () => {
+  globalThis.fetch = async () => { throw new Error('should not call Ollama'); };
+  const questions = [
+    { slotId: '0-0', q: 'Which planet is known as the Red Planet?', a: 'Mars', o: ['Mars', 'Venus', 'Earth', 'Jupiter'], i: 0 },
+    { slotId: '0-1', q: 'Which planet is famous for a broad ring system?', a: 'Saturn', o: ['Earth', 'Mars', 'Saturn', 'Venus'], i: 2 },
+  ];
+  const res = await callApi({ action: 'quiz-validate', quiz: { ...baseQuiz, categories: ['Solar System'], questions } });
   assert.equal(res.statusCode, 200);
-  assert.equal(calls, 0);
-  const batch = JSON.parse(res.body.answer);
-  assert.deepEqual(batch.questions, []);
-  assert.deepEqual(batch.failedSlots, ['0-0']);
+  const finalized = JSON.parse(res.body.answer);
+  assert.equal(finalized.ready, true);
+  assert.equal(finalized.questions.length, 2);
 });
 
 test('final validation accepts missing slots for a partial board', { concurrency: false }, async () => {
   globalThis.fetch = async () => { throw new Error('should not call Ollama'); };
   const questions = [
-    { slotId: '0-0', q: 'Which planet is known as the Red Planet?', o: ['Mars', 'Venus', 'Earth', 'Jupiter'], i: 0 },
+    { slotId: '0-0', q: 'Which planet is known as the Red Planet?', a: 'Mars', o: ['Mars', 'Venus', 'Earth', 'Jupiter'], i: 0 },
   ];
   const res = await callApi({
     action: 'quiz-validate',
-    quiz: { ...baseQuiz, questions, missingSlotIds: ['0-1'] },
+    quiz: { ...baseQuiz, categories: ['Solar System'], questions, missingSlotIds: ['0-1'] },
   });
   assert.equal(res.statusCode, 200);
   const finalized = JSON.parse(res.body.answer);
@@ -310,200 +400,28 @@ test('final validation accepts missing slots for a partial board', { concurrency
 test('final validation rejects an undocumented missing slot', { concurrency: false }, async () => {
   globalThis.fetch = async () => { throw new Error('should not call Ollama'); };
   const questions = [
-    { slotId: '0-0', q: 'Which planet is known as the Red Planet?', o: ['Mars', 'Venus', 'Earth', 'Jupiter'], i: 0 },
+    { slotId: '0-0', q: 'Which planet is known as the Red Planet?', a: 'Mars', o: ['Mars', 'Venus', 'Earth', 'Jupiter'], i: 0 },
   ];
   const res = await callApi({
     action: 'quiz-validate',
-    quiz: { ...baseQuiz, questions, missingSlotIds: [] },
+    quiz: { ...baseQuiz, categories: ['Solar System'], questions, missingSlotIds: [] },
   });
   assert.equal(res.statusCode, 502);
 });
 
-test('evidence questions follow the planned slot type on mixed boards', { concurrency: false }, async () => {
-  globalThis.fetch = async (url, init) => {
-    if (String(url).includes('wikipedia.org')) {
-      return jsonResponse({
-        query: {
-          pages: [{
-            index: 1,
-            title: 'SpaceX in 2025',
-            extract: 'In 2025, SpaceX launched Starship Flight 8 from Starbase in Texas. SpaceX also launched Starlink satellites during 2025.',
-            fullurl: 'https://en.wikipedia.org/wiki/SpaceX',
-          }],
-        },
-      });
-    }
-    const request = JSON.parse(init.body);
-    const system = request.messages[0].content;
-    if (system.includes('category headings')) return ollamaResponse({ categories: ['SpaceX missions in 2025'] });
-    const slotFormats = request.format?.properties?.qs?.prefixItems ?? [];
-    const qs = slotFormats.map((item, index) => {
-      if (!item.properties?.s) throw new Error('expected the evidence format');
-      const sourceId = item.properties.s.enum[index % item.properties.s.enum.length];
-      if (item.properties.x) {
-        return { q: `Which company ran Starship mission ${sourceId} in 2025?`, a: 'SpaceX', x: ['Blue Origin', 'NASA', 'Roscosmos'], s: sourceId };
-      }
-      if (item.properties.d) {
-        return { q: `Draw the mission from fact ${sourceId} and label the company.`, a: 'SpaceX', s: sourceId, d: 1 };
-      }
-      return { q: `Which company ran Starship mission ${sourceId} in 2025?`, a: 'SpaceX', s: sourceId };
-    });
-    return ollamaResponse({ qs });
-  };
-
-  const spec = { ...baseQuiz, topic: 'SpaceX', questionType: 'mixed', categories: undefined };
-  const planRes = await callApi({ action: 'quiz-plan', quiz: spec });
-  assert.equal(planRes.statusCode, 200);
-  const plan = JSON.parse(planRes.body.answer);
-
-  const batchRes = await callApi({
-    action: 'quiz-batch',
-    quiz: { ...spec, categories: plan.categories, slotIds: ['0-0', '0-1'], excludedQuestions: [] },
-  });
-  assert.equal(batchRes.statusCode, 200);
-  const batch = JSON.parse(batchRes.body.answer);
-  assert.deepEqual(batch.failedSlots, []);
-  plan.slots.forEach(slot => {
-    const question = batch.questions.find(candidate => candidate.slotId === slot.slotId);
-    assert.ok(question, `missing ${slot.slotId}`);
-    if (slot.type === 'multiple') assert.ok(Array.isArray(question.o));
-    if (slot.type === 'open') assert.equal(typeof question.a, 'string');
-    if (slot.type === 'drawing') assert.equal(question.d, 1);
-  });
-
-  const validateRes = await callApi({
-    action: 'quiz-validate',
-    quiz: { ...spec, categories: plan.categories, questions: batch.questions, missingSlotIds: [] },
-  });
-  assert.equal(validateRes.statusCode, 200, JSON.stringify(validateRes.body));
-});
-
-test('quiz plan expands fewer topics and groups more topics', { concurrency: false }, async () => {
-  const systems = [];
-  globalThis.fetch = async (_url, init) => {
-    systems.push(JSON.parse(init.body).messages[0].content);
-    return ollamaResponse({ categories: ['Songs', 'Albums', 'Career', 'Performances'] });
-  };
-  const expanded = await callApi({
-    action: 'quiz-plan',
-    quiz: { ...baseQuiz, topic: 'Olivia Rodrigo', columns: 4, rows: 2, categories: undefined },
-  });
-  assert.equal(expanded.statusCode, 200);
-  assert.match(systems[0], /Decompose each supplied topic/);
-  assert.equal(JSON.parse(expanded.body.answer).categories.length, 4);
-
-  systems.length = 0;
-  globalThis.fetch = async (_url, init) => {
-    systems.push(JSON.parse(init.body).messages[0].content);
-    return ollamaResponse({ categories: ['SpaceX', 'Mars'] });
-  };
-  const grouped = await callApi({
-    action: 'quiz-plan',
-    quiz: { ...baseQuiz, topic: 'SpaceX, Mars, Europa, Titan, Venus, Ceres', columns: 2, rows: 2, categories: undefined },
-  });
-  assert.equal(grouped.statusCode, 200);
-  assert.match(systems[0], /Group closely related topics/);
-  assert.equal(JSON.parse(grouped.body.answer).categories.length, 2);
-});
-
-test('quiz plan returns the model-classified topic kind', { concurrency: false }, async () => {
-  globalThis.fetch = async () => ollamaResponse({ kind: 'celebrity', categories: ['Career'] });
+test('returns a useful fast failure when Ollama is unavailable', { concurrency: false }, async () => {
+  globalThis.fetch = async () => { throw new Error('offline'); };
   const res = await callApi({
     action: 'quiz-plan',
-    quiz: { ...baseQuiz, topic: 'Olivia Rodrigo', categories: undefined },
+    quiz: { ...baseQuiz, topic: 'Minecraft', columns: 2 },
   });
-  assert.equal(res.statusCode, 200);
-  const plan = JSON.parse(res.body.answer);
-  assert.equal(plan.kind, 'celebrity');
-  assert.deepEqual(plan.categories, ['Career']);
+  assert.equal(res.statusCode, 502);
+  assert.equal(res.body.error, 'AI server unavailable');
 });
 
-test('question batches follow the requested topic style', { concurrency: false }, async () => {
-  const systems = [];
-  globalThis.fetch = async (_url, init) => {
-    const request = JSON.parse(init.body);
-    systems.push(request.messages[0].content);
-    const slotIds = [...request.messages[1].content.matchAll(/slotId=([\w-]+)/g)].map(match => match[1]);
-    return ollamaResponse({
-      qs: slotIds.map(slotId => ({
-        slotId,
-        q: `Which game feature belongs to slot ${slotId}?`,
-        o: ['Build mode', 'Taxes', 'Photosynthesis', 'Law'],
-        i: 0,
-      })),
-    });
-  };
-
-  const res = await callApi({
-    action: 'quiz-batch',
-    quiz: {
-      ...baseQuiz,
-      topic: 'Roblox',
-      kind: 'games',
-      categories: ['Game history'],
-      slotIds: ['0-0'],
-      excludedQuestions: [],
-    },
-  });
-  assert.equal(res.statusCode, 200);
-  assert.match(systems[0], /game trivia/);
-  assert.equal(JSON.parse(res.body.answer).questions.length, 1);
-});
-
-test('topic style falls back to deterministic keywords', { concurrency: false }, async () => {
-  const systems = [];
-  globalThis.fetch = async (_url, init) => {
-    const request = JSON.parse(init.body);
-    systems.push(request.messages[0].content);
-    const slotIds = [...request.messages[1].content.matchAll(/slotId=([\w-]+)/g)].map(match => match[1]);
-    return ollamaResponse({
-      qs: slotIds.map(slotId => ({
-        slotId,
-        q: `Which Minecraft feature belongs to slot ${slotId}?`,
-        o: ['Creeper', 'Taxes', 'Photosynthesis', 'Law'],
-        i: 0,
-      })),
-    });
-  };
-
-  const res = await callApi({
-    action: 'quiz-batch',
-    quiz: {
-      ...baseQuiz,
-      topic: 'Minecraft',
-      categories: ['Game history'],
-      slotIds: ['0-0'],
-      excludedQuestions: [],
-    },
-  });
-  assert.equal(res.statusCode, 200);
-  assert.match(systems[0], /game trivia/);
-});
-
-test('locked-category math requests are computed in code', { concurrency: false }, async () => {
-  let calls = 0;
-  globalThis.fetch = async () => { calls += 1; throw new Error('the model must not be used for math'); };
-  const res = await callApi({
-    action: 'quiz-category',
-    quiz: {
-      topic: 'Math practice',
-      language: 'English',
-      category: 'Multiplication',
-      categoryCount: 1,
-      categoryIndex: 0,
-      rows: 2,
-      questionType: 'open',
-      difficulty: 'easy',
-      allCategories: ['Multiplication'],
-    },
-  });
-  assert.equal(res.statusCode, 200);
-  assert.equal(calls, 0);
-  const quiz = JSON.parse(res.body.answer);
-  assert.deepEqual(quiz.c, ['Multiplication']);
-  assert.equal(quiz.qs[0].length, 2);
-  quiz.qs[0].forEach(question => {
-    assert.equal(typeof question.a, 'string');
-    assert.equal(question.a, solveArithmetic(question.q));
-  });
+test('rejects malformed quiz requests', { concurrency: false }, async () => {
+  const res = await callApi({ action: 'quiz-plan', quiz: { ...baseQuiz, language: 'Klingon' } });
+  assert.equal(res.statusCode, 400);
+  const unknown = await callApi({ action: 'quiz-magic', quiz: baseQuiz });
+  assert.equal(unknown.statusCode, 400);
 });
