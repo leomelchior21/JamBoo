@@ -181,15 +181,18 @@ export class DeepSeekProvider extends AIProvider {
     const url = new URL(this.endpoint.href);
     url.pathname = url.pathname.replace(/\/chat\/completions\/?$/, '/models');
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 4000);
+    const timer = setTimeout(() => controller.abort(), 8000);
     try {
       const response = await fetch(url, {
         headers: { Accept: 'application/json', Authorization: `Bearer ${this.apiKey}` },
         signal: controller.signal,
       });
       return { ready: response.ok, detail: response.ok ? 'ok' : `HTTP ${response.status}` };
-    } catch (_) {
-      return { ready: false, detail: 'unreachable' };
+    } catch (error) {
+      // Surface the network failure code (ENOTFOUND, ECONNREFUSED, timeouts) so a
+      // broken DEEPSEEK_BASE_URL is visible from /api/ai/health without logs.
+      const code = error?.cause?.code ?? error?.code ?? error?.name ?? 'error';
+      return { ready: false, detail: `unreachable (${code})` };
     } finally {
       clearTimeout(timer);
     }
