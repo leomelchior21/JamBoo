@@ -1,4 +1,4 @@
-import { AITimeoutError, InvalidAIResponseError } from './ai-errors.mjs';
+import { AIProviderError, AITimeoutError, InvalidAIResponseError } from './ai-errors.mjs';
 import { createCallBudget, spendCall } from './ai-provider.mjs';
 import { readBoundedInteger } from './config.mjs';
 import { verifyPythonOutput } from './code-checks.mjs';
@@ -23,7 +23,7 @@ import {
 import { classifyTopicVoice, normalizeTopicVoice } from './quiz-voice.mjs';
 
 export const QUESTION_BATCH_SIZE = readBoundedInteger(process.env.QUESTION_BATCH_SIZE, 6, 1, 8);
-const MAX_REPAIR_ATTEMPTS = readBoundedInteger(process.env.MAX_REPAIR_ATTEMPTS, 2, 1, 3);
+const MAX_REPAIR_ATTEMPTS = readBoundedInteger(process.env.MAX_REPAIR_ATTEMPTS, 1, 1, 3);
 const MAX_PLAN_ATTEMPTS = 2;
 const MAX_CATEGORY_ROUNDS = MAX_REPAIR_ATTEMPTS + 1;
 const PLAN_MAX_TOKENS = 300;
@@ -163,7 +163,13 @@ async function generateCategoryQuestions(provider, spec, category, slots, exclud
         retry: round - 1,
       });
     } catch (error) {
-      if (!(error instanceof InvalidAIResponseError) && !(error instanceof AITimeoutError)) throw error;
+      const retryable = error instanceof InvalidAIResponseError ||
+        error instanceof AITimeoutError ||
+        (error instanceof AIProviderError && error.retryable);
+      if (!retryable) throw error;
+      if (error instanceof AIProviderError) {
+        console.warn(`[quiz] transient provider failure id=${spec.generationId} category=${JSON.stringify(category)} reason=${JSON.stringify(error.message)}`);
+      }
       const reason = error instanceof AITimeoutError ? 'AI request timed out' : error.message;
       pending.forEach(slot => rejected.set(slot.slotId, reason));
       continue;

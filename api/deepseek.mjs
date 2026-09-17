@@ -1,4 +1,4 @@
-import { AIConfigError, AIProviderError, AITimeoutError, InvalidAIResponseError } from './ai-errors.mjs';
+import { AIConfigError, AIProviderError, AITimeoutError, InvalidAIResponseError, providerHttpError } from './ai-errors.mjs';
 
 export const DEFAULT_DEEPSEEK_BASE_URL = 'https://api.deepseek.com';
 export const DEFAULT_DEEPSEEK_MODEL = 'deepseek-flash';
@@ -105,7 +105,7 @@ export async function callDeepSeek({
   } catch (error) {
     if (timedOut) throw new AITimeoutError(`DeepSeek timed out after ${timeoutMs}ms`);
     if (signal?.aborted) throw error;
-    throw new AIProviderError('DeepSeek request failed');
+    throw new AIProviderError('DeepSeek request failed', { retryable: true });
   } finally {
     clearTimeout(timer);
     signal?.removeEventListener('abort', relay);
@@ -113,7 +113,7 @@ export async function callDeepSeek({
 
   if (!upstream.ok) {
     const detail = await readUpstreamError(upstream);
-    throw new AIProviderError(detail ? `DeepSeek HTTP ${upstream.status}: ${detail}` : `DeepSeek HTTP ${upstream.status}`);
+    throw providerHttpError('DeepSeek', upstream.status, detail);
   }
 
   let data;

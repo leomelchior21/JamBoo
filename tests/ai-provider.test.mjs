@@ -215,10 +215,32 @@ test('DeepSeek probe reports readiness and HTTP failures', async () => {
   assert.equal((await unconfigured.probe()).ready, false);
 });
 
-test('DeepSeek provider reports upstream failures and empty content', async () => {
+test('DeepSeek provider classifies retryable and fatal upstream failures', async () => {
   const provider = new DeepSeekProvider({ DEEPSEEK_API_KEY: 'test-key' });
-  globalThis.fetch = async () => ({ ok: false, status: 500, async json() { return {}; } });
-  await assert.rejects(() => provider.chat({ messages: [{ role: 'user', content: 'json' }] }), AIProviderError);
+  const classify = async status => {
+    globalThis.fetch = async () => ({ ok: false, status, async json() { return {}; } });
+    try {
+      await provider.chat({ messages: [{ role: 'user', content: 'json' }] });
+      return null;
+    } catch (error) {
+      assert.ok(error instanceof AIProviderError, `expected AIProviderError for HTTP ${status}`);
+      assert.equal(error.status, status);
+      return error.retryable;
+    }
+  };
+
+  assert.equal(await classify(429), true);
+  assert.equal(await classify(500), true);
+  assert.equal(await classify(503), true);
+  assert.equal(await classify(400), false);
+  assert.equal(await classify(401), false);
+  assert.equal(await classify(402), false);
+
+  globalThis.fetch = async () => { throw new Error('socket closed'); };
+  await assert.rejects(
+    () => provider.chat({ messages: [{ role: 'user', content: 'json' }] }),
+    error => error instanceof AIProviderError && error.retryable === true
+  );
 
   globalThis.fetch = async () => ({ ok: true, status: 200, async json() { return { choices: [] }; } });
   await assert.rejects(() => provider.chat({ messages: [{ role: 'user', content: 'json' }] }), InvalidAIResponseError);

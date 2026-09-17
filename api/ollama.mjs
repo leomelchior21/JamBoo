@@ -1,4 +1,4 @@
-import { AIConfigError, AIProviderError, InvalidAIResponseError } from './ai-errors.mjs';
+import { AIConfigError, AIProviderError, InvalidAIResponseError, providerHttpError } from './ai-errors.mjs';
 
 const DEFAULT_NUM_CTX = 4096;
 
@@ -66,12 +66,12 @@ export async function callOllama({
     });
   } catch (error) {
     if (signal?.aborted) throw error;
-    throw new AIProviderError('Ollama request failed');
+    throw new AIProviderError('Ollama request failed', { retryable: true });
   }
 
   if (!upstream.ok) {
     console.error(`Ollama returned HTTP ${upstream.status}`);
-    throw new AIProviderError(`Ollama returned HTTP ${upstream.status}`);
+    throw providerHttpError('Ollama', upstream.status);
   }
 
   let data;

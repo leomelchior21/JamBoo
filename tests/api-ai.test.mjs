@@ -646,16 +646,40 @@ test('mixed difficulty and mixed types follow the planned slots', { concurrency:
   });
 });
 
-test('a provider outage fails clearly without a partial quiz', { concurrency: false }, async () => {
-  globalThis.fetch = async () => { throw new Error('network down'); };
-  const planRes = await callApi({
-    action: 'quiz-plan',
-    quiz: { ...baseQuiz, topic: 'Minecraft', columns: 2 },
+test('retries transient provider failures within the batch', { concurrency: false }, async () => {
+  let calls = 0;
+  globalThis.fetch = async (_url, init) => {
+    calls += 1;
+    if (calls === 1) {
+      return { ok: false, status: 503, async json() { return { error: { message: 'busy' } }; } };
+    }
+    return ollamaResponse({ qs: questionsFromRequest(JSON.parse(init.body)) });
+  };
+  const res = await callApi({
+    action: 'quiz-batch',
+    quiz: {
+      ...baseQuiz,
+      columns: 2,
+      rows: 1,
+      categories: ['Planets', 'Stars'],
+      slotIds: ['0-0', '1-0'],
+      excludedQuestions: [],
+    },
   });
-  assert.equal(planRes.statusCode, 502);
-  assert.equal(planRes.body.answer, undefined);
+  assert.equal(res.statusCode, 200);
+  const batch = JSON.parse(res.body.answer);
+  assert.deepEqual(batch.failedSlots, []);
+  assert.equal(batch.repaired, 1);
+  assert.equal(batch.questions.length, 2);
+});
 
-  const batchRes = await callApi({
+test('fails fast on fatal provider errors such as auth failures', { concurrency: false }, async () => {
+  let calls = 0;
+  globalThis.fetch = async () => {
+    calls += 1;
+    return { ok: false, status: 401, async json() { return { error: { message: 'Authentication Fails' } }; } };
+  };
+  const res = await callApi({
     action: 'quiz-batch',
     quiz: {
       ...baseQuiz,
@@ -666,8 +690,39 @@ test('a provider outage fails clearly without a partial quiz', { concurrency: fa
       excludedQuestions: [],
     },
   });
-  assert.equal(batchRes.statusCode, 502);
-  assert.equal(batchRes.body.answer, undefined);
+  assert.equal(res.statusCode, 502);
+  assert.equal(calls, 1);
+});
+
+test('a provider outage fails clearly without a partial quiz', { concurrency: false }, async () => {
+  globalThis.fetch = async () => { throw new Error('network down'); };
+  const planRes = await callApi({
+    action: 'quiz-plan',
+    quiz: { ...baseQuiz, topic: 'Minecraft', columns: 2 },
+  });
+  assert.equal(planRes.statusCode, 502);
+  assert.equal(planRes.body.answer, undefined);
+
+  const quiz = {
+    ...baseQuiz,
+    columns: 1,
+    rows: 1,
+    categories: ['Solar System'],
+    slotIds: ['0-0'],
+    excludedQuestions: [],
+  };
+  const batchRes = await callApi({ action: 'quiz-batch', quiz });
+  assert.equal(batchRes.statusCode, 200);
+  const batch = JSON.parse(batchRes.body.answer);
+  assert.deepEqual(batch.questions, []);
+  assert.deepEqual(batch.failedSlots, ['0-0']);
+
+  const validateRes = await callApi({
+    action: 'quiz-validate',
+    quiz: { ...baseQuiz, columns: 1, rows: 1, categories: ['Solar System'], questions: [], missingSlotIds: ['0-0'] },
+  });
+  assert.equal(validateRes.statusCode, 502);
+  assert.equal(validateRes.body.code, 'INVALID_AI_RESPONSE');
 });
 
 test('uses the DeepSeek provider by default with thinking disabled', { concurrency: false }, async () => {
