@@ -23,6 +23,15 @@ export function normalizeUsage(usage) {
   return { ...EMPTY_USAGE, ...(usage ?? {}) };
 }
 
+function describeNetworkError(error) {
+  const cause = error?.cause;
+  const nested = Array.isArray(cause?.errors) ? cause.errors.find(item => item?.code) ?? cause.errors[0] : null;
+  const detail = nested ?? cause ?? error;
+  const code = detail?.code ?? detail?.name ?? 'error';
+  const message = String(detail?.message ?? '').replace(/\s+/g, ' ').trim().slice(0, 120);
+  return message ? `${code}: ${message}` : code;
+}
+
 export function logAIUsage(entry) {
   console.info(`[ai-usage] ${JSON.stringify(entry)}`);
   if ((entry.reasoningTokens ?? 0) > 0) {
@@ -191,8 +200,7 @@ export class DeepSeekProvider extends AIProvider {
     } catch (error) {
       // Surface the network failure code (ENOTFOUND, ECONNREFUSED, timeouts) so a
       // broken DEEPSEEK_BASE_URL is visible from /api/ai/health without logs.
-      const code = error?.cause?.code ?? error?.code ?? error?.name ?? 'error';
-      return { ready: false, detail: `unreachable (${code})` };
+      return { ready: false, detail: `unreachable (${describeNetworkError(error)})` };
     } finally {
       clearTimeout(timer);
     }
