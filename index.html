@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>JamBoo — Quiz Generator 9000</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Fredoka+One&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
 <style>
 /* ═══════════════════════════════
    BASE
@@ -24,6 +24,8 @@
   --text:#FFFFFF;
   --dim:rgba(255,255,255,.35);
   --fp:'Press Start 2P',monospace;
+  --fd:'Fredoka One',cursive;
+  --fb:'Nunito',sans-serif;
   --row-border: rgba(102,0,255,.18);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -245,16 +247,6 @@ body::before{
   background:var(--cyan);box-shadow:0 0 8px var(--cyan);
 }
 
-/* ─── mode toggle buttons ─── */
-.mode-btn{
-  display:flex;flex-direction:column;align-items:center;gap:4px;
-  padding:12px 8px;
-}
-.mode-btn .mode-ico{font-size:14px;line-height:1;}
-.mode-btn .mode-lbl{font-size:6px;letter-spacing:1px;}
-.mode-btn .mode-desc{font-size:5px;color:rgba(255,255,255,.35);letter-spacing:1px;}
-.mode-btn.on .mode-desc{color:rgba(0,255,255,.6);}
-
 /* ═══════════════════════════════
    LED MATRIX GRID PICKER
 ═══════════════════════════════ */
@@ -283,18 +275,6 @@ body::before{
 }
 
 /* team inputs */
-.team-row-wrap{margin-bottom:20px;}
-.team-row-label{
-  font-size:7px;letter-spacing:2px;text-transform:uppercase;
-  color:rgba(0,255,255,.7);padding-bottom:8px;margin-bottom:12px;
-  border-bottom:1px solid var(--row-border);
-  display:flex;align-items:center;gap:8px;
-}
-.team-row-dot{
-  width:6px;height:6px;background:var(--pink);
-  box-shadow:0 0 8px var(--pink);flex-shrink:0;
-  animation:blink .8s step-end infinite;
-}
 .lcd-strips{
   display:flex;flex-wrap:wrap;justify-content:center;gap:10px;
 }
@@ -317,56 +297,12 @@ body::before{
 }
 .lcd-strip input::placeholder{color:rgba(255,0,255,.3);}
 
-/* AI prompt */
-.prompt-wrap{margin-bottom:20px;}
-.prompt-label{
-  font-size:7px;letter-spacing:2px;text-transform:uppercase;
-  color:rgba(0,255,255,.7);padding-bottom:8px;margin-bottom:12px;
-  border-bottom:1px solid var(--row-border);
-  display:flex;align-items:center;gap:8px;
-}
-.lcd-cursor{
-  display:inline-block;width:8px;height:10px;
-  background:#FF77CC;margin-left:4px;vertical-align:middle;
-  animation:blink .9s step-end infinite;
-}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
-.lcd-screen{
-  position:relative;background:#160616;
-  border:2px solid rgba(255,0,255,.28);overflow:hidden;
-  animation:promptPulse 3s ease-in-out infinite;
-}
-@keyframes promptPulse{
-  0%,100%{border-color:rgba(255,0,255,.22);}
-  50%{border-color:rgba(255,0,255,.6);box-shadow:0 0 22px rgba(255,0,255,.12);}
-}
-.lcd-screen::after{
-  content:'';position:absolute;inset:0;pointer-events:none;z-index:2;
-  background:repeating-linear-gradient(
-    0deg,rgba(0,0,0,.12) 0px,rgba(0,0,0,.12) 1px,
-    transparent 1px,transparent 3px
-  );
-}
-.lcd-ta{
-  display:block;width:100%;min-height:160px;
-  padding:28px 32px;
-  background:transparent;border:none;outline:none;
-  color:#FF77CC;font-family:var(--fp);font-size:18px;line-height:2;
-  resize:vertical;caret-color:#FF77CC;position:relative;z-index:1;
-}
-.lcd-ta::placeholder{color:rgba(255,0,255,.3);}
-
 /* ═══════════════════════════════
    LAUNCH BUTTON
 ═══════════════════════════════ */
 .launch-wrap{
   display:flex;flex-direction:column;align-items:center;gap:12px;
   padding:4px 0 8px;
-}
-.launch-label{
-  font-size:7px;letter-spacing:4px;text-transform:uppercase;
-  color:rgba(255,120,255,.6);animation:blink 1.2s step-end infinite;
-  text-shadow:0 0 10px rgba(255,0,255,.4);
 }
 .btn-launch{
   position:relative;overflow:hidden;
@@ -571,9 +507,6 @@ body::after{
 .lcd-strip{min-width:0;padding:15px 18px;background:linear-gradient(90deg,#1b0719,#100511);transition:border-color .2s,transform .2s,box-shadow .2s;}
 .lcd-strip:focus-within{transform:translateY(-1px);border-color:var(--tc,var(--pink));box-shadow:0 0 20px rgba(255,0,255,.18);}
 .lcd-strip input{font-size:clamp(11px,1.1vw,15px);line-height:1.5;}
-.lcd-screen{width:100%;background:linear-gradient(145deg,#1b0719,#100511);box-shadow:inset 0 0 30px rgba(0,0,0,.3);}
-.lcd-screen:focus-within{border-color:rgba(255,0,255,.8);box-shadow:0 0 26px rgba(255,0,255,.12),inset 0 0 30px rgba(0,0,0,.3);}
-.lcd-ta{min-height:140px;padding:24px 26px;font-size:clamp(11px,1.3vw,16px);line-height:1.85;}
 .launch-wrap{max-width:1320px;margin:0 auto;padding:8px 0 20px !important;}
 .btn-launch{min-height:68px;max-width:100%;clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px);}
 .grid-floor{opacity:.48;filter:saturate(1.2);}
@@ -602,9 +535,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,[role="button"]:
   .led-cell{width:25px;height:25px;}
   .lcd-strips{grid-template-columns:1fr;}
   .lcd-strip{min-height:54px;padding:12px 15px;}
-  .lcd-ta{min-height:150px;padding:18px 16px;font-size:11px;line-height:1.8;}
   .launch-wrap{padding:8px 4px calc(12px + env(safe-area-inset-bottom)) !important;}
-  .launch-label{font-size:6px;letter-spacing:2.5px;}
   .btn-launch{width:100%;min-height:62px;padding:17px 12px;font-size:10px;letter-spacing:2.5px;}
 }
 @media(max-width:370px){
@@ -617,6 +548,143 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,[role="button"]:
   html{scroll-behavior:auto;}
   *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important;}
 }
+
+/* ═══════════════════════════════
+   BUILDER (repository-driven)
+═══════════════════════════════ */
+.teams-setup{display:flex;flex-direction:column;gap:16px;width:100%;}
+.stepper{display:flex;align-items:center;gap:14px;}
+.step-btn{
+  width:52px;height:52px;flex:none;
+  background:#14143A;border:3px solid #2A2A55;box-shadow:3px 3px 0 #000;
+  color:#fff;font-family:var(--fp);font-size:16px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:border-color .12s,color .12s,transform .08s,background .12s;
+}
+.step-btn:hover:not(:disabled){border-color:var(--cyan);color:var(--cyan);background:rgba(0,255,255,.08);}
+.step-btn:active:not(:disabled){transform:translateY(2px);}
+.step-btn:disabled{opacity:.28;cursor:not-allowed;}
+.step-btn.sm{width:38px;height:38px;font-size:12px;border-width:2px;box-shadow:2px 2px 0 #000;}
+.step-value{min-width:92px;text-align:center;}
+.step-value span{display:block;font-size:22px;color:var(--cyan);text-shadow:2px 2px 0 var(--b1),0 0 14px rgba(0,255,255,.5);}
+.step-value small{display:block;margin-top:7px;font-size:6px;letter-spacing:2px;color:var(--dim);}
+.diff-pills{display:flex;flex-wrap:wrap;gap:8px;width:100%;}
+.diff-pill{
+  padding:12px 18px;min-height:46px;
+  background:rgba(8,8,28,.9);border:2px solid rgba(102,0,255,.35);
+  color:rgba(255,255,255,.55);font-family:var(--fp);font-size:7px;letter-spacing:1.5px;
+  cursor:pointer;transition:border-color .12s,color .12s,background .12s,box-shadow .12s;
+}
+.diff-pill:hover{border-color:rgba(0,255,255,.6);color:#fff;}
+.diff-pill.active{
+  border-color:var(--cyan);color:#fff;
+  background:linear-gradient(160deg,rgba(102,0,255,.5),rgba(0,200,255,.16));
+  box-shadow:0 0 16px rgba(0,255,255,.22);
+}
+.config-row-topics{grid-column:1/-1;}
+.topics-empty{margin:0;font-family:var(--fb);font-weight:700;font-size:16px;line-height:1.5;color:rgba(255,255,255,.6);}
+.topics-empty[hidden]{display:none;}
+.topic-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;width:100%;}
+.topic-card{
+  position:relative;min-width:0;padding:16px 16px 14px 20px;
+  background:linear-gradient(150deg,rgba(16,14,46,.95),rgba(7,7,24,.92));
+  border:2px solid var(--tc,var(--cyan));
+  box-shadow:5px 5px 0 rgba(0,0,0,.45),0 0 22px rgba(0,0,0,.25);
+  animation:cardIn .28s cubic-bezier(.2,.85,.25,1) both;
+  transition:transform .16s,border-color .16s;
+}
+@keyframes cardIn{from{opacity:0;transform:translateY(10px) scale(.98);}to{opacity:1;transform:none;}}
+.topic-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--tc,var(--cyan));box-shadow:0 0 14px var(--tc,var(--cyan));}
+.topic-path{font-family:var(--fb);font-weight:800;font-size:12px;letter-spacing:1.1px;color:rgba(255,255,255,.5);text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.topic-name{margin-top:7px;font-family:var(--fd);font-size:26px;line-height:1.15;letter-spacing:.4px;color:#fff;overflow-wrap:anywhere;}
+.topic-controls{margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+.col-stepper{display:flex;align-items:center;gap:8px;}
+.col-lbl{font-family:var(--fb);font-weight:800;font-size:14px;letter-spacing:.2px;color:rgba(255,255,255,.55);}
+.col-count{min-width:30px;text-align:center;font-family:var(--fb);font-weight:900;font-size:22px;color:var(--tc,var(--cyan));}
+.topic-actions{display:flex;align-items:center;gap:6px;margin-left:auto;}
+.mini-btn{
+  min-height:38px;padding:0 13px;
+  background:rgba(8,8,28,.9);border:2px solid rgba(102,0,255,.4);
+  color:rgba(255,255,255,.75);font-family:var(--fb);font-weight:800;font-size:14px;letter-spacing:.2px;
+  cursor:pointer;transition:border-color .12s,color .12s,background .12s;
+}
+.mini-btn:hover:not(:disabled){border-color:var(--cyan);color:#fff;}
+.mini-btn:disabled{opacity:.25;cursor:not-allowed;}
+.mini-btn.danger:hover{border-color:var(--red);color:#fff;background:rgba(255,34,68,.16);}
+.topic-warn{margin-top:10px;font-family:var(--fb);font-weight:700;font-size:14px;line-height:1.45;color:var(--yellow);}
+.columns-meter{display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-family:var(--fb);font-weight:900;font-size:16px;letter-spacing:1px;color:var(--cyan);text-shadow:0 0 12px rgba(0,255,255,.35);min-height:18px;}
+.columns-meter .cm-left{color:var(--yellow);}
+.columns-meter.warn{color:var(--yellow);text-shadow:0 0 12px rgba(255,215,0,.3);}
+.add-topic-btn{
+  align-self:flex-start;min-height:56px;padding:0 24px;
+  background:rgba(8,8,28,.9);border:2px dashed rgba(0,255,255,.45);
+  color:rgba(0,255,255,.9);font-family:var(--fb);font-weight:900;font-size:16px;letter-spacing:.6px;
+  cursor:pointer;transition:border-color .14s,color .14s,background .14s,transform .14s;
+}
+.add-topic-btn:hover:not(:disabled){border-style:solid;border-color:var(--cyan);background:rgba(0,255,255,.08);color:#fff;transform:translateY(-2px);}
+.board-preview-wrap{width:100%;display:flex;flex-direction:column;gap:10px;}
+.board-preview-lbl{font-family:var(--fb);font-weight:800;font-size:12px;letter-spacing:2px;color:var(--dim);}
+.board-preview{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 10px;}
+.bp-col{flex:1 0 96px;min-width:96px;display:flex;flex-direction:column;align-items:center;gap:7px;padding:11px 8px;background:rgba(0,0,0,.22);border:1px solid var(--tc,var(--cyan));}
+.bp-head{display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:15px;letter-spacing:.3px;color:var(--tc,var(--cyan));text-align:center;line-height:1.15;min-height:38px;overflow-wrap:anywhere;}
+.bp-dot{width:9px;height:9px;background:var(--tc,var(--cyan));box-shadow:0 0 8px rgba(255,255,255,.12);}
+.bp-empty{font-family:var(--fb);font-weight:700;font-size:14px;color:var(--dim);padding:12px 0;}
+.build-status{min-height:18px;font-family:var(--fb);font-weight:800;font-size:15px;line-height:1.5;color:var(--yellow);text-align:center;}
+.build-status:empty{display:none;}
+body.picker-open{overflow:hidden;}
+.picker-overlay{position:fixed;inset:0;z-index:5000;display:flex;align-items:center;justify-content:center;padding:clamp(10px,3vw,28px);background:rgba(2,2,12,.86);backdrop-filter:blur(8px);}
+.picker-overlay[hidden]{display:none;}
+.picker-panel{
+  width:min(100%,560px);max-height:min(86dvh,720px);
+  display:flex;flex-direction:column;
+  background:linear-gradient(150deg,rgba(15,15,42,.99),rgba(7,7,25,.99));
+  border:2px solid rgba(0,255,255,.5);
+  box-shadow:8px 8px 0 rgba(0,0,0,.55),0 0 40px rgba(0,255,255,.12);
+  animation:pickerIn .22s cubic-bezier(.2,.85,.25,1);
+}
+@keyframes pickerIn{from{opacity:0;transform:translateY(14px) scale(.97);}to{opacity:1;transform:none;}}
+.picker-head{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid rgba(102,0,255,.28);}
+.picker-back{width:44px;height:44px;flex:none;background:#14143A;border:2px solid #2A2A55;color:#fff;font-size:16px;cursor:pointer;transition:border-color .12s,color .12s;}
+.picker-back:hover:not(:disabled){border-color:var(--cyan);color:var(--cyan);}
+.picker-back:disabled{opacity:.25;cursor:default;}
+.picker-title{flex:1;min-width:0;font-family:var(--fb);font-weight:900;font-size:20px;letter-spacing:.2px;color:#fff;text-shadow:0 0 14px rgba(0,255,255,.45);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.picker-close{width:44px;height:44px;flex:none;background:#14143A;border:2px solid #2A2A55;color:rgba(255,255,255,.7);cursor:pointer;font-size:13px;transition:border-color .12s,color .12s;}
+.picker-close:hover{border-color:var(--pink);color:#fff;}
+.picker-search{padding:12px 14px 6px;}
+.picker-search input{
+  width:100%;min-height:54px;padding:0 16px;
+  background:#12052A;border:2px solid rgba(102,0,255,.4);outline:none;
+  color:#fff;font-family:var(--fb);font-weight:700;font-size:17px;letter-spacing:.2px;caret-color:var(--cyan);
+}
+.picker-search input::placeholder{color:rgba(255,255,255,.3);}
+.picker-search input:focus{border-color:var(--cyan);box-shadow:0 0 18px rgba(0,255,255,.16);}
+.picker-body{flex:1;overflow-y:auto;padding:10px 14px 16px;overscroll-behavior:contain;}
+.picker-section{margin:16px 0 8px;font-family:var(--fb);font-weight:900;font-size:13px;letter-spacing:2.4px;color:rgba(255,255,255,.55);text-transform:uppercase;}
+.picker-section:first-child{margin-top:2px;}
+.picker-item{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  width:100%;min-height:68px;padding:12px 16px;margin-bottom:8px;
+  background:rgba(8,8,28,.85);border:2px solid rgba(102,0,255,.3);
+  color:#fff;font-family:var(--fb);text-align:left;cursor:pointer;
+  transition:border-color .12s,background .12s,transform .12s;
+}
+.picker-item:hover,.picker-item:focus-visible{border-color:var(--cyan);background:rgba(0,255,255,.07);transform:translateX(3px);}
+.picker-item .pi-text{min-width:0;}
+.picker-item .pi-name{display:block;font-family:var(--fd);font-size:24px;font-weight:400;letter-spacing:.3px;line-height:1.15;overflow-wrap:anywhere;}
+.picker-item .pi-path{display:block;margin-top:5px;font-family:var(--fb);font-weight:800;font-size:13px;letter-spacing:.9px;color:rgba(255,255,255,.5);text-transform:uppercase;}
+.picker-item .pi-arrow{flex:none;color:var(--cyan);font-size:22px;line-height:1;}
+.picker-empty{padding:26px 6px;text-align:center;font-family:var(--fb);font-weight:700;font-size:16px;line-height:1.6;color:var(--dim);}
+@media(max-width:700px){
+  .topic-cards{grid-template-columns:1fr;}
+  .topic-actions{margin-left:0;}
+  .step-btn{width:48px;height:48px;}
+  .board-preview .bp-col{flex:0 0 92px;min-width:92px;}
+  .picker-overlay{padding:0;align-items:flex-end;}
+  .picker-panel{width:100%;max-height:92dvh;border-left:0;border-right:0;border-bottom:0;}
+  .picker-item{min-height:70px;}
+  .picker-item .pi-name{font-size:22px;}
+  .topic-name{font-size:24px;}
+}
 </style>
 </head>
 <body>
@@ -628,11 +696,11 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,[role="button"]:
   <img class="splash-logo" src="Jamboo-logo-png.png" alt="JamBoo">
 </div>
 
-<!-- LOADING -->
-<div class="loading-overlay" id="loading" role="status" aria-live="polite" aria-label="Generating quiz">
+<!-- LOADING (brief — the board is assembled from the library, never generated) -->
+<div class="loading-overlay" id="loading" role="status" aria-live="polite" aria-label="Building your Jamboo">
   <img class="load-logo" src="Jamboo-logo-png.png" alt="JamBoo">
   <div class="load-bar-wrap"><div class="load-bar"></div></div>
-  <p class="load-text" id="load-text">Generating...</p>
+  <p class="load-text" id="load-text">BUILDING YOUR JAMBOO...</p>
 </div>
 
 <!-- HEADER -->
@@ -653,22 +721,28 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,[role="button"]:
 <div class="synth-body">
 
   <div class="synth-title">
-    <span id="page-title">CREATE YOUR CHALLENGE!</span>
-    <small>★ JAMBOO QUIZ GENERATOR 9000 ★</small>
+    <span id="page-title">CREATE A JAMBOO</span>
+    <small id="page-subtitle">★ BUILD FROM THE JAMBOO LIBRARY ★</small>
   </div>
 
-  <!-- ══ CONFIG ROWS (full-width, no bounding box) ══ -->
   <div class="config-grid" id="config-grid">
 
-    <!-- ROW 1: PLAYERS -->
+    <!-- ROW: TEAMS -->
     <div class="config-row">
-      <div class="config-row-lbl" data-i18n="teamsTitle">PLAYERS</div>
-      <div class="config-btn-group" id="teams-btns"></div>
+      <div class="config-row-lbl" data-i18n="teamsTitle">TEAMS</div>
+      <div class="teams-setup">
+        <div class="stepper" role="group" aria-label="Number of teams">
+          <button type="button" class="step-btn" id="teams-minus" onclick="changeTeams(-1)" aria-label="Fewer teams">−</button>
+          <div class="step-value"><span id="teams-count">4</span><small id="teams-word">TEAMS</small></div>
+          <button type="button" class="step-btn" id="teams-plus" onclick="changeTeams(1)" aria-label="More teams">+</button>
+        </div>
+        <div class="lcd-strips" id="team-inputs"></div>
+      </div>
     </div>
 
-    <!-- ROW 2: BOARD SIZE -->
+    <!-- ROW: BOARD -->
     <div class="config-row config-row-grid">
-      <div class="config-row-lbl" data-i18n="gridTitle">BOARD SIZE</div>
+      <div class="config-row-lbl" data-i18n="gridTitle">BOARD</div>
       <div class="grid-area">
         <div class="led-matrix" id="gp-grid"></div>
         <div class="matrix-readout">
@@ -676,213 +750,545 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,[role="button"]:
           <div class="matrix-sub" id="gp-sublabel">12 questions</div>
         </div>
       </div>
-    </div>
-
-    <!-- ROW 3: DIFFICULTY -->
-    <div class="config-row">
-      <div class="config-row-lbl" data-i18n="diffTitle">DIFFICULTY</div>
-      <div class="config-btn-group" id="diff-btns"></div>
-    </div>
-
-    <!-- ROW 4: QUESTION TYPE -->
-    <div class="config-row">
-      <div class="config-row-lbl" data-i18n="qtypeTitle">QUESTION</div>
-      <div class="config-btn-group" id="qtype-btns"></div>
-    </div>
-
-
-    <!-- ROW: TEAM NAMES -->
-    <div class="config-row">
-      <div class="config-row-lbl" data-i18n="teamNamesLabel">TEAM NAMES</div>
-      <div class="lcd-strips" id="team-inputs"></div>
-    </div>
-
-    <!-- ROW: AI PROMPT -->
-    <div class="config-row">
-      <label class="config-row-lbl" for="ai-prompt">
-        <span data-i18n="promptTitle">ENTER YOUR QUEST</span>
-        <span class="lcd-cursor"></span>
-      </label>
-      <div class="lcd-screen" style="width:100%">
-        <textarea class="lcd-ta" id="ai-prompt" placeholder="> Describe your quiz..."></textarea>
+      <div class="board-preview-wrap">
+        <div class="board-preview-lbl" data-i18n="boardPreview">BOARD PREVIEW</div>
+        <div class="board-preview" id="board-preview"></div>
       </div>
+    </div>
+
+    <!-- ROW: TOPICS -->
+    <div class="config-row config-row-topics">
+      <div class="config-row-lbl" data-i18n="topicsTitle">TOPICS</div>
+      <p class="topics-empty" id="topics-empty" data-i18n="topicsEmpty">Choose what this Jamboo is about.</p>
+      <div class="topic-cards" id="topic-cards"></div>
+      <button type="button" class="add-topic-btn" id="add-topic-btn" data-i18n="addTopic" onclick="openPicker(null)">+ ADD TOPIC</button>
+      <div class="columns-meter" id="columns-meter" aria-live="polite"></div>
+    </div>
+
+    <!-- ROW: DIFFICULTY (secondary) -->
+    <div class="config-row config-row-difficulty">
+      <div class="config-row-lbl" data-i18n="diffTitle">DIFFICULTY</div>
+      <div class="diff-pills" id="diff-pills"></div>
     </div>
 
   </div><!-- /config-grid -->
 
   <!-- LAUNCH -->
   <div class="launch-wrap" style="padding:24px 80px 8px;">
-    <div class="launch-label" data-i18n="launchLabel">◄ PRESS START ►</div>
-    <button class="btn-launch" id="gen-btn" onclick="startGame()">
-      ▶ &nbsp;<span data-i18n="startBtn">START GAME</span>
+    <button class="btn-launch" id="gen-btn" onclick="createGame()" disabled>
+      ▶ &nbsp;<span data-i18n="createBtn">CREATE JAMBOO</span>
     </button>
+    <p class="build-status" id="build-status" role="status" aria-live="polite"></p>
   </div>
 
 </div><!-- /synth-body -->
 
 <div class="grid-floor"></div>
 
+<!-- TOPIC PICKER -->
+<div class="picker-overlay" id="picker-overlay" hidden>
+  <div class="picker-panel" role="dialog" aria-modal="true" aria-labelledby="picker-title">
+    <div class="picker-head">
+      <button type="button" class="picker-back" id="picker-back" onclick="pickerBack()" aria-label="Back">←</button>
+      <div class="picker-title" id="picker-title">Choose a topic</div>
+      <button type="button" class="picker-close" onclick="closePicker()" aria-label="Close">✕</button>
+    </div>
+    <div class="picker-search">
+      <input type="search" id="picker-search" placeholder="Search topics..." autocomplete="off" aria-label="Search topics">
+    </div>
+    <div class="picker-body" id="picker-body"></div>
+  </div>
+</div>
+
+<script src="data/questions.js"></script>
 <script>
+/* ══════════════════════════════════════════════════════════════════════
+   JAMBOO QUIZ ENGINE
+   Pure selection logic: repository index, search, column allocation,
+   difficulty balancing, unique question picking and session building.
+   No DOM access in here so the engine can be unit tested on its own.
+══════════════════════════════════════════════════════════════════════ */
+/* ═══ ENGINE START ═══ */
+const JamBooEngine=(function(){
+  const ROMAN=['I','II','III','IV','V','VI','VII','VIII','IX','X'];
+
+  function clean(value){ return String(value ?? '').trim(); }
+
+  function normalizeText(value){
+    return clean(value)
+      .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+      .toLowerCase().replace(/[^a-z0-9]+/g,' ')
+      .trim();
+  }
+
+  function shuffle(list,rng){
+    const out=Array.isArray(list)?list.slice():[];
+    for(let i=out.length-1;i>0;i--){
+      const j=Math.floor(rng()*(i+1));
+      const swap=out[i];out[i]=out[j];out[j]=swap;
+    }
+    return out;
+  }
+
+  function createRng(seed){
+    if(seed===undefined||seed===null||seed==='') return Math.random;
+    let state=0;
+    const text=String(seed);
+    for(let i=0;i<text.length;i++) state=(state*31+text.charCodeAt(i))>>>0;
+    if(state===0) state=0x9E3779B9;
+    return function(){
+      state|=0;state=(state+0x6D2B79F5)|0;
+      let t=Math.imul(state^(state>>>15),1|state);
+      t=(t+Math.imul(t^(t>>>7),61|t))^t;
+      return ((t^(t>>>14))>>>0)/4294967296;
+    };
+  }
+
+  function localizeName(name,lang){
+    if(name===undefined||name===null) return '';
+    if(typeof name==='string') return clean(name);
+    return clean(name[lang])||clean(name.en)||clean(Object.values(name)[0]);
+  }
+
+  function isEligibleQuestion(question){
+    if(!question||typeof question!=='object') return false;
+    if(question.active===false) return false;
+    if(question.reviewStatus && question.reviewStatus!=='approved') return false;
+    if(!clean(question.question)) return false;
+    if(!Array.isArray(question.choices)||question.choices.length!==4) return false;
+    if(!question.choices.every(choice=>clean(choice))) return false;
+    if(new Set(question.choices.map(normalizeText)).size!==4) return false;
+    const correct=Number(question.correctAnswer);
+    if(!Number.isInteger(correct)||correct<0||correct>3) return false;
+    return true;
+  }
+
+  function buildRepository(rawRepository,lang='en'){
+    const repo={categories:[],topics:[],byId:{}};
+    const categories=Array.isArray(rawRepository?.categories)?rawRepository.categories:[];
+    const defaultLanguage=clean(rawRepository?.defaultLanguage)||'en';
+    categories.forEach(rawCategory=>{
+      const category={id:clean(rawCategory.id),name:rawCategory.name,subjects:[]};
+      (Array.isArray(rawCategory.subjects)?rawCategory.subjects:[]).forEach(rawSubject=>{
+        const subject={id:clean(rawSubject.id),name:rawSubject.name,topics:[]};
+        (Array.isArray(rawSubject.topics)?rawSubject.topics:[]).forEach(rawTopic=>{
+          const subtopics=(Array.isArray(rawTopic.subtopics)?rawTopic.subtopics:[])
+            .map(subtopic=>({id:clean(subtopic.id),name:subtopic.name}));
+          const questions=(Array.isArray(rawTopic.questions)?rawTopic.questions:[])
+            .filter(isEligibleQuestion)
+            .map(question=>({
+              id:clean(question.id),
+              question:clean(question.question),
+              choices:question.choices.map(clean),
+              correctAnswer:Number(question.correctAnswer),
+              subtopic:clean(question.subtopic),
+              difficulty:Math.min(3,Math.max(1,Number(question.difficulty)||2)),
+              language:clean(question.language)||defaultLanguage,
+              tags:(Array.isArray(question.tags)?question.tags:[]).map(clean).filter(Boolean),
+              variantGroup:clean(question.variantGroup),
+            }));
+          const entry={
+            id:clean(rawTopic.id),
+            name:rawTopic.name,
+            aliases:(Array.isArray(rawTopic.aliases)?rawTopic.aliases:[]).map(clean).filter(Boolean),
+            tags:(Array.isArray(rawTopic.tags)?rawTopic.tags:[]).map(clean).filter(Boolean),
+            subtopics,
+            questions,
+            categoryId:category.id,
+            categoryName:category.name,
+            subjectId:subject.id,
+            subjectName:subject.name,
+          };
+          entry.searchText=normalizeText([
+            ...Object.values(entry.name||{}),
+            ...Object.values(category.name||{}),
+            ...Object.values(subject.name||{}),
+            ...entry.aliases,
+            ...entry.tags,
+            ...subtopics.flatMap(subtopic=>Object.values(subtopic.name||{})),
+          ].join(' '));
+          subject.topics.push(entry);
+          repo.topics.push(entry);
+          repo.byId[entry.id]=entry;
+        });
+        category.subjects.push(subject);
+      });
+      repo.categories.push(category);
+    });
+    return repo;
+  }
+
+  function searchTopics(repository,query){
+    const repo=repository?.byId?repository:buildRepository(repository);
+    const terms=normalizeText(query).split(' ').filter(Boolean);
+    if(!terms.length) return [];
+    return repo.topics.filter(topic=>terms.every(term=>topic.searchText.includes(term)));
+  }
+
+  function maxColumnsForTopic(topic,rows){
+    const questionCount=topic?.questions?.length||0;
+    const rowCount=Math.max(1,Math.floor(Number(rows)||1));
+    return Math.floor(questionCount/rowCount);
+  }
+
+  function distributeColumns(topicCount,totalColumns){
+    if(topicCount<=0) return [];
+    const base=Math.floor(totalColumns/topicCount);
+    const remainder=totalColumns%topicCount;
+    return Array.from({length:topicCount},(_,index)=>base+(index<remainder?1:0));
+  }
+
+  function difficultyTargets(rows,difficulty){
+    const rowCount=Math.max(0,Math.floor(Number(rows)||0));
+    const fixed={easy:1,medium:2,hard:3}[difficulty];
+    if(fixed) return Array(rowCount).fill(fixed);
+    return Array.from({length:rowCount},(_,index)=>1+Math.floor((index*3)/Math.max(1,rowCount)));
+  }
+
+  function selectQuestions({candidates,rowTargets,excludeIds,recentIds,avoidVariantGroups=true,rng=Math.random}){
+    const excluded=excludeIds instanceof Set?excludeIds:new Set(excludeIds||[]);
+    const recent=recentIds instanceof Set?recentIds:new Set(recentIds||[]);
+    const pool=shuffle((candidates||[]).filter(question=>!excluded.has(question.id)),rng);
+    const picked=[];
+    const usedIds=new Set();
+    const subtopicUse={};
+    const variantUse=new Set();
+    (rowTargets||[]).forEach(target=>{
+      let best=null;
+      let bestScore=Infinity;
+      pool.forEach((question,index)=>{
+        if(usedIds.has(question.id)) return;
+        const difficultyDistance=Math.abs(question.difficulty-target);
+        const subtopicPenalty=(subtopicUse[question.subtopic]||0)*10;
+        const variantPenalty=(avoidVariantGroups&&question.variantGroup&&variantUse.has(question.variantGroup))?25:0;
+        const recentPenalty=recent.has(question.id)?40:0;
+        const score=difficultyDistance*100+subtopicPenalty+variantPenalty+recentPenalty+index*0.01;
+        if(score<bestScore){bestScore=score;best=question;}
+      });
+      if(!best) return;
+      picked.push(best);
+      usedIds.add(best.id);
+      subtopicUse[best.subtopic]=(subtopicUse[best.subtopic]||0)+1;
+      if(best.variantGroup) variantUse.add(best.variantGroup);
+    });
+    return picked;
+  }
+
+  function planColumns(topics,repository,lang='en'){
+    const repo=repository?.byId?repository:buildRepository(repository,lang);
+    const plan=(topics||[]).filter(entry=>entry&&repo.byId[entry.topicId]&&Number(entry.columns)>0);
+    const totals={};
+    plan.forEach(entry=>{totals[entry.topicId]=(totals[entry.topicId]||0)+Number(entry.columns);});
+    const seen={};
+    const columns=[];
+    plan.forEach(entry=>{
+      const topic=repo.byId[entry.topicId];
+      const base=localizeName(topic.name,lang)||topic.id;
+      for(let index=0;index<Number(entry.columns);index++){
+        seen[entry.topicId]=(seen[entry.topicId]||0)+1;
+        columns.push({
+          topicId:entry.topicId,
+          label:totals[entry.topicId]>1?`${base} ${ROMAN[seen[entry.topicId]-1]||seen[entry.topicId]}`:base,
+        });
+      }
+    });
+    return {repo,columns};
+  }
+
+  function validateConfiguration({repository,topics,board}){
+    const repo=repository?.byId?repository:buildRepository(repository);
+    const columns=Math.max(0,Math.floor(Number(board?.columns)||0));
+    const rows=Math.max(0,Math.floor(Number(board?.rows)||0));
+    const plan=(topics||[]).filter(entry=>entry&&repo.byId[entry.topicId]);
+    const assigned=plan.reduce((sum,entry)=>sum+Math.max(0,Math.floor(Number(entry.columns)||0)),0);
+    const issues=[];
+    if(!repo.topics.length) issues.push({type:'library-empty'});
+    if(!plan.length) issues.push({type:'no-topics'});
+    plan.forEach(entry=>{
+      const topic=repo.byId[entry.topicId];
+      const required=Math.max(0,Math.floor(Number(entry.columns)||0))*rows;
+      if(required>topic.questions.length){
+        issues.push({
+          type:'insufficient',
+          topicId:entry.topicId,
+          label:topic.name,
+          available:topic.questions.length,
+          required,
+          columns:Number(entry.columns)||0,
+        });
+      }
+    });
+    if(assigned<columns) issues.push({type:'unassigned',remaining:columns-assigned});
+    if(assigned>columns) issues.push({type:'overassigned'});
+    return {ok:issues.length===0,assigned,columns,remaining:Math.max(0,columns-assigned),issues,repo};
+  }
+
+  function buildSession({repository,topics,board,difficulty='mixed',lang='en',recentIds=[],excludeIds=[],seed}={}){
+    const columns=Math.max(0,Math.floor(Number(board?.columns)||0));
+    const rows=Math.max(0,Math.floor(Number(board?.rows)||0));
+    if(!columns||!rows) throw new Error('Invalid board size');
+    const {repo,columns:plannedColumns}=planColumns(topics,repository,lang);
+    if(plannedColumns.length!==columns) throw new Error('Column allocation does not match the board');
+    const rng=createRng(seed);
+    const targets=difficultyTargets(rows,difficulty);
+    const usedIds=new Set(excludeIds||[]);
+    const recent=new Set(recentIds||[]);
+    const categories=[];
+    const columnTopics=[];
+    const questions=[];
+    const questionIds=[];
+    plannedColumns.forEach(column=>{
+      const topic=repo.byId[column.topicId];
+      const picked=selectQuestions({
+        candidates:topic.questions,
+        rowTargets:targets,
+        excludeIds:usedIds,
+        recentIds:recent,
+        rng,
+      });
+      if(picked.length<rows) throw new Error(`Not enough questions for ${column.label}`);
+      categories.push(column.label);
+      columnTopics.push(column.topicId);
+      questions.push(picked.map(question=>{
+        usedIds.add(question.id);
+        questionIds.push(question.id);
+        const options=shuffle(question.choices,rng);
+        let correctIndex=options.indexOf(question.choices[question.correctAnswer]);
+        if(correctIndex<0) correctIndex=0;
+        return {
+          id:question.id,
+          question:question.question,
+          options,
+          correctIndex,
+          answer:options[correctIndex],
+          difficulty:question.difficulty,
+          subtopic:question.subtopic,
+          type:'multiple',
+          isDrawing:false,
+        };
+      }));
+    });
+    return {
+      version:1,
+      createdAt:new Date().toISOString(),
+      board:{columns,rows},
+      difficulty,
+      lang,
+      categories,
+      columnTopics,
+      questions,
+      questionIds,
+    };
+  }
+
+  return {
+    clean,
+    normalizeText,
+    shuffle,
+    createRng,
+    localizeName,
+    isEligibleQuestion,
+    buildRepository,
+    searchTopics,
+    maxColumnsForTopic,
+    distributeColumns,
+    difficultyTargets,
+    selectQuestions,
+    planColumns,
+    validateConfiguration,
+    buildSession,
+  };
+})();
+/* ═══ ENGINE END ═══ */
+
 /* ══════════ I18N ══════════ */
 const T={
   en:{
-    pageTitle:'CREATE YOUR CHALLENGE!',
-    teamsTitle:'PLAYERS', gridTitle:'BOARD SIZE',
-    diffTitle:'DIFFICULTY', qtypeTitle:'QUESTION TYPE',
-    diff0:'EASY',    diff0desc:'beginner level',
-    diff1:'MED',     diff1desc:'grade standard',
-    diff2:'HARD',    diff2desc:'advanced',
-    diff3:'MIX',     diff3desc:'all levels',
-    qt0:'M.C.',      qt0desc:'multiple choice',
-    qt1:'OPEN',      qt1desc:'open answer',
-    qt2:'DRAW',      qt2desc:'draw the answer',
-    qt3:'MIX',       qt3desc:'all types mixed',
+    pageTitle:'CREATE A JAMBOO',
+    pageSubtitle:'★ BUILD FROM THE JAMBOO LIBRARY ★',
+    teamsTitle:'TEAMS', teamsWord:'TEAMS', soloWord:'PLAYER',
     teamNamesLabel:'TEAM NAMES',
-    promptTitle:'ENTER YOUR QUEST',
-    launchLabel:'◄ PRESS START ►', startBtn:'START GAME',
-    promptPH:'> Describe your quiz... e.g. French Revolution for 9th grade students',
-    noPrompt:'Please describe your quiz topic!',
-    generating:'Generating your game...', year6Mode:'💻 YEAR 6 CODING MODE 💻',
+    gridTitle:'BOARD', questions:'questions',
+    boardPreview:'BOARD PREVIEW',
+    topicsTitle:'TOPICS',
+    topicsEmpty:'Choose what this Jamboo is about.',
+    addTopic:'+ ADD TOPIC',
+    columnsWord:'Columns', columnsAssignedWord:'COLUMNS ASSIGNED', remainingWord:'REMAINING',
+    changeTopic:'Change', removeTopic:'Remove', moveLeft:'Move left', moveRight:'Move right',
+    diffTitle:'DIFFICULTY',
+    diff0:'EASY',diff0desc:'beginner level',
+    diff1:'MED',diff1desc:'grade standard',
+    diff2:'HARD',diff2desc:'advanced',
+    diff3:'MIX',diff3desc:'all levels',
+    createBtn:'CREATE JAMBOO',
+    building:'BUILDING YOUR JAMBOO...',
+    needTopic:'Choose a topic to start.',
+    assignAll:'Assign all {total} columns to create your board.',
+    notEnough:'{topic} has only {count} questions for this board. Reduce its columns or choose another topic.',
+    maxColumns:'Max {max} columns for this board.',
+    libraryError:'The question library could not be loaded.',
+    noResults:'No topics found.',
+    resultsWord:'RESULTS',
+    pickerTitle:'Choose a topic',
+    searchPH:'Search topics...',
+    previewEmpty:'No columns yet',
+    back:'Back',
     teamDefaults:['Team 1','Team 2','Team 3','Team 4','Team 5','Team 6','Team 7','Team 8'],
-    soloDefault:'Player 1', soloDesc:'solo mode', teamsWord:'teams',
-    questions:'questions', solo:'1P',
+    soloDefault:'Player 1',
   },
   pt:{
-    pageTitle:'CRIE SEU DESAFIO!',
-    teamsTitle:'JOGADORES', gridTitle:'TAMANHO DO BOARD',
-    diffTitle:'DIFICULDADE', qtypeTitle:'TIPO DE QUESTÃO',
-    diff0:'FÁCIL',   diff0desc:'nível básico',
-    diff1:'MÉDIO',   diff1desc:'padrão escolar',
-    diff2:'DIFÍCIL', diff2desc:'avançado',
-    diff3:'MISTO',   diff3desc:'todos os níveis',
-    qt0:'M.E.',      qt0desc:'múltipla escolha',
-    qt1:'ABERTA',    qt1desc:'resposta aberta',
-    qt2:'DRAW',      qt2desc:'desenhar a resposta',
-    qt3:'MIX',       qt3desc:'todos os tipos',
+    pageTitle:'CRIE UM JAMBOO',
+    pageSubtitle:'★ MONTE A PARTIR DA BIBLIOTECA JAMBOO ★',
+    teamsTitle:'TIMES', teamsWord:'TIMES', soloWord:'JOGADOR',
     teamNamesLabel:'NOMES DOS TIMES',
-    promptTitle:'SUA MISSÃO',
-    launchLabel:'◄ PRESSIONE START ►', startBtn:'INICIAR JOGO',
-    promptPH:'> Descreva seu quiz... ex: Revolução Francesa para o 9º ano',
-    noPrompt:'Por favor, descreva o tema do quiz!',
-    generating:'Gerando seu jogo...', year6Mode:'💻 PROGRAMAÇÃO — 6º ANO 💻',
+    gridTitle:'TABULEIRO', questions:'perguntas',
+    boardPreview:'PRÉVIA DO TABULEIRO',
+    topicsTitle:'TÓPICOS',
+    topicsEmpty:'Escolha sobre o que este Jamboo vai falar.',
+    addTopic:'+ ADICIONAR TÓPICO',
+    columnsWord:'Colunas', columnsAssignedWord:'COLUNAS ATRIBUÍDAS', remainingWord:'RESTANTE(S)',
+    changeTopic:'Trocar', removeTopic:'Remover', moveLeft:'Mover para a esquerda', moveRight:'Mover para a direita',
+    diffTitle:'DIFICULDADE',
+    diff0:'FÁCIL',diff0desc:'nível básico',
+    diff1:'MÉDIO',diff1desc:'padrão escolar',
+    diff2:'DIFÍCIL',diff2desc:'avançado',
+    diff3:'MISTO',diff3desc:'todos os níveis',
+    createBtn:'CRIAR JAMBOO',
+    building:'MONTANDO SEU JAMBOO...',
+    needTopic:'Escolha um tópico para começar.',
+    assignAll:'Atribua todas as {total} colunas para criar o tabuleiro.',
+    notEnough:'{topic} tem apenas {count} perguntas para este tabuleiro. Reduza as colunas ou escolha outro tópico.',
+    maxColumns:'Máximo de {max} colunas para este tabuleiro.',
+    libraryError:'Não foi possível carregar a biblioteca de perguntas.',
+    noResults:'Nenhum tópico encontrado.',
+    resultsWord:'RESULTADOS',
+    pickerTitle:'Escolha um tópico',
+    searchPH:'Buscar tópicos...',
+    previewEmpty:'Nenhuma coluna ainda',
+    back:'Voltar',
     teamDefaults:['Time 1','Time 2','Time 3','Time 4','Time 5','Time 6','Time 7','Time 8'],
-    soloDefault:'Jogador 1', soloDesc:'modo solo', teamsWord:'times',
-    questions:'perguntas', solo:'1J',
+    soloDefault:'Jogador 1',
   },
   es:{
-    pageTitle:'¡CREA TU DESAFÍO!',
-    teamsTitle:'JUGADORES', gridTitle:'TAMAÑO DEL BOARD',
-    diffTitle:'DIFICULTAD', qtypeTitle:'TIPO DE PREGUNTA',
-    diff0:'FÁCIL',   diff0desc:'nivel básico',
-    diff1:'MEDIO',   diff1desc:'estándar',
-    diff2:'DIFÍCIL', diff2desc:'avanzado',
-    diff3:'MIXTO',   diff3desc:'todos los niveles',
-    qt0:'M.O.',      qt0desc:'opción múltiple',
-    qt1:'ABIERTA',   qt1desc:'respuesta abierta',
-    qt2:'DIBUJO',    qt2desc:'dibuja la respuesta',
-    qt3:'MIX',       qt3desc:'todos los tipos',
+    pageTitle:'CREA UN JAMBOO',
+    pageSubtitle:'★ MONTA DESDE LA BIBLIOTECA JAMBOO ★',
+    teamsTitle:'EQUIPOS', teamsWord:'EQUIPOS', soloWord:'JUGADOR',
     teamNamesLabel:'NOMBRES DE EQUIPOS',
-    promptTitle:'TU MISIÓN',
-    launchLabel:'◄ PRESIONA START ►', startBtn:'INICIAR JUEGO',
-    promptPH:'> Describe tu quiz... ej: Revolución Francesa para 9° grado',
-    noPrompt:'¡Por favor describe el tema de tu quiz!',
-    generating:'Generando tu juego...', year6Mode:'💻 PROGRAMACIÓN — 6.º AÑO 💻',
+    gridTitle:'TABLERO', questions:'preguntas',
+    boardPreview:'VISTA DEL TABLERO',
+    topicsTitle:'TEMAS',
+    topicsEmpty:'Elige de qué trata este Jamboo.',
+    addTopic:'+ AÑADIR TEMA',
+    columnsWord:'Columnas', columnsAssignedWord:'COLUMNAS ASIGNADAS', remainingWord:'RESTANTE(S)',
+    changeTopic:'Cambiar', removeTopic:'Quitar', moveLeft:'Mover a la izquierda', moveRight:'Mover a la derecha',
+    diffTitle:'DIFICULTAD',
+    diff0:'FÁCIL',diff0desc:'nivel básico',
+    diff1:'MEDIO',diff1desc:'estándar',
+    diff2:'DIFÍCIL',diff2desc:'avanzado',
+    diff3:'MIXTO',diff3desc:'todos los niveles',
+    createBtn:'CREAR JAMBOO',
+    building:'MONTANDO TU JAMBOO...',
+    needTopic:'Elige un tema para empezar.',
+    assignAll:'Asigna las {total} columnas para crear el tablero.',
+    notEnough:'{topic} solo tiene {count} preguntas para este tablero. Reduce las columnas o elige otro tema.',
+    maxColumns:'Máximo {max} columnas para este tablero.',
+    libraryError:'No se pudo cargar la biblioteca de preguntas.',
+    noResults:'No se encontraron temas.',
+    resultsWord:'RESULTADOS',
+    pickerTitle:'Elige un tema',
+    searchPH:'Buscar temas...',
+    previewEmpty:'Aún no hay columnas',
+    back:'Volver',
     teamDefaults:['Equipo 1','Equipo 2','Equipo 3','Equipo 4','Equipo 5','Equipo 6','Equipo 7','Equipo 8'],
-    soloDefault:'Jugador 1', soloDesc:'modo solo', teamsWord:'equipos',
-    questions:'preguntas', solo:'1J',
+    soloDefault:'Jugador 1',
   }
 };
 
 const TEAM_COLORS=['#00FFCC','#FF00BB','#BF00FF','#F5C518','#00D1FF','#FB923C','#34D399','#F472B6'];
-
-/* ══════════ ARDUINO SECRET MODE ══════════ */
-const ARDUINO_PROMPT=`Arduino & Physical Computing — introductory quiz for a technology or STEM class. Cover ALL of these topics distributed across the quiz categories:
-1. Basic electric components: resistor, LED, breadboard, jumper wire, capacitor — what each one does
-2. Basic electric concepts: voltage (V), current (A), resistance (Ohm), Ohm Law (V=IR), series vs parallel circuit, open vs closed circuit
-3. Analog vs Digital: difference between analog and digital signals, real-world examples of each, what ADC does, what PWM (marked with ~) does
-4. Input vs Output in electronics: what each means, examples — button and sensor are inputs, LED and servo and buzzer are outputs
-5. What is Arduino: open-source microcontroller board, runs C++ sketches, connects to real electronic components
-6. Arduino pins — digital pins 0 to 13 (on/off signals); PWM pins marked with tilde (3, 5, 6, 9, 10, 11) for variable signals; Analog pins A0 to A5 reading 0-1023; Power pins: 5V, 3.3V, VIN, GND and what each does
-7. Tinkercad Circuits: free online circuit simulator, block-based programming, switching from Blocks to Text view to see C++ code, copying that code to Arduino IDE
-8. Arduino IDE: software used to write and upload sketches to the Arduino board, what a sketch is
-9. Arduino components and their functions: LED (emit light), Push Button (detect press), Servo Motor (controlled rotation angle), Buzzer (emit sound), Photoresistor/LDR (sense light), difference between sensors (inputs) and actuators (outputs)
-Make all questions appropriate for a beginner or introductory level student, ages 11-14.`;
-
-/* Exact shortcut: "year 6 coding" */
-const YEAR6_CODING_PROMPT=`Year 6 Computational Thinking — a PRE-CODING quiz for sixth-grade students who have never programmed. Build every question from plain-language logic and introductory computational-thinking lessons. Distribute these ideas across the quiz categories:
-1. Algorithms: clear, ordered everyday instructions and why sequence matters
-2. Decomposition: breaking a large problem into smaller manageable parts
-3. Pattern recognition: spotting similarities and using patterns to solve a new problem
-4. Abstraction: keeping important information and ignoring distracting detail
-5. Inputs, processes, and outputs in familiar everyday systems
-6. Decisions: choosing an action using plain-language if/then rules
-7. Repetition: recognizing repeated steps and describing a more efficient instruction
-8. Debugging and testing: finding and fixing mistakes in instructions or a process
-9. Logical reasoning: predicting the next step, ordering actions, and eliminating impossible choices
-10. Simple flowcharts and routes using familiar words and visual concepts only
-Use concrete contexts such as recipes, classroom routines, mazes, treasure hunts, robots following spoken instructions, games, sorting objects, and planning an event. Every question must be answerable without coding experience.
-NEVER include source code, code snippets, pseudocode, functions, methods, variable declarations or naming rules, programming syntax, operators, console output, or language-specific terms such as Python or JavaScript. Never ask students to read, write, complete, or predict the output of code. Do not assume familiarity with Scratch or any other programming tool. If a concept resembles a loop or condition, explain it through ordinary words and situations. Increase difficulty through multi-step reasoning, not programming knowledge. Avoid obscure facts and trick questions. Keep wording clear for learners around ages 10-12.`;
-
-function levenshtein(a,b){
-  const m=a.length,n=b.length;
-  const dp=[];
-  for(let i=0;i<=m;i++){dp[i]=[];dp[i][0]=i;}
-  for(let j=0;j<=n;j++) dp[0][j]=j;
-  for(let i=1;i<=m;i++)
-    for(let j=1;j<=n;j++)
-      dp[i][j]=a[i-1]===b[j-1]?dp[i-1][j-1]:1+Math.min(dp[i-1][j-1],dp[i-1][j],dp[i][j-1]);
-  return dp[m][n];
-}
-function detectArduino(text){
-  const words=text.toLowerCase().replace(/[^a-z0-9]/g,' ').split(/\s+/).filter(w=>w.length>=4);
-  return words.some(w=>levenshtein(w,'arduino')<=2);
-}
-function detectYear6Coding(text){
-  const normalized=text.toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
-  return /^(?:year\s*6|year\s+six)\s+(?:coding|code)$/.test(normalized);
-}
-const TEAMS_OPTS=[
-  {val:'solo',labelKey:'solo'},
-  {val:2,label:'2'},{val:3,label:'3'},{val:4,label:'4'},
-  {val:5,label:'5'},{val:6,label:'6'},{val:8,label:'8'},
-];
+const TOPIC_ACCENTS=['#00FFFF','#FF00FF','#FFD700','#BF00FF','#00FF41','#00D1FF','#FB923C','#F472B6'];
+const RECENT_KEY='jamboo_recent_questions';
+const MAX_TEAMS=8;
 
 /* ══════════ STATE ══════════ */
 let lang='en';
-let numTeams=4, numCols=4, numRows=3;
-let difficulty='easy', qType='multiple';
+let numTeams=4,numCols=4,numRows=3;
+let difficulty='mixed';
 let teams=[];
-let soloMode=false;
+let selectedTopics=[];
+let repository=null;
+const pickerState={target:null,path:[],query:''};
+
+/* ══════════ HELPERS ══════════ */
+function escapeHtml(value){
+  return String(value??'').replace(/[&<>"']/g,character=>({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;',
+  }[character]));
+}
+function formatText(template,values){
+  return Object.entries(values).reduce((text,[key,value])=>text.replaceAll(`{${key}}`,String(value)),template);
+}
+function topicName(topic){ return JamBooEngine.localizeName(topic.name,lang)||topic.id; }
+function topicPath(topic){
+  return [
+    JamBooEngine.localizeName(topic.categoryName,lang),
+    JamBooEngine.localizeName(topic.subjectName,lang),
+  ].filter(Boolean).join(' / ');
+}
+function accentForTopic(topicId){
+  const index=selectedTopics.findIndex(entry=>entry.topicId===topicId);
+  return TOPIC_ACCENTS[(index<0?0:index)%TOPIC_ACCENTS.length];
+}
+function readRecent(){
+  try{
+    const value=JSON.parse(localStorage.getItem(RECENT_KEY)||'[]');
+    return Array.isArray(value)?value:[];
+  }catch(_){ return []; }
+}
+function saveRecent(ids){
+  try{
+    const unique=[...new Set([...(ids||[]),...readRecent()])].slice(0,200);
+    localStorage.setItem(RECENT_KEY,JSON.stringify(unique));
+  }catch(_){ /* Storage unavailable. */ }
+}
 
 /* ══════════ INIT ══════════ */
 function init(){
-  teams=T[lang].teamDefaults.map((n,i)=>({name:n,color:TEAM_COLORS[i]}));
-  renderTeamInputs();
-  initGridPicker();
-  renderConfigBtns();
-  applyI18n();
-  // Restore previous game settings when "Same Teams, New Game" was pressed
-  const raw=localStorage.getItem('jamboo_config');
-  if(raw){
-    const c=JSON.parse(raw);
-    if(c._keepTeams){
-      if(c.lang){lang=c.lang;['en','pt','es'].forEach(x=>document.getElementById('lang-'+x).classList.toggle('active',x===lang));}
-      soloMode=!!c.soloMode;
-      numTeams=c.numTeams||numTeams;
-      numRows=c.numRows||numRows;
-      numCols=c.numCols||numCols;
-      difficulty=c.difficulty||difficulty;
-      qType=c.qType||qType;
-      if(c.teams) teams=c.teams.map((t,i)=>({name:t.name,color:TEAM_COLORS[i]}));
-      renderTeamInputs();
-      renderConfigBtns();
-      updateGridLabel();
-      const el=document.getElementById('ai-prompt');
-      if(el&&c.prompt) el.value=c.prompt;
-      c._keepTeams=false;
-      localStorage.setItem('jamboo_config',JSON.stringify(c));
-    }
+  try{
+    repository=JamBooEngine.buildRepository(globalThis.JAMBOO_QUESTION_REPOSITORY,lang);
+  }catch(error){
+    console.error('Question library failed to load',error);
+    repository=JamBooEngine.buildRepository({categories:[]},lang);
   }
+  teams=T[lang].teamDefaults.map((name,index)=>({name,color:TEAM_COLORS[index]}));
+  initGridPicker();
+  applyI18n();
+  restoreConfig();
+}
+
+function restoreConfig(){
+  const raw=localStorage.getItem('jamboo_config');
+  if(!raw) return;
+  let config;
+  try{ config=JSON.parse(raw); }catch(_){ return; }
+  if(!config||!config._keepTeams) return;
+  if(config.lang&&T[config.lang]) lang=config.lang;
+  ['en','pt','es'].forEach(code=>document.getElementById('lang-'+code).classList.toggle('active',code===lang));
+  if(Number.isInteger(config.numTeams)) numTeams=Math.min(MAX_TEAMS,Math.max(1,config.numTeams));
+  if(Number.isInteger(config.numRows)) numRows=Math.min(GP_ROWS,Math.max(1,config.numRows));
+  if(Number.isInteger(config.numCols)) numCols=Math.min(GP_COLS,Math.max(1,config.numCols));
+  if(['easy','medium','hard','mixed'].includes(config.difficulty)) difficulty=config.difficulty;
+  if(Array.isArray(config.teams)){
+    teams=config.teams.map((team,index)=>({name:team.name||T[lang].teamDefaults[index],color:TEAM_COLORS[index]}));
+  }
+  if(Array.isArray(config.topics)){
+    selectedTopics=config.topics
+      .filter(entry=>entry&&repository.byId[entry.topicId])
+      .slice(0,TOPIC_ACCENTS.length)
+      .map(entry=>({topicId:entry.topicId,columns:Math.max(1,Math.floor(Number(entry.columns)||1))}));
+  }
+  config._keepTeams=false;
+  localStorage.setItem('jamboo_config',JSON.stringify(config));
+  applyI18n();
 }
 
 /* ══════════ LANG ══════════ */
@@ -893,17 +1299,17 @@ function toggleLangMenu(){
   btn.classList.toggle('open',open);
   btn.setAttribute('aria-expanded',String(open));
 }
-function setLang(l){
-  lang=l;
+function setLang(nextLang){
+  lang=nextLang;
   document.getElementById('lang-menu').classList.remove('open');
   document.getElementById('burger-btn').classList.remove('open');
   document.getElementById('burger-btn').setAttribute('aria-expanded','false');
-  ['en','pt','es'].forEach(x=>document.getElementById('lang-'+x).classList.toggle('active',x===l));
+  ['en','pt','es'].forEach(code=>document.getElementById('lang-'+code).classList.toggle('active',code===lang));
   applyI18n();
 }
-document.addEventListener('click',function(e){
+document.addEventListener('click',function(event){
   const wrap=document.querySelector('.burger-wrap');
-  if(wrap&&!wrap.contains(e.target)){
+  if(wrap&&!wrap.contains(event.target)){
     document.getElementById('lang-menu').classList.remove('open');
     document.getElementById('burger-btn').classList.remove('open');
     document.getElementById('burger-btn').setAttribute('aria-expanded','false');
@@ -911,85 +1317,96 @@ document.addEventListener('click',function(e){
 });
 
 function applyI18n(){
-  const d=T[lang];
-  document.getElementById('page-title').textContent=d.pageTitle;
-  document.getElementById('ai-prompt').placeholder=d.promptPH;
-  document.querySelectorAll('[data-i18n]').forEach(el=>{
-    const k=el.getAttribute('data-i18n');
-    if(d[k]!==undefined) el.textContent=d[k];
+  const dictionary=T[lang];
+  document.documentElement.lang=lang;
+  document.getElementById('page-title').textContent=dictionary.pageTitle;
+  document.getElementById('page-subtitle').textContent=dictionary.pageSubtitle;
+  document.getElementById('picker-search').placeholder=dictionary.searchPH;
+  document.querySelectorAll('[data-i18n]').forEach(element=>{
+    const key=element.getAttribute('data-i18n');
+    if(dictionary[key]!==undefined) element.textContent=dictionary[key];
   });
-  renderConfigBtns();
+  renderTeams();
+  renderDiffPills();
+  renderTopics();
   updateGridLabel();
+  updateValidation();
+}
+
+/* ══════════ TEAMS ══════════ */
+function changeTeams(delta){
+  const next=Math.min(MAX_TEAMS,Math.max(1,numTeams+delta));
+  if(next===numTeams) return;
+  numTeams=next;
+  if(!teams[0]) teams[0]={name:T[lang].teamDefaults[0],color:TEAM_COLORS[0]};
+  renderTeams();
+}
+function renderTeams(){
+  const dictionary=T[lang];
+  document.getElementById('teams-count').textContent=String(numTeams);
+  document.getElementById('teams-word').textContent=numTeams===1?dictionary.soloWord:dictionary.teamsWord;
+  document.getElementById('teams-minus').disabled=numTeams<=1;
+  document.getElementById('teams-plus').disabled=numTeams>=MAX_TEAMS;
   renderTeamInputs();
 }
-
-/* ══════════ CONFIG BUTTONS ══════════ */
-function makeBtn(main, sub, active, onclick){
-  const b=document.createElement('button');
-  b.className='cfg-btn'+(active?' active':'');
-  b.type='button';
-  b.setAttribute('aria-pressed',String(active));
-  b.innerHTML=`<span class="btn-main">${main}</span><span class="btn-sub">${sub}</span>`;
-  b.onclick=onclick;
-  return b;
+function renderTeamInputs(){
+  const host=document.getElementById('team-inputs');
+  const dictionary=T[lang];
+  host.innerHTML='';
+  for(let index=0;index<numTeams;index++){
+    const fallback=numTeams===1?dictionary.soloDefault:dictionary.teamDefaults[index];
+    if(!teams[index]) teams[index]={name:fallback,color:TEAM_COLORS[index]};
+    const strip=document.createElement('div');
+    strip.className='lcd-strip';
+    strip.style.setProperty('--tc',TEAM_COLORS[index]);
+    const input=document.createElement('input');
+    input.type='text';
+    input.value=teams[index].name;
+    input.placeholder=fallback;
+    input.setAttribute('aria-label',`${dictionary.teamNamesLabel} ${index+1}`);
+    input.oninput=event=>{teams[index].name=event.target.value;};
+    strip.appendChild(input);
+    host.appendChild(strip);
+  }
 }
 
-function renderConfigBtns(){
-  const d=T[lang];
-
-  // Teams
-  const tg=document.getElementById('teams-btns');
-  tg.innerHTML='';
-  TEAMS_OPTS.forEach(opt=>{
-    const active=(opt.val==='solo'&&soloMode)||(opt.val===numTeams&&!soloMode);
-    const label=opt.labelKey?d[opt.labelKey]:opt.label;
-    const sub=opt.val==='solo'?d.soloDesc:(opt.val+' '+d.teamsWord);
-    tg.appendChild(makeBtn(label,sub,active,()=>{
-      if(opt.val==='solo'){soloMode=true;numTeams=1;}
-      else{soloMode=false;numTeams=opt.val;}
-      renderConfigBtns();renderTeamInputs();
-    }));
-  });
-
-  // Difficulty
-  const dg=document.getElementById('diff-btns');
-  dg.innerHTML='';
-  ['easy','medium','hard','mixed'].forEach((val,i)=>{
-    dg.appendChild(makeBtn(d['diff'+i],d['diff'+i+'desc'],difficulty===val,()=>{
-      difficulty=val;renderConfigBtns();
-    }));
-  });
-
-  // Question type
-  const qg=document.getElementById('qtype-btns');
-  qg.innerHTML='';
-  ['multiple','open','drawing','mixed'].forEach((val,i)=>{
-    qg.appendChild(makeBtn(d['qt'+i],d['qt'+i+'desc'],qType===val,()=>{
-      qType=val;renderConfigBtns();
-    }));
+/* ══════════ DIFFICULTY ══════════ */
+function renderDiffPills(){
+  const dictionary=T[lang];
+  const host=document.getElementById('diff-pills');
+  host.innerHTML='';
+  ['easy','medium','hard','mixed'].forEach((value,index)=>{
+    const button=document.createElement('button');
+    button.type='button';
+    button.className='diff-pill'+(difficulty===value?' active':'');
+    button.setAttribute('aria-pressed',String(difficulty===value));
+    button.textContent=dictionary['diff'+index];
+    button.title=dictionary['diff'+index+'desc'];
+    button.onclick=()=>{difficulty=value;renderDiffPills();};
+    host.appendChild(button);
   });
 }
 
-/* ══════════ GRID PICKER ══════════ */
+/* ══════════ BOARD SIZE ══════════ */
 const GP_COLS=8, GP_ROWS=6;
 function initGridPicker(){
   const grid=document.getElementById('gp-grid');
   grid.style.gridTemplateColumns=`repeat(${GP_COLS},1fr)`;
   grid.innerHTML='';
-  for(let r=0;r<GP_ROWS;r++){
-    for(let c=0;c<GP_COLS;c++){
+  for(let row=0;row<GP_ROWS;row++){
+    for(let column=0;column<GP_COLS;column++){
       const cell=document.createElement('div');
       cell.className='led-cell';
-      cell.dataset.c=c;cell.dataset.r=r;
+      cell.dataset.c=column;cell.dataset.r=row;
       cell.tabIndex=0;
       cell.setAttribute('role','button');
-      cell.setAttribute('aria-label',`${c+1} × ${r+1}`);
-      cell.addEventListener('mouseenter',()=>highlightGrid(c,r,false));
-      cell.addEventListener('click',()=>{numCols=c+1;numRows=r+1;highlightGrid(c,r,true);updateGridLabel();});
+      cell.setAttribute('aria-label',`${column+1} × ${row+1}`);
+      cell.addEventListener('mouseenter',()=>highlightGrid(column,row,false));
+      cell.addEventListener('click',()=>setBoard(column+1,row+1));
       cell.addEventListener('keydown',event=>{
         if(event.key==='Enter'||event.key===' '){
           event.preventDefault();
-          numCols=c+1;numRows=r+1;highlightGrid(c,r,true);updateGridLabel();
+          setBoard(column+1,row+1);
         }
       });
       grid.appendChild(cell);
@@ -999,17 +1416,18 @@ function initGridPicker(){
   highlightGrid(numCols-1,numRows-1,true);
   updateGridLabel();
 }
-function highlightGrid(maxC,maxR,perm){
+function highlightGrid(maxColumn,maxRow,permanent){
   document.querySelectorAll('.led-cell').forEach(cell=>{
-    const c=+cell.dataset.c,r=+cell.dataset.r;
-    const inside=c<=maxC&&r<=maxR;
-    cell.classList.toggle('hover',inside&&!perm);
-    cell.classList.toggle('sel',inside&&perm);
-    if(perm) cell.setAttribute('aria-pressed',String(c===maxC&&r===maxR));
+    const column=+cell.dataset.c;
+    const row=+cell.dataset.r;
+    const inside=column<=maxColumn&&row<=maxRow;
+    cell.classList.toggle('hover',inside&&!permanent);
+    cell.classList.toggle('sel',inside&&permanent);
+    if(permanent) cell.setAttribute('aria-pressed',String(column===maxColumn&&row===maxRow));
   });
-  if(!perm){
-    document.getElementById('gp-label').textContent=`${maxC+1} × ${maxR+1}`;
-    document.getElementById('gp-sublabel').textContent=`${(maxC+1)*(maxR+1)} ${T[lang].questions}`;
+  if(!permanent){
+    document.getElementById('gp-label').textContent=`${maxColumn+1} × ${maxRow+1}`;
+    document.getElementById('gp-sublabel').textContent=`${(maxColumn+1)*(maxRow+1)} ${T[lang].questions}`;
   }
 }
 function updateGridLabel(){
@@ -1017,98 +1435,464 @@ function updateGridLabel(){
   document.getElementById('gp-sublabel').textContent=`${numCols*numRows} ${T[lang].questions}`;
   highlightGrid(numCols-1,numRows-1,true);
 }
-
-/* ══════════ TEAM INPUTS ══════════ */
-function renderTeamInputs(){
-  const g=document.getElementById('team-inputs');
-  g.innerHTML='';
-  const d=T[lang];
-  const count=soloMode?1:numTeams;
-  for(let i=0;i<count;i++){
-    const def=soloMode?d.soloDefault:d.teamDefaults[i];
-    if(!teams[i]) teams[i]={name:def,color:TEAM_COLORS[i]};
-    const wrap=document.createElement('div');
-    wrap.className='lcd-strip';
-    wrap.style.setProperty('--tc',TEAM_COLORS[i]);
-    const inp=document.createElement('input');
-    inp.type='text';inp.value=teams[i].name;inp.placeholder=def;
-    inp.setAttribute('aria-label',`${d.teamNamesLabel} ${i+1}`);
-    inp.oninput=e=>teams[i].name=e.target.value;
-    wrap.appendChild(inp);
-    g.appendChild(wrap);
+function setBoard(columns,rows){
+  const columnsChanged=columns!==numCols;
+  numCols=columns;
+  numRows=rows;
+  updateGridLabel();
+  if(columnsChanged&&selectedTopics.length){
+    const values=JamBooEngine.distributeColumns(selectedTopics.length,numCols);
+    selectedTopics.forEach((entry,index)=>{entry.columns=values[index];});
   }
+  enforceMaxColumns();
 }
 
-/* ══════════ START ══════════ */
-function startGame(){
-  const prompt=document.getElementById('ai-prompt').value.trim();
-  if(!prompt){alert(T[lang].noPrompt);return;}
-  const isArduino=detectArduino(prompt);
-  const isYear6Coding=!isArduino&&detectYear6Coding(prompt);
-  const finalPrompt=isArduino?ARDUINO_PROMPT:(isYear6Coding?YEAR6_CODING_PROMPT:prompt);
-  const qLang={en:'English',pt:'Portuguese',es:'Spanish'}[lang];
-  const count=soloMode?1:numTeams;
+/* ══════════ TOPIC CARDS ══════════ */
+function miniButton(label,title,disabled,handler,extraClass){
+  const button=document.createElement('button');
+  button.type='button';
+  button.className='mini-btn'+(extraClass?` ${extraClass}`:'');
+  button.textContent=label;
+  if(title) button.title=title;
+  button.disabled=disabled;
+  button.onclick=handler;
+  return button;
+}
+function renderTopics(){
+  const host=document.getElementById('topic-cards');
+  const dictionary=T[lang];
+  host.innerHTML='';
+  document.getElementById('topics-empty').hidden=selectedTopics.length>0;
+  const assigned=selectedTopics.reduce((sum,entry)=>sum+entry.columns,0);
+
+  selectedTopics.forEach((entry,index)=>{
+    const topic=repository.byId[entry.topicId];
+    if(!topic) return;
+    const maxColumns=JamBooEngine.maxColumnsForTopic(topic,numRows);
+    const card=document.createElement('div');
+    card.className='topic-card';
+    card.style.setProperty('--tc',accentForTopic(entry.topicId));
+
+    const path=document.createElement('div');
+    path.className='topic-path';
+    path.textContent=topicPath(topic);
+    path.title=path.textContent;
+
+    const name=document.createElement('div');
+    name.className='topic-name';
+    name.textContent=topicName(topic);
+
+    const controls=document.createElement('div');
+    controls.className='topic-controls';
+
+    const stepper=document.createElement('div');
+    stepper.className='col-stepper';
+    const label=document.createElement('span');
+    label.className='col-lbl';
+    label.textContent=dictionary.columnsWord;
+
+    const minus=document.createElement('button');
+    minus.type='button';
+    minus.className='step-btn sm';
+    minus.textContent='−';
+    minus.disabled=entry.columns<=1;
+    minus.setAttribute('aria-label',`${dictionary.columnsWord} ${topicName(topic)} −1`);
+    minus.onclick=()=>changeTopicColumns(index,-1);
+
+    const count=document.createElement('span');
+    count.className='col-count';
+    count.textContent=String(entry.columns);
+    count.setAttribute('aria-live','polite');
+
+    const plus=document.createElement('button');
+    plus.type='button';
+    plus.className='step-btn sm';
+    plus.textContent='+';
+    plus.disabled=entry.columns>=maxColumns||assigned>=numCols;
+    plus.title=entry.columns>=maxColumns?formatText(dictionary.maxColumns,{max:maxColumns}):'';
+    plus.setAttribute('aria-label',`${dictionary.columnsWord} ${topicName(topic)} +1`);
+    plus.onclick=()=>changeTopicColumns(index,1);
+
+    stepper.append(label,minus,count,plus);
+
+    const actions=document.createElement('div');
+    actions.className='topic-actions';
+    actions.append(
+      miniButton('◀',dictionary.moveLeft,index===0,()=>moveTopic(index,-1)),
+      miniButton('▶',dictionary.moveRight,index===selectedTopics.length-1,()=>moveTopic(index,1)),
+      miniButton(dictionary.changeTopic,'',false,()=>openPicker(index)),
+      miniButton('×',dictionary.removeTopic,false,()=>removeTopic(index),'danger'),
+    );
+
+    controls.append(stepper,actions);
+    card.append(path,name,controls);
+
+    if(entry.columns*numRows>topic.questions.length){
+      const warning=document.createElement('div');
+      warning.className='topic-warn';
+      warning.textContent=formatText(dictionary.notEnough,{topic:topicName(topic),count:topic.questions.length});
+      card.appendChild(warning);
+    }
+    host.appendChild(card);
+  });
+
+  renderBoardPreview();
+  updateMeter();
+}
+function changeTopicColumns(index,delta){
+  const entry=selectedTopics[index];
+  if(!entry) return;
+  const topic=repository.byId[entry.topicId];
+  if(!topic) return;
+  const maxColumns=JamBooEngine.maxColumnsForTopic(topic,numRows);
+  const assigned=selectedTopics.reduce((sum,item)=>sum+item.columns,0);
+  const next=entry.columns+delta;
+  if(delta>0&&(next>maxColumns||assigned>=numCols)) return;
+  entry.columns=Math.max(1,next);
+  renderTopics();
+  updateValidation();
+}
+function moveTopic(index,direction){
+  const target=index+direction;
+  if(target<0||target>=selectedTopics.length) return;
+  const current=selectedTopics[index];
+  selectedTopics[index]=selectedTopics[target];
+  selectedTopics[target]=current;
+  renderTopics();
+  updateValidation();
+}
+function removeTopic(index){
+  selectedTopics.splice(index,1);
+  renderTopics();
+  updateValidation();
+}
+function enforceMaxColumns(){
+  selectedTopics.forEach(entry=>{
+    const topic=repository.byId[entry.topicId];
+    if(!topic) return;
+    const maxColumns=JamBooEngine.maxColumnsForTopic(topic,numRows);
+    if(entry.columns>maxColumns) entry.columns=Math.max(0,maxColumns);
+  });
+  renderTopics();
+  updateValidation();
+}
+function updateMeter(){
+  const dictionary=T[lang];
+  const meter=document.getElementById('columns-meter');
+  const assigned=selectedTopics.reduce((sum,entry)=>sum+entry.columns,0);
+  meter.classList.toggle('warn',selectedTopics.length>0&&assigned!==numCols);
+  if(!selectedTopics.length){ meter.textContent=''; return; }
+  meter.innerHTML=`<span class="cm-main">${assigned} / ${numCols} ${escapeHtml(dictionary.columnsAssignedWord)}</span>`+
+    (assigned<numCols?`<span class="cm-left">${numCols-assigned} ${escapeHtml(dictionary.remainingWord)}</span>`:'');
+}
+
+/* ══════════ BOARD PREVIEW ══════════ */
+function renderBoardPreview(){
+  const host=document.getElementById('board-preview');
+  const dictionary=T[lang];
+  const planned=JamBooEngine.planColumns(selectedTopics,repository,lang).columns;
+  if(!planned.length){
+    host.innerHTML=`<div class="bp-empty">${escapeHtml(dictionary.previewEmpty)}</div>`;
+    return;
+  }
+  host.innerHTML='';
+  planned.forEach(column=>{
+    const element=document.createElement('div');
+    element.className='bp-col';
+    element.style.setProperty('--tc',accentForTopic(column.topicId));
+    const head=document.createElement('div');
+    head.className='bp-head';
+    head.textContent=column.label;
+    element.appendChild(head);
+    for(let row=0;row<numRows;row++){
+      const dot=document.createElement('span');
+      dot.className='bp-dot';
+      element.appendChild(dot);
+    }
+    host.appendChild(element);
+  });
+}
+
+/* ══════════ VALIDATION + CREATE ══════════ */
+function updateValidation(){
+  const dictionary=T[lang];
+  const result=JamBooEngine.validateConfiguration({
+    repository,
+    topics:selectedTopics,
+    board:{columns:numCols,rows:numRows},
+  });
+  let message='';
+  if(result.issues.some(issue=>issue.type==='library-empty')) message=dictionary.libraryError;
+  else if(result.issues.some(issue=>issue.type==='no-topics')) message=dictionary.needTopic;
+  else{
+    const insufficient=result.issues.find(issue=>issue.type==='insufficient');
+    if(insufficient){
+      message=formatText(dictionary.notEnough,{
+        topic:JamBooEngine.localizeName(insufficient.label,lang),
+        count:insufficient.available,
+      });
+    }else if(result.issues.some(issue=>issue.type==='unassigned')){
+      message=formatText(dictionary.assignAll,{total:numCols});
+    }
+  }
+  const status=document.getElementById('build-status');
+  status.textContent=message;
+  const button=document.getElementById('gen-btn');
+  button.disabled=!result.ok;
+  button.setAttribute('aria-disabled',String(!result.ok));
+
+  // Adding a topic while the board is full redistributes the columns evenly,
+  // so the button stays available until the topic limit is reached.
+  const addButton=document.getElementById('add-topic-btn');
+  addButton.hidden=!repository.topics.length||selectedTopics.length>=TOPIC_ACCENTS.length;
+}
+
+function createGame(){
+  const result=JamBooEngine.validateConfiguration({
+    repository,
+    topics:selectedTopics,
+    board:{columns:numCols,rows:numRows},
+  });
+  if(!result.ok) return;
+  let session;
+  try{
+    session=JamBooEngine.buildSession({
+      repository,
+      topics:selectedTopics,
+      board:{columns:numCols,rows:numRows},
+      difficulty,
+      lang,
+      recentIds:readRecent(),
+      seed:Date.now(),
+    });
+  }catch(error){
+    console.error('Could not build the game session',error);
+    document.getElementById('build-status').textContent=error.message;
+    return;
+  }
+  const dictionary=T[lang];
+  const count=numTeams;
   const config={
-    numTeams:count,numRows,numCols,difficulty,qType,
-    teams:teams.slice(0,count),
-    lang,qLang,
-    timerOn:true,speedOn:false,
-    soloMode,prompt:finalPrompt,
-    preset:isYear6Coding?'year6-coding':(isArduino?'arduino':'')
+    numTeams:count,
+    numRows,
+    numCols,
+    difficulty,
+    lang,
+    qLang:{en:'English',pt:'Portuguese',es:'Spanish'}[lang],
+    teams:teams.slice(0,count).map((team,index)=>({
+      name:(team.name||'').trim()||(count===1?dictionary.soloDefault:dictionary.teamDefaults[index]),
+      color:TEAM_COLORS[index],
+    })),
+    timerOn:true,
+    speedOn:false,
+    soloMode:count===1,
+    topics:selectedTopics.map(entry=>({topicId:entry.topicId,columns:entry.columns})),
+    session,
   };
-  const loadEl=document.getElementById('load-text');
-  loadEl.textContent=isArduino?'⚡ ARDUINO MODE ⚡':(isYear6Coding?T[lang].year6Mode:T[lang].generating);
+  localStorage.setItem('jamboo_config',JSON.stringify(config));
+  saveRecent(session.questionIds);
+  document.getElementById('load-text').textContent=dictionary.building;
   document.getElementById('loading').classList.add('active');
   document.getElementById('gen-btn').disabled=true;
-  // A deliberate Start always creates a fresh board. game.html keeps the
-  // generated board only for accidental refreshes within this tab.
-  try{sessionStorage.removeItem('jamboo_game_cache_v4');}catch(_){/* Storage unavailable. */}
-  localStorage.setItem('jamboo_config',JSON.stringify(config));
-  if(isArduino||isYear6Coding){setTimeout(()=>{window.location.href='game.html';},400);}
-  else{window.location.href='game.html';}
+  setTimeout(()=>{window.location.href='game.html';},420);
 }
+
+/* ══════════ TOPIC PICKER ══════════ */
+function pickerItem({name,path,arrow,onSelect}){
+  const button=document.createElement('button');
+  button.type='button';
+  button.className='picker-item';
+  const text=document.createElement('span');
+  text.className='pi-text';
+  const nameNode=document.createElement('span');
+  nameNode.className='pi-name';
+  nameNode.textContent=name;
+  text.appendChild(nameNode);
+  if(path){
+    const pathNode=document.createElement('span');
+    pathNode.className='pi-path';
+    pathNode.textContent=path;
+    text.appendChild(pathNode);
+  }
+  button.appendChild(text);
+  if(arrow){
+    const arrowNode=document.createElement('span');
+    arrowNode.className='pi-arrow';
+    arrowNode.textContent=arrow;
+    button.appendChild(arrowNode);
+  }
+  button.onclick=onSelect;
+  return button;
+}
+function openPicker(targetIndex){
+  if(!repository.topics.length) return;
+  pickerState.target=targetIndex;
+  pickerState.path=[];
+  pickerState.query='';
+  document.getElementById('picker-search').value='';
+  document.getElementById('picker-overlay').hidden=false;
+  document.body.classList.add('picker-open');
+  renderPicker();
+  setTimeout(()=>document.getElementById('picker-search').focus(),40);
+}
+function closePicker(){
+  document.getElementById('picker-overlay').hidden=true;
+  document.body.classList.remove('picker-open');
+}
+function pickerBack(){
+  if(pickerState.query){
+    pickerState.query='';
+    document.getElementById('picker-search').value='';
+    renderPicker();
+    return;
+  }
+  if(pickerState.path.length){
+    pickerState.path.pop();
+    renderPicker();
+    return;
+  }
+  closePicker();
+}
+function selectTopic(topicId){
+  if(pickerState.target===null){
+    selectedTopics.push({topicId,columns:1});
+    const values=JamBooEngine.distributeColumns(selectedTopics.length,numCols);
+    selectedTopics.forEach((entry,index)=>{entry.columns=values[index];});
+    enforceMaxColumns();
+  }else{
+    selectedTopics[pickerState.target].topicId=topicId;
+    enforceMaxColumns();
+  }
+  closePicker();
+}
+function renderPicker(){
+  const dictionary=T[lang];
+  const body=document.getElementById('picker-body');
+  const title=document.getElementById('picker-title');
+  const back=document.getElementById('picker-back');
+  body.innerHTML='';
+  back.disabled=pickerState.path.length===0&&!pickerState.query;
+
+  if(pickerState.query){
+    title.textContent=dictionary.searchPH.replace('...','');
+    const results=JamBooEngine.searchTopics(repository,pickerState.query);
+    if(!results.length){
+      const empty=document.createElement('div');
+      empty.className='picker-empty';
+      empty.textContent=dictionary.noResults;
+      body.appendChild(empty);
+      return;
+    }
+    const section=document.createElement('div');
+    section.className='picker-section';
+    section.textContent=`${results.length} ${dictionary.resultsWord}`;
+    body.appendChild(section);
+    results.forEach(topic=>{
+      body.appendChild(pickerItem({
+        name:topicName(topic),
+        path:topicPath(topic),
+        onSelect:()=>selectTopic(topic.id),
+      }));
+    });
+    return;
+  }
+
+  if(!pickerState.path.length){
+    title.textContent=dictionary.pickerTitle;
+    repository.categories.forEach(category=>{
+      if(!category.subjects.length) return;
+      const section=document.createElement('div');
+      section.className='picker-section';
+      section.textContent=JamBooEngine.localizeName(category.name,lang);
+      body.appendChild(section);
+      category.subjects.forEach(subject=>{
+        if(!subject.topics.length) return;
+        body.appendChild(pickerItem({
+          name:JamBooEngine.localizeName(subject.name,lang)||subject.id,
+          path:subject.topics.length===1?topicName(subject.topics[0]):'',
+          arrow:'›',
+          onSelect:()=>{pickerState.path=[category.id,subject.id];renderPicker();},
+        }));
+      });
+    });
+    return;
+  }
+
+  const [categoryId,subjectId]=pickerState.path;
+  const category=repository.categories.find(entry=>entry.id===categoryId);
+  const subject=category?.subjects.find(entry=>entry.id===subjectId);
+  title.textContent=JamBooEngine.localizeName(subject?.name,lang)||dictionary.pickerTitle;
+  (subject?.topics||[]).forEach(topic=>{
+    body.appendChild(pickerItem({
+      name:topicName(topic),
+      path:`${topic.questions.length} ${dictionary.questions}`,
+      onSelect:()=>selectTopic(topic.id),
+    }));
+  });
+}
+
+document.getElementById('picker-search').addEventListener('input',event=>{
+  pickerState.query=event.target.value.trim();
+  renderPicker();
+});
+document.getElementById('picker-overlay').addEventListener('click',event=>{
+  if(event.target===document.getElementById('picker-overlay')) closePicker();
+});
+document.getElementById('picker-overlay').addEventListener('keydown',event=>{
+  if(event.key==='Escape'){closePicker();return;}
+  if(event.key!=='ArrowDown'&&event.key!=='ArrowUp') return;
+  const items=[...document.querySelectorAll('.picker-item')];
+  if(!items.length) return;
+  event.preventDefault();
+  const active=document.activeElement;
+  const index=items.indexOf(active);
+  if(index<0){items[0].focus();return;}
+  const next=Math.min(items.length-1,Math.max(0,index+(event.key==='ArrowDown'?1:-1)));
+  items[next].focus();
+});
 
 init();
 
 // Comet particles
 (function(){
-  const cvs=document.getElementById('comet-canvas');
-  const ctx=cvs.getContext('2d');
-  const COLS=['#00FFFF','#FF00FF','#AA00FF','#6600FF','#FFD700'];
-  const NUM=20;
-  let W,H;
-  function resize(){W=cvs.width=window.innerWidth;H=cvs.height=window.innerHeight;}
+  const canvas=document.getElementById('comet-canvas');
+  const context=canvas.getContext('2d');
+  const COLORS=['#00FFFF','#FF00FF','#AA00FF','#6600FF','#FFD700'];
+  const COUNT=20;
+  let width,height;
+  function resize(){width=canvas.width=window.innerWidth;height=canvas.height=window.innerHeight;}
   resize();
   window.addEventListener('resize',resize,{passive:true});
-  function rnd(a,b){return a+Math.random()*(b-a);}
+  function random(min,max){return min+Math.random()*(max-min);}
   function spawn(){
-    const angle=rnd(0,Math.PI*2);
-    const spd=rnd(1.2,3.5);
+    const angle=random(0,Math.PI*2);
+    const speed=random(1.2,3.5);
     let x,y;
-    if(Math.random()<0.5){x=Math.random()<0.5?-10:W+10;y=rnd(0,H);}
-    else{x=rnd(0,W);y=Math.random()<0.5?-10:H+10;}
-    return{x,y,vx:Math.cos(angle)*spd,vy:Math.sin(angle)*spd,
-      size:rnd(1.2,2.8),col:COLS[0|rnd(0,COLS.length)],
-      trail:[],tLen:0|rnd(24,55),alpha:rnd(0.45,0.85)};
+    if(Math.random()<0.5){x=Math.random()<0.5?-10:width+10;y=random(0,height);}
+    else{x=random(0,width);y=Math.random()<0.5?-10:height+10;}
+    return{x,y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,
+      size:random(1.2,2.8),color:COLORS[0|random(0,COLORS.length)],
+      trail:[],trailLength:0|random(24,55),alpha:random(0.45,0.85)};
   }
-  const comets=Array.from({length:NUM},spawn);
-  comets.forEach(c=>{c.x=rnd(0,W);c.y=rnd(0,H);});
+  const comets=Array.from({length:COUNT},spawn);
+  comets.forEach(comet=>{comet.x=random(0,width);comet.y=random(0,height);});
   function tick(){
-    ctx.clearRect(0,0,W,H);
-    comets.forEach(c=>{
-      c.trail.push({x:c.x,y:c.y});
-      if(c.trail.length>c.tLen)c.trail.shift();
-      const tl=c.trail.length;
-      for(let i=0;i<tl;i++){
-        const p=c.trail[i];const f=i/tl;
-        ctx.beginPath();ctx.arc(p.x,p.y,c.size*f*0.8,0,Math.PI*2);
-        ctx.fillStyle=c.col;ctx.globalAlpha=f*c.alpha*0.45;ctx.fill();
+    context.clearRect(0,0,width,height);
+    comets.forEach(comet=>{
+      comet.trail.push({x:comet.x,y:comet.y});
+      if(comet.trail.length>comet.trailLength) comet.trail.shift();
+      const trailLength=comet.trail.length;
+      for(let index=0;index<trailLength;index++){
+        const point=comet.trail[index];
+        const factor=index/trailLength;
+        context.beginPath();context.arc(point.x,point.y,comet.size*factor*0.8,0,Math.PI*2);
+        context.fillStyle=comet.color;context.globalAlpha=factor*comet.alpha*0.45;context.fill();
       }
-      ctx.beginPath();ctx.arc(c.x,c.y,c.size,0,Math.PI*2);
-      ctx.fillStyle=c.col;ctx.globalAlpha=c.alpha;ctx.fill();
-      ctx.globalAlpha=1;
-      c.x+=c.vx;c.y+=c.vy;
-      if(c.x<-70||c.x>W+70||c.y<-70||c.y>H+70)Object.assign(c,spawn());
+      context.beginPath();context.arc(comet.x,comet.y,comet.size,0,Math.PI*2);
+      context.fillStyle=comet.color;context.globalAlpha=comet.alpha;context.fill();
+      context.globalAlpha=1;
+      comet.x+=comet.vx;comet.y+=comet.vy;
+      if(comet.x<-70||comet.x>width+70||comet.y<-70||comet.y>height+70)Object.assign(comet,spawn());
     });
     requestAnimationFrame(tick);
   }
@@ -1117,13 +1901,13 @@ init();
 
 // Sticky header scroll-shrink
 (function(){
-  const hdr=document.querySelector('.hdr');
+  const header=document.querySelector('.hdr');
   let ticking=false;
   window.addEventListener('scroll',function(){
     if(!ticking){
       requestAnimationFrame(function(){
-        if(window.scrollY>10) hdr.classList.add('hdr-scrolled');
-        else hdr.classList.remove('hdr-scrolled');
+        if(window.scrollY>10) header.classList.add('hdr-scrolled');
+        else header.classList.remove('hdr-scrolled');
         ticking=false;
       });
       ticking=true;

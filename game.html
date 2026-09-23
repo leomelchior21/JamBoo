@@ -96,277 +96,6 @@ body{
   55%{transform:translateY(2px) rotate(.6deg);}
   80%{transform:translateY(-3px) rotate(-.4deg);}
 }
-.loading-stage{
-  position:relative;
-  width:min(100%,440px);height:198px;
-  background:
-    radial-gradient(circle at 50% 45%, rgba(255,0,187,.16), transparent 32%),
-    radial-gradient(circle at 50% 62%, rgba(0,255,204,.12), transparent 38%);
-  border:none;
-  box-shadow:none;
-  overflow:visible;
-}
-.loading-stage::before{
-  content:'';position:absolute;inset:10% 8%;pointer-events:none;
-  background:
-    radial-gradient(circle at 30% 50%, rgba(255,0,187,.12), transparent 30%),
-    radial-gradient(circle at 70% 50%, rgba(0,255,204,.12), transparent 34%);
-  filter:blur(24px);
-  animation:stageAura 7s ease-in-out infinite alternate;
-}
-.loading-stage::after{
-  content:'';position:absolute;left:8%;right:8%;bottom:26px;height:2px;
-  background:linear-gradient(90deg, transparent, rgba(0,255,204,.32), transparent);
-  filter:blur(.4px);
-  opacity:.8;
-}
-@keyframes stageAura{
-  0%{transform:translateX(-6px) scale(.96);opacity:.7;}
-  100%{transform:translateX(6px) scale(1.04);opacity:1;}
-}
-.loading-scene{
-  position:absolute;inset:0;
-  display:grid;place-items:center;
-  opacity:0;visibility:hidden;
-  filter:blur(8px);
-  transform:translateY(10px) scale(.96);
-  transition:opacity .55s ease, transform .55s ease, filter .55s ease, visibility 0s linear .55s;
-}
-.loading-scene.is-active{
-  opacity:1;visibility:visible;
-  filter:blur(0);
-  transform:translateY(0) scale(1);
-  transition-delay:0s;
-}
-
-.relay-system{
-  position:relative;width:320px;height:132px;
-  animation:relayFloat 6s ease-in-out infinite;
-}
-.relay-system::before{
-  content:'';position:absolute;left:20px;right:18px;top:82px;height:38px;
-  background:radial-gradient(circle at center, rgba(0,255,204,.16), transparent 58%);
-  filter:blur(18px);opacity:.45;
-}
-.relay-line,.relay-rise{
-  position:absolute;
-  background:linear-gradient(90deg, rgba(0,255,204,.2), var(--primary), rgba(0,255,204,.2));
-  box-shadow:0 0 12px rgba(0,255,204,.45);
-}
-.relay-line{height:4px;}
-.relay-rise{width:4px;background:linear-gradient(180deg, rgba(255,0,187,.22), var(--accent), rgba(255,0,187,.22));box-shadow:0 0 12px rgba(255,0,187,.4);}
-.rl-a{width:92px;left:34px;top:92px;}
-.rl-b{width:74px;left:126px;top:56px;}
-.rl-c{width:86px;left:200px;top:92px;}
-.rl-d{width:70px;left:286px;top:56px;}
-.rr-a{height:36px;left:126px;top:56px;}
-.rr-b{height:36px;left:200px;top:56px;}
-.rr-c{height:36px;left:286px;top:56px;}
-.relay-node{
-  position:absolute;width:18px;height:18px;
-  border:3px solid #000;
-  background:var(--node,#FFD700);
-  box-shadow:0 0 18px rgba(255,255,255,.2);
-  animation:relayNodeGlow 2.8s ease-in-out infinite;
-}
-.relay-node::after{
-  content:'';position:absolute;inset:-8px;
-  border:2px solid var(--node,#FFD700);
-  opacity:0;animation:nodePing 2.6s linear infinite;
-}
-.rn-1{left:24px;top:84px;--node:#FFD700;}
-.rn-2{left:118px;top:48px;--node:#FF00BB;}
-.rn-3{left:192px;top:84px;--node:#00FFCC;}
-.rn-4{left:278px;top:48px;--node:#BF00FF;}
-.rn-5{left:344px;top:84px;--node:#00D1FF;}
-.rn-2::after{animation-delay:.35s;}
-.rn-3::after{animation-delay:.7s;}
-.rn-4::after{animation-delay:1.05s;}
-.rn-5::after{animation-delay:1.4s;}
-.rn-2{animation-delay:.2s;}
-.rn-3{animation-delay:.4s;}
-.rn-4{animation-delay:.6s;}
-.rn-5{animation-delay:.8s;}
-.relay-packet{
-  position:absolute;left:0;top:0;
-  width:14px;height:14px;
-  border:2px solid #000;
-  background:#fff;
-  box-shadow:0 0 16px rgba(255,255,255,.9), 0 0 28px rgba(255,0,187,.22);
-  animation:relayPacket 3.3s cubic-bezier(.32,0,.18,1) infinite;
-}
-.relay-packet::after{
-  content:'';position:absolute;inset:-7px;border-radius:50%;
-  background:radial-gradient(circle,rgba(255,255,255,.55),transparent 70%);
-  animation:packetGlow 1.1s ease-in-out infinite;
-}
-@keyframes packetGlow{0%,100%{opacity:.5;transform:scale(.85);}50%{opacity:.95;transform:scale(1.1);}}
-@keyframes relayPacket{
-  0%{transform:translate(28px,86px) scale(.75);opacity:0;}
-  8%{transform:translate(44px,86px) scale(1);opacity:1;}
-  22%{transform:translate(118px,86px) scale(1);}
-  28%{transform:translate(118px,50px) scale(1.08);}
-  42%{transform:translate(192px,50px) scale(1);}
-  50%{transform:translate(192px,86px) scale(1.08);}
-  68%{transform:translate(278px,86px) scale(1);}
-  76%{transform:translate(278px,50px) scale(1.08);}
-  92%{transform:translate(344px,50px) scale(.96);}
-  100%{transform:translate(344px,86px) scale(.72);opacity:.28;}
-}
-@keyframes nodePing{
-  0%,18%,100%{transform:scale(.65);opacity:0;}
-  8%{transform:scale(1.05);opacity:.65;}
-}
-@keyframes relayNodeGlow{
-  0%,100%{transform:scale(1);filter:brightness(1);}
-  50%{transform:scale(1.08);filter:brightness(1.2);}
-}
-@keyframes relayFloat{
-  0%,100%{transform:translateY(0);}
-  50%{transform:translateY(-5px);}
-}
-
-.cradle-wrap{
-  position:relative;width:300px;height:142px;
-  animation:cradleFloat 4.8s ease-in-out infinite;
-}
-.cradle-frame{
-  position:absolute;left:44px;right:44px;top:24px;bottom:24px;
-}
-.cradle-frame::before,
-.cradle-frame::after{
-  content:'';position:absolute;top:0;bottom:0;width:4px;
-  background:linear-gradient(180deg, rgba(0,255,204,.52), rgba(255,0,187,.22));
-  box-shadow:0 0 12px rgba(0,255,204,.18);
-}
-.cradle-frame::before{left:0;}
-.cradle-frame::after{right:0;}
-.cradle-wrap::before{
-  content:'';position:absolute;left:118px;right:118px;top:96px;height:8px;
-  background:linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent);
-  filter:blur(2px);
-  opacity:0;
-  animation:cradleCollision 1.9s linear infinite;
-}
-.cradle-wrap::after{
-  content:'';position:absolute;left:60px;right:60px;bottom:8px;height:18px;
-  background:radial-gradient(circle at center, rgba(0,255,204,.18), transparent 64%);
-  filter:blur(10px);opacity:.5;
-}
-.cradle-base{
-  position:absolute;left:44px;right:44px;bottom:18px;height:8px;
-  background:linear-gradient(90deg, rgba(255,0,187,.4), rgba(0,255,204,.55), rgba(255,0,187,.4));
-  box-shadow:0 0 16px rgba(0,255,204,.18);
-}
-.cradle-bar{
-  position:absolute;top:22px;left:44px;right:44px;height:5px;
-  background:linear-gradient(90deg, var(--primary), var(--accent), var(--primary));
-  box-shadow:0 0 10px rgba(0,255,204,.35);
-}
-.c-arm{
-  position:absolute;top:27px;width:3px;height:74px;
-  background:rgba(255,255,255,.22);
-  transform-origin:top center;
-}
-.c-arm::after{
-  content:'';position:absolute;bottom:-20px;left:50%;
-  transform:translateX(-50%);
-  width:22px;height:22px;
-  border:2px solid #000;
-  background:var(--bc,#FFD700);
-  box-shadow:0 0 12px rgba(255,255,255,.18);
-}
-.ca-1{left:74px; --bc:#FF00BB; animation:pendulumLeft 1.9s linear infinite;}
-.ca-2{left:112px;--bc:#BF00FF;}
-.ca-3{left:150px;--bc:#00FFCC;}
-.ca-4{left:188px;--bc:#FFD700;}
-.ca-5{left:226px;--bc:#00D1FF;animation:pendulumRight 1.9s linear infinite;}
-@keyframes pendulumLeft{
-  0%{transform:rotate(-30deg);animation-timing-function:ease-in;}
-  24%{transform:rotate(0deg);animation-timing-function:linear;}
-  76%{transform:rotate(0deg);animation-timing-function:ease-out;}
-  100%{transform:rotate(-30deg);}
-}
-@keyframes pendulumRight{
-  0%{transform:rotate(0deg);animation-timing-function:linear;}
-  24%{transform:rotate(0deg);animation-timing-function:ease-out;}
-  50%{transform:rotate(30deg);animation-timing-function:ease-in;}
-  76%{transform:rotate(0deg);animation-timing-function:linear;}
-  100%{transform:rotate(0deg);}
-}
-@keyframes cradleCollision{
-  0%,21%,29%,71%,79%,100%{opacity:0;transform:scaleX(.6);}
-  24%,76%{opacity:.85;transform:scaleX(1);}
-}
-@keyframes cradleFloat{
-  0%,100%{transform:translateY(0);}
-  50%{transform:translateY(-4px);}
-}
-
-.orbit-system{
-  position:relative;width:220px;height:220px;
-  animation:orbitFloat 7s ease-in-out infinite;
-}
-.orbit-system::before{
-  content:'';position:absolute;inset:34px;
-  background:radial-gradient(circle at center, rgba(255,0,187,.18), transparent 62%);
-  filter:blur(24px);opacity:.7;
-}
-.orbit-ring{
-  position:absolute;top:50%;left:50%;
-  width:var(--size);height:var(--size);
-  transform:translate(-50%,-50%) rotate(var(--tilt)) scaleY(var(--squash));
-  border:2px solid rgba(255,255,255,.08);
-  border-top-color:var(--orbit);
-  border-left-color:var(--orbit);
-  border-radius:50%;
-  animation:orbitSpin var(--dur) linear infinite;
-}
-.orbit-ring.reverse{animation-direction:reverse;}
-.ring-a{--size:72px; --orbit:#FF00BB; --dur:2.1s; --tilt:-18deg; --squash:.8;}
-.ring-b{--size:116px;--orbit:#BF00FF; --dur:2.9s; --tilt:16deg; --squash:.68;}
-.ring-c{--size:164px;--orbit:#00FFCC; --dur:3.8s; --tilt:0deg; --squash:.9;}
-.orbit-satellite{
-  position:absolute;left:50%;top:-9px;
-  width:16px;height:16px;
-  transform:translateX(-50%);
-  border:2px solid #000;
-  border-radius:50%;
-  background:var(--orbit);
-  box-shadow:0 0 14px rgba(255,255,255,.22);
-}
-.orbit-core{
-  position:absolute;top:50%;left:50%;
-  transform:translate(-50%,-50%);
-  width:28px;height:28px;
-  border:3px solid #000;
-  background:#FFD700;
-  box-shadow:0 0 16px rgba(255,215,0,.55), 0 0 34px rgba(255,215,0,.25);
-  animation:corePulse 1.15s ease-in-out infinite;
-}
-.orbit-core::after{
-  content:'';position:absolute;inset:-12px;
-  border:2px solid rgba(255,215,0,.45);
-  border-radius:50%;
-  animation:coreEcho 1.8s ease-out infinite;
-}
-@keyframes orbitSpin{
-  from{transform:translate(-50%,-50%) rotate(var(--tilt)) scaleY(var(--squash)) rotate(0deg);}
-  to{transform:translate(-50%,-50%) rotate(var(--tilt)) scaleY(var(--squash)) rotate(360deg);}
-}
-@keyframes corePulse{
-  0%,100%{transform:translate(-50%,-50%) scale(.94);}
-  50%{transform:translate(-50%,-50%) scale(1.14);}
-}
-@keyframes coreEcho{
-  0%{transform:scale(.72);opacity:.6;}
-  100%{transform:scale(1.3);opacity:0;}
-}
-@keyframes orbitFloat{
-  0%,100%{transform:translateY(0);}
-  50%{transform:translateY(-6px);}
-}
-
 .load-bar-wrap{
   width:min(100%,340px);height:8px;
   padding:0;background:rgba(255,255,255,.08);
@@ -400,80 +129,6 @@ body{
   0%,100%{opacity:.7;letter-spacing:3px;}
   50%{opacity:1;letter-spacing:4px;}
 }
-.generation-console{
-  position:relative;width:min(100%,520px);padding:14px 16px 13px;
-  overflow:hidden;
-  background:linear-gradient(180deg,rgba(9,10,31,.92),rgba(4,4,16,.96));
-  border:1px solid rgba(0,255,204,.25);
-  box-shadow:4px 4px 0 rgba(0,0,0,.7),0 0 22px rgba(0,255,204,.08);
-}
-.generation-console::before{
-  content:'';position:absolute;inset:0;pointer-events:none;
-  background:linear-gradient(180deg,transparent,rgba(0,255,204,.055),transparent);
-  transform:translateY(-100%);animation:consoleScan 4s linear infinite;
-}
-@keyframes consoleScan{to{transform:translateY(100%);}}
-.generation-console-head{
-  position:relative;display:flex;align-items:center;justify-content:space-between;gap:12px;
-  padding-bottom:11px;border-bottom:1px solid rgba(255,255,255,.1);
-  font-family:var(--fp);font-size:6px;letter-spacing:1.4px;text-transform:uppercase;
-}
-.generation-console-title{color:var(--primary);}
-.generation-console-title::before{
-  content:'';display:inline-block;width:6px;height:6px;margin-right:7px;
-  background:var(--primary);box-shadow:0 0 8px var(--primary);
-  animation:statusBlink 1.2s steps(2,end) infinite;
-}
-@keyframes statusBlink{50%{opacity:.25;}}
-.generation-elapsed{color:rgba(255,255,255,.55);font-variant-numeric:tabular-nums;}
-.generation-steps{
-  position:relative;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));
-  gap:4px;margin-top:14px;
-}
-.generation-step{position:relative;min-width:0;text-align:center;color:rgba(255,255,255,.28);}
-.generation-step::after{
-  content:'';position:absolute;z-index:0;top:9px;left:calc(50% + 11px);
-  width:calc(100% - 18px);height:2px;background:rgba(255,255,255,.1);
-  transition:background .4s,box-shadow .4s;
-}
-.generation-step:last-child::after{display:none;}
-.generation-step.is-complete::after{
-  background:var(--primary);box-shadow:0 0 7px rgba(0,255,204,.7);
-}
-.generation-node{
-  position:relative;z-index:1;width:20px;height:20px;margin:0 auto 8px;
-  display:grid;place-items:center;
-  border:2px solid rgba(255,255,255,.18);background:#09091c;
-  font-family:var(--fp);font-size:5px;transition:all .35s;
-}
-.generation-step.is-active{color:#fff;}
-.generation-step.is-active .generation-node{
-  color:#03030c;border-color:var(--accent);background:var(--accent);
-  box-shadow:0 0 0 4px rgba(255,0,187,.1),0 0 16px rgba(255,0,187,.65);
-  animation:activeNode 1.2s ease-in-out infinite;
-}
-.generation-step.is-complete{color:rgba(0,255,204,.72);}
-.generation-step.is-complete .generation-node{
-  color:#031510;border-color:var(--primary);background:var(--primary);
-  box-shadow:0 0 9px rgba(0,255,204,.45);
-}
-.generation-step.is-complete .generation-node span{display:none;}
-.generation-step.is-complete .generation-node::before{content:'\2713';font-family:var(--fb);font-size:12px;font-weight:900;}
-@keyframes activeNode{
-  0%,100%{transform:translateY(0);}
-  50%{transform:translateY(-2px);filter:brightness(1.25);}
-}
-.generation-step-label{
-  display:block;overflow:hidden;text-overflow:ellipsis;
-  font-family:var(--fp);font-size:5px;line-height:1.45;letter-spacing:.25px;text-transform:uppercase;
-}
-.generation-detail{
-  position:relative;min-height:15px;margin-top:13px;
-  color:rgba(255,255,255,.62);font-family:var(--fp);font-size:5px;line-height:1.7;
-  letter-spacing:.45px;text-align:left;text-transform:uppercase;
-}
-.generation-detail::before{content:'>';color:var(--accent);margin-right:8px;}
-.generation-detail::after{content:'_';color:var(--primary);margin-left:4px;animation:statusBlink .85s steps(2,end) infinite;}
 .loading-error-actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;}
 .loading-error-actions[hidden]{display:none;}
 .loading-error-back{
@@ -484,10 +139,8 @@ body{
   box-shadow:4px 4px 0 #000,0 0 14px rgba(255,0,187,.28);
 }
 .loading-error-back:hover{filter:brightness(1.2);}
-#loading.has-error .loading-stage{opacity:.32;}
 #loading.has-error .load-bar-wrap{display:none;}
 #loading.has-error .load-text{color:#ff8fcf;animation:none;line-height:1.8;}
-#loading.has-error .generation-console{opacity:.38;filter:saturate(.5);}
 
 /* ═══════════════════════════════════════════
    GAME WRAPPER
@@ -756,9 +409,9 @@ body{
 .cat-cell{
   background:var(--cat-bg);border:2px solid var(--border);
   color:var(--cat-color);
-  font-size:calc(clamp(12px,1.8vw,16px) * var(--bz));
-  min-height:calc(60px * var(--bz));
-  letter-spacing:.3px;line-height:1.2;text-transform:uppercase;
+  font-size:calc(clamp(15px,2.1vw,21px) * var(--bz));
+  min-height:calc(64px * var(--bz));
+  letter-spacing:.2px;line-height:1.15;text-transform:uppercase;
 }
 .q-cell{
   background:var(--cell-bg);border:2px solid var(--border);
@@ -1049,10 +702,6 @@ body{
   .loading-shell{width:calc(100vw - 20px);padding:16px 13px 14px;gap:12px;}
   #loading .load-logo{width:54px;}
   .loading-topic{font-size:6px;}
-  #loading .loading-stage{height:148px;}
-  .generation-console{padding:12px 11px 11px;}
-  .generation-step-label{font-size:4.5px;letter-spacing:0;}
-  .generation-detail{font-size:4.5px;}
   .mc-grid{grid-template-columns:1fr;}
   .award-grid{grid-template-columns:1fr 1fr;}
   .chip-name{font-size:10px;max-width:60px;padding:5px 3px 5px 7px;}
@@ -1064,13 +713,6 @@ body{
   #loading{overflow-y:auto;padding:14px;}
   .loading-shell{gap:11px;}
   #loading .load-logo{width:64px;}
-  #loading .loading-stage{height:132px;}
-  #anim-relay{--scene-scale:.8;--scene-from-scale:.76;}
-  #anim-cradle-stage{--scene-scale:.82;--scene-from-scale:.78;}
-  #anim-orbit{--scene-scale:.7;--scene-from-scale:.66;}
-  .generation-console{padding-top:10px;padding-bottom:9px;}
-  .generation-steps{margin-top:10px;}
-  .generation-detail{margin-top:9px;}
 }
 
 /* ═══════════════════════════════════════════
@@ -1240,30 +882,15 @@ body::after{
   align-self:flex-start;padding:5px 8px;border:1px solid rgba(0,255,204,.25);background:rgba(0,255,204,.055);
   color:var(--primary);font-family:var(--fp);font-size:5px;letter-spacing:.7px;white-space:nowrap;
 }
-.loading-stage{width:100%;height:clamp(150px,26vw,196px);border:1px solid rgba(255,255,255,.07);overflow:hidden;}
-#anim-relay{--scene-scale:.9;--scene-from-scale:.86;}
-#anim-cradle-stage{--scene-scale:.92;--scene-from-scale:.88;}
-#anim-orbit{--scene-scale:.82;--scene-from-scale:.78;}
-.loading-stage .loading-scene{transform:translateY(10px) scale(var(--scene-from-scale,.96));}
-.loading-stage .loading-scene.is-active{transform:translateY(0) scale(var(--scene-scale,1));}
 .loading-progress{width:100%;display:grid;gap:8px;}
-.loading-progress-meta{display:flex;align-items:center;justify-content:space-between;gap:14px;}
+.loading-progress-meta{display:block;}
 .loading-progress .load-text{margin:0;text-align:left;}
-.generation-percent{
-  color:var(--primary);font-family:var(--fp);font-size:7px;font-variant-numeric:tabular-nums;
-  text-shadow:0 0 10px rgba(0,255,204,.45);
-}
 .loading-progress .load-bar-wrap{width:100%;height:10px;}
-.generation-console{width:100%;padding:16px 17px 14px;border-color:rgba(0,255,204,.32);}
-.generation-console-head{font-size:7px;}
-.generation-step-label{font-size:5.5px;}
-.generation-detail{font-size:5.5px;}
 .loading-error-back{min-height:46px;display:inline-flex;align-items:center;justify-content:center;transition:transform .14s,filter .14s,border-color .14s;}
 .loading-error-back:hover{transform:translateY(-2px);}
 .loading-error-back:focus-visible{outline:3px solid #FFD700;outline-offset:3px;}
 #loading.has-error .loading-shell{border-color:rgba(255,68,110,.46);box-shadow:8px 10px 0 rgba(0,0,0,.42),0 28px 90px rgba(0,0,0,.42),0 0 42px rgba(255,68,110,.1);}
 #loading.has-error .loading-progress-meta{justify-content:center;}
-#loading.has-error .generation-percent{display:none;}
 #winner-screen{position:relative;overflow:hidden;background:radial-gradient(circle at 50% 25%,rgba(191,0,255,.18),transparent 35rem);}
 .final-card{transition:transform .18s,box-shadow .18s;}.final-card:hover{transform:translateY(-4px);box-shadow:7px 9px 0 #000,0 0 22px currentColor;}
 button{-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
@@ -1291,7 +918,7 @@ button{-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
   .zoom-lbl{min-width:40px;font-size:7px;}
   .board-wrap{padding:58px 8px 20px;}
   .board{min-width:max(100%,calc(var(--board-cols,4) * 106px));padding:7px;}
-  .cat-cell{font-size:calc(12px * var(--bz));min-height:calc(58px * var(--bz));}
+  .cat-cell{font-size:calc(15px * var(--bz));min-height:calc(62px * var(--bz));}
   .q-cell{min-height:calc(72px * var(--bz));}
   .modal-overlay{padding:0;align-items:flex-end;}
   .modal{max-width:none;max-height:96dvh;border-width:2px 0 0;border-radius:8px 8px 0 0;padding-bottom:env(safe-area-inset-bottom);}
@@ -1307,14 +934,8 @@ button{-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
   .loading-intro{gap:7px;}
   .loading-topic{max-width:100%;font-size:6px;}
   .loading-spec{font-size:4.5px;padding:4px 6px;}
-  .loading-stage{height:156px;overflow:hidden;}
-  #anim-relay{--scene-scale:.74;--scene-from-scale:.7;}
-  #anim-cradle-stage{--scene-scale:.76;--scene-from-scale:.72;}
-  #anim-orbit{--scene-scale:.68;--scene-from-scale:.64;}
   .loading-progress{gap:7px;}
   .loading-progress .load-text{font-size:6px;letter-spacing:2px;}
-  .generation-console{padding:12px 10px 11px;}
-  .generation-steps{gap:2px;}.generation-step-label{font-size:4.5px;}.generation-detail{font-size:4.5px;}
   .loading-error-actions{width:100%;}.loading-error-back{flex:1;min-width:132px;}
   .winner-actions{max-width:100%;}.btn-winner{min-height:50px;}
 }
@@ -1326,32 +947,10 @@ button{-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
 }
 @media(max-height:620px) and (orientation:landscape){
   #loading{overflow-y:auto;padding:10px;}
-  .loading-shell{
-    width:min(96vw,940px);min-height:min(360px,calc(100dvh - 20px));padding:13px 18px;gap:8px 20px;
-    display:grid;grid-template-columns:minmax(240px,.85fr) minmax(390px,1.25fr);
-    grid-template-areas:'top console' 'stage console' 'progress console' 'errors errors';
-    align-content:center;align-items:stretch;
-  }
-  .loading-top{grid-area:top;align-self:center;}
-  .load-logo{width:92px;}
+  .loading-shell{width:min(96vw,620px);padding:13px 18px;gap:10px;}
+  .load-logo{width:82px;}
   .loading-intro{align-self:center;}
-  .loading-stage{grid-area:stage;height:126px;align-self:center;overflow:hidden;}
-  .loading-progress{grid-area:progress;align-self:start;}
-  .generation-console{grid-area:console;align-self:center;max-width:none;min-height:164px;padding:14px 15px;}
-  .loading-error-actions{grid-area:errors;}
-  #anim-relay{--scene-scale:.78;--scene-from-scale:.74;}
-  #anim-cradle-stage{--scene-scale:.8;--scene-from-scale:.76;}
-  #anim-orbit{--scene-scale:.68;--scene-from-scale:.64;}
-  .generation-steps{margin-top:12px;}.generation-detail{margin-top:12px;}
   .modal{max-height:100dvh;}.modal-overlay{padding:0;}
-}
-@media(max-width:660px) and (max-height:620px) and (orientation:landscape){
-  .loading-shell{display:flex;width:calc(100vw - 16px);min-height:0;padding:12px;gap:7px;}
-  .load-logo{width:94px;}
-  .loading-stage{height:86px;}
-  .loading-intro{display:none;}
-  .generation-console{width:100%;min-height:0;padding:9px 10px;}
-  .generation-steps{margin-top:8px;}.generation-detail{margin-top:7px;}
 }
 @media(hover:none){
   .q-cell:hover:not(.used),.mc-opt:hover:not(:disabled),.btn-reveal:hover,.btn-done:hover,.score-chip:hover{transform:none;}
@@ -1365,75 +964,24 @@ button{-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
 </head>
 <body>
 
-<!-- LOADING -->
-<div id="loading" role="status" aria-live="polite" aria-label="Generating quiz">
+<!-- LOADING (brief — the board is assembled from the library, never generated) -->
+<div id="loading" role="status" aria-live="polite" aria-label="Building your Jamboo">
   <div class="loading-shell">
     <div class="loading-top">
       <img class="load-logo" src="Jamboo-logo-png.png" alt="JamBoo">
       <div class="loading-intro" aria-live="polite">
-        <strong class="loading-topic" id="loading-topic">Preparing quiz</strong>
+        <strong class="loading-topic" id="loading-topic">Preparing board</strong>
         <span class="loading-spec" id="loading-spec">—</span>
-      </div>
-    </div>
-
-    <div class="loading-stage">
-      <div class="loading-scene is-active" id="anim-relay">
-        <div class="relay-system">
-          <div class="relay-line rl-a"></div>
-          <div class="relay-line rl-b"></div>
-          <div class="relay-line rl-c"></div>
-          <div class="relay-line rl-d"></div>
-          <div class="relay-rise rr-a"></div>
-          <div class="relay-rise rr-b"></div>
-          <div class="relay-rise rr-c"></div>
-          <div class="relay-node rn-1"></div>
-          <div class="relay-node rn-2"></div>
-          <div class="relay-node rn-3"></div>
-          <div class="relay-node rn-4"></div>
-          <div class="relay-node rn-5"></div>
-          <div class="relay-packet"></div>
-        </div>
-      </div>
-
-      <div class="loading-scene" id="anim-cradle-stage">
-        <div class="cradle-wrap">
-          <div class="cradle-frame"></div>
-          <div class="cradle-bar"></div>
-          <div class="cradle-base"></div>
-          <div class="c-arm ca-1"></div>
-          <div class="c-arm ca-2"></div>
-          <div class="c-arm ca-3"></div>
-          <div class="c-arm ca-4"></div>
-          <div class="c-arm ca-5"></div>
-        </div>
-      </div>
-
-      <div class="loading-scene" id="anim-orbit">
-        <div class="orbit-system">
-          <div class="orbit-ring ring-c reverse"><span class="orbit-satellite"></span></div>
-          <div class="orbit-ring ring-b"><span class="orbit-satellite"></span></div>
-          <div class="orbit-ring ring-a reverse"><span class="orbit-satellite"></span></div>
-          <div class="orbit-core"></div>
-        </div>
       </div>
     </div>
 
     <div class="loading-progress">
       <div class="loading-progress-meta">
-        <p class="load-text" id="load-text">Generating your game...</p>
-        <span class="generation-percent" id="generation-percent" aria-hidden="true">0%</span>
+        <p class="load-text" id="load-text">Building your Jamboo...</p>
       </div>
       <div class="load-bar-wrap" id="generation-progress" role="progressbar" aria-labelledby="load-text" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
         <div class="load-bar"></div>
       </div>
-    </div>
-    <div class="generation-console" id="generation-console">
-      <div class="generation-console-head">
-        <span class="generation-console-title" id="generation-console-title">Creation pipeline</span>
-        <span class="generation-elapsed" id="generation-elapsed" aria-hidden="true">00:00</span>
-      </div>
-      <div class="generation-steps" id="generation-steps"></div>
-      <div class="generation-detail" id="generation-detail" role="status" aria-live="polite">Reading your game brief</div>
     </div>
     <div class="loading-error-actions" id="loading-error-actions" hidden>
       <button class="loading-error-back" type="button" id="loading-error-retry" onclick="retryGeneration()">Retry</button>
@@ -1549,84 +1097,36 @@ const GT = {
     answer:'Answer', award:'Who answered?', correct:'✓ Correct', wrong:'✗ Wrong',
     clear:'🗑 Clear', winner:'🏆 Winner!', playAgain:'▶ Play Again',
     sameTeams:'↺ Same Teams, New Game', home:'⌂ Home',
-    pts:'pts', generating:'Generating your game...',
-    errorGen:'Error generating game. Please go back and try again.',
-    aiOffline:'AI server offline. Check the AI configuration and try again.', backToSetup:'Back to setup',
+    pts:'pts', building:'Building your Jamboo...',
+    errorSession:'This game session is invalid. Please create a new Jamboo.',
+    backToSetup:'Back to setup',
     noConfig:'No game config found. Please go back to setup.',
     calculating:'CALCULATING...',
-    creationPipeline:'Creation pipeline',
-    generationSteps:['Brief','Categories','Creating','Validation','Final check','Board'],
-    generationDetails:[
-      'Reading the topic, level, and language',
-      'Designing distinct category angles',
-      'Generating question batches in parallel',
-      'Validating answers and choices',
-      'Checking duplicates and consistency',
-      'Assembling your game board'
-    ],
-    usingCategories:'Locking your {count} named categories',
-    planningCategories:'Planning {count} focused categories',
-    categoryProgress:'Creating {current}/{total}: {category}',
-    questionProgress:'Generating questions {current} / {total}',
-    repairingQuestions:'Repairing {count} question(s)',
     retry:'Retry',
-    validatingQuiz:'Validating every question and answer',
   },
   pt:{
     back:'Início', redo:'Refazer', redoTitle:'Refazer última pergunta', end:'🏆 Fim', reveal:'Revelar Resposta', done:'Feito ✓',
     answer:'Resposta', award:'Quem respondeu?', correct:'✓ Correto', wrong:'✗ Errado',
     clear:'🗑 Limpar', winner:'🏆 Vencedor!', playAgain:'▶ Jogar Novamente',
     sameTeams:'↺ Mesmos Times, Novo Jogo', home:'⌂ Início',
-    pts:'pontos', generating:'Gerando seu jogo...',
-    errorGen:'Erro ao gerar o jogo. Volte e tente novamente.',
-    aiOffline:'Servidor de IA offline. Verifique a configuração da IA e tente novamente.', backToSetup:'Voltar ao início',
+    pts:'pontos', building:'Montando seu Jamboo...',
+    errorSession:'Esta sessão de jogo é inválida. Crie um novo Jamboo.',
+    backToSetup:'Voltar ao início',
     noConfig:'Configuração não encontrada. Volte ao início.',
     calculating:'CALCULANDO...',
-    creationPipeline:'Linha de criação',
-    generationSteps:['Tema','Categorias','Criando','Validação','Revisão final','Tabuleiro'],
-    generationDetails:[
-      'Lendo o tema, o nível e o idioma',
-      'Planejando categorias diferentes',
-      'Gerando lotes de perguntas em paralelo',
-      'Validando respostas e alternativas',
-      'Conferindo repetições e consistência',
-      'Montando o tabuleiro do jogo'
-    ],
-    usingCategories:'Fixando suas {count} categorias',
-    planningCategories:'Planejando {count} categorias específicas',
-    categoryProgress:'Criando {current}/{total}: {category}',
-    questionProgress:'Gerando perguntas {current} / {total}',
-    repairingQuestions:'Reparando {count} pergunta(s)',
     retry:'Tentar novamente',
-    validatingQuiz:'Validando todas as perguntas e respostas',
   },
   es:{
     back:'Inicio', redo:'Rehacer', redoTitle:'Rehacer última pregunta', end:'🏆 Fin', reveal:'Revelar Respuesta', done:'Listo ✓',
     answer:'Respuesta', award:'¿Quién respondió?', correct:'✓ Correcto', wrong:'✗ Incorrecto',
     clear:'🗑 Limpiar', winner:'🏆 ¡Ganador!', playAgain:'▶ Jugar de Nuevo',
     sameTeams:'↺ Mismos Equipos, Nuevo Juego', home:'⌂ Inicio',
-    pts:'puntos', generating:'Generando tu juego...',
-    errorGen:'Error al generar el juego. Vuelve e intenta de nuevo.',
-    aiOffline:'Servidor de IA sin conexión. Verifica la configuración de la IA e inténtalo de nuevo.', backToSetup:'Volver al inicio',
+    pts:'puntos', building:'Montando tu Jamboo...',
+    errorSession:'Esta sesión de juego no es válida. Crea un nuevo Jamboo.',
+    backToSetup:'Volver al inicio',
     noConfig:'Configuración no encontrada. Vuelve al inicio.',
     calculating:'CALCULANDO...',
-    creationPipeline:'Línea de creación',
-    generationSteps:['Tema','Categorías','Creando','Validación','Revisión final','Tablero'],
-    generationDetails:[
-      'Leyendo el tema, el nivel y el idioma',
-      'Diseñando categorías diferentes',
-      'Generando lotes de preguntas en paralelo',
-      'Validando respuestas y opciones',
-      'Revisando repeticiones y consistencia',
-      'Preparando el tablero del juego'
-    ],
-    usingCategories:'Fijando tus {count} categorías',
-    planningCategories:'Planificando {count} categorías específicas',
-    categoryProgress:'Creando {current}/{total}: {category}',
-    questionProgress:'Generando preguntas {current} / {total}',
-    repairingQuestions:'Reparando {count} pregunta(s)',
     retry:'Reintentar',
-    validatingQuiz:'Validando todas las preguntas y respuestas',
   }
 };
 
@@ -1636,702 +1136,116 @@ let currentQuestionAward=null, lastClosedQuestion=null, boardCompletionTimer=nul
 let drawCtx=null, isDrawing=false, drawColor='#000000';
 let mcAnswered=null;
 let openOutcome=null;
-let loadingSceneTimer=null;
-let activeLoadingSceneIndex=0;
-let generationProgressTimer=null;
-let generationStartedAt=0;
-let generationProgressStep=0;
-let generationRequest=null;
-const GENERATION_API_URL='/api/ai';
-const GENERATION_PROVIDER='jamboo-engine-v13-deepseek';
-const GAME_CACHE_KEY='jamboo_game_cache_v4';
-const GENERATION_SIMULATION_MS=120000;
-const MAX_QUESTION_ROUNDS=3;
-const BATCH_CONCURRENCY=3;
-const QUIZ_REQUEST_TIMEOUT_MS=150000;
+let scoreEditIdx=null;
+const MIN_LOADING_MS=450;
 
 function cleanText(value){
   return String(value ?? '').trim();
 }
 
-function normalizeAnswerKey(value){
-  return cleanText(value)
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g,'')
-    .toLowerCase()
-    .replace(/["'`]/g,'')
-    .replace(/[.,;:!?]/g,'')
-    .replace(/\s+/g,' ')
-    .trim();
-}
-
-function findCorrectOptionIndex(options, answer, correctIndex){
-  const strictAnswerKey=cleanText(answer)
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g,'')
-    .toLowerCase()
-    .replace(/\s+/g,' ')
-    .trim();
-  const strictMatch=options.findIndex(opt=>cleanText(opt)
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g,'')
-    .toLowerCase()
-    .replace(/\s+/g,' ')
-    .trim()===strictAnswerKey);
-  if(strictMatch>=0) return strictMatch;
-
-  const answerKey=normalizeAnswerKey(answer);
-  const normalizedOptions=options.map(normalizeAnswerKey);
-  const normalizedMatches=normalizedOptions
-    .map((optionKey,index)=>optionKey===answerKey ? index : -1)
-    .filter(index=>index>=0);
-  if(normalizedMatches.length===1) return normalizedMatches[0];
-  if(Number.isInteger(correctIndex) && correctIndex>=0 && correctIndex<options.length) return correctIndex;
-
-  const fuzzyMatches=normalizedOptions
-    .map((optionKey,index)=>optionKey.includes(answerKey) || answerKey.includes(optionKey) ? index : -1)
-    .filter(index=>index>=0);
-  if(fuzzyMatches.length===1) return fuzzyMatches[0];
-  return -1;
-}
-
-function sanitizeQuestion(rawQuestion, colIndex, rowIndex){
+function normalizeSessionQuestion(rawQuestion,colIndex,rowIndex){
   if(!rawQuestion || typeof rawQuestion!=='object'){
-    throw new Error(`Invalid question object at ${colIndex}:${rowIndex}`);
+    throw new Error(`Invalid question at ${colIndex}:${rowIndex}`);
   }
-
-  const question=cleanText(rawQuestion.q ?? rawQuestion.question);
-  let answer=cleanText(rawQuestion.a ?? rawQuestion.answer);
-  if(!question){
-    throw new Error(`Missing question text at ${colIndex}:${rowIndex}`);
-  }
-
-  const isDrawing=rawQuestion.d===1 || rawQuestion.d===true || !!rawQuestion.isDrawing;
-  const sourceOptions=rawQuestion.o ?? rawQuestion.options;
-  const rawOptions=Array.isArray(sourceOptions)
-    ? sourceOptions.map(cleanText).filter(Boolean).slice(0,4)
-    : [];
-  const sourceCorrectIndex=rawQuestion.i ?? rawQuestion.correctIndex;
-  const parsedCorrectIndex=Number.isInteger(sourceCorrectIndex)
-    ? sourceCorrectIndex
-    : Number.parseInt(sourceCorrectIndex,10);
-
-  // Compact multiple-choice responses do not repeat the correct option as a
-  // separate answer string. Expand it here into the UI's existing shape.
-  if(!answer && rawOptions.length===4 && parsedCorrectIndex>=0 && parsedCorrectIndex<4){
-    answer=rawOptions[parsedCorrectIndex];
-  }
-  if(!answer){
-    throw new Error(`Missing answer text at ${colIndex}:${rowIndex}`);
-  }
-
-  if(isDrawing){
-    return {question,answer,type:'drawing',options:[],correctIndex:0,isDrawing:true};
-  }
-
-  if(rawOptions.length===4){
-    const correctIndex=findCorrectOptionIndex(rawOptions,answer,parsedCorrectIndex);
-    if(correctIndex>=0){
-      return {question,answer:rawOptions[correctIndex],type:'multiple',options:rawOptions,correctIndex,isDrawing:false};
-    }
-  }
-
-  return {question,answer,type:'open',options:[],correctIndex:0,isDrawing:false};
-}
-
-function rebalanceMultipleChoiceAnswers(game){
-  const multipleQuestions=[];
-  game.questions.forEach(col=>{
-    col.forEach(question=>{
-      if(question && Array.isArray(question.options) && question.options.length===4){
-        multipleQuestions.push(question);
-      }
-    });
-  });
-
-  if(!multipleQuestions.length) return game;
-
-  const offset=multipleQuestions.length===1 ? 1+Math.floor(Math.random()*3) : Math.floor(Math.random()*4);
-  multipleQuestions.forEach((question,index)=>{
-    const targetIndex=(index+offset)%4;
-    if(question.correctIndex===targetIndex) return;
-    const correctOption=question.options[question.correctIndex];
-    const otherOptions=question.options.filter((_,optionIndex)=>optionIndex!==question.correctIndex);
-    question.options=[
-      ...otherOptions.slice(0,targetIndex),
-      correctOption,
-      ...otherOptions.slice(targetIndex)
-    ];
-    question.correctIndex=targetIndex;
-  });
-
-  return game;
-}
-
-function extractJsonObject(text){
-  const source=cleanText(String(text ?? '').replace(/```json|```/gi,''));
-  const start=source.indexOf('{');
-  if(start<0) throw new Error('No JSON object found in response');
-
-  let depth=0;
-  let inString=false;
-  let isEscaped=false;
-
-  for(let i=start;i<source.length;i++){
-    const char=source[i];
-
-    if(inString){
-      if(isEscaped){
-        isEscaped=false;
-      }else if(char==='\\'){
-        isEscaped=true;
-      }else if(char==='"'){
-        inString=false;
-      }
-      continue;
-    }
-
-    if(char==='"'){
-      inString=true;
-      continue;
-    }
-    if(char==='{'){
-      depth++;
-      continue;
-    }
-    if(char==='}'){
-      depth--;
-      if(depth===0) return source.slice(start,i+1);
-    }
-  }
-
-  throw new Error('Incomplete JSON object in response');
-}
-
-function transposeQuestionGrid(grid){
-  return Array.from({length:grid[0].length},(_,colIndex)=>{
-    return grid.map(row=>row[colIndex]);
-  });
-}
-
-function normalizeQuestionColumns(rawQuestions, expectedCols, expectedRows){
-  if(!Array.isArray(rawQuestions)){
-    throw new Error('Invalid game schema');
-  }
-
-  const hasColumnShape=rawQuestions.length>=expectedCols
-    && rawQuestions.slice(0,expectedCols).every(column=>Array.isArray(column) && column.length>=expectedRows);
-  if(hasColumnShape){
-    return rawQuestions.slice(0,expectedCols).map(column=>column.slice(0,expectedRows));
-  }
-
-  const hasRowShape=rawQuestions.length>=expectedRows
-    && rawQuestions.slice(0,expectedRows).every(row=>Array.isArray(row) && row.length>=expectedCols);
-  if(hasRowShape){
-    const trimmedRows=rawQuestions.slice(0,expectedRows).map(row=>row.slice(0,expectedCols));
-    return transposeQuestionGrid(trimmedRows);
-  }
-
-  const hasFlatShape=rawQuestions.length>=expectedCols*expectedRows
-    && rawQuestions.slice(0,expectedCols*expectedRows).every(item=>item && typeof item==='object' && !Array.isArray(item));
-  if(hasFlatShape){
-    return Array.from({length:expectedCols},(_,colIndex)=>{
-      const start=colIndex*expectedRows;
-      return rawQuestions.slice(start,start+expectedRows);
-    });
-  }
-
-  throw new Error('Unexpected game dimensions');
-}
-
-function formatGenerationStatus(template,values){
-  return Object.entries(values).reduce((text,[key,value])=>{
-    return text.replaceAll(`{${key}}`,String(value));
-  },template);
-}
-
-function parseExplicitCategories(topic,expectedCount){
-  const categories=cleanText(topic)
-    .split(/[,;|\n]+/)
-    .map(value=>value.replace(/^\s*(?:[-*]+|\d+[.)])\s*/, '').trim())
-    .filter(Boolean);
-  if(categories.length!==expectedCount || categories.some(category=>category.length>50)) return null;
-  const normalized=categories.map(normalizeAnswerKey);
-  return new Set(normalized).size===categories.length ? categories : null;
-}
-
-async function requestQuizAction(body,signal){
-  const controller=new AbortController();
-  const relay=()=>controller.abort();
-  if(signal) signal.addEventListener('abort',relay,{once:true});
-  const timer=setTimeout(()=>controller.abort(),QUIZ_REQUEST_TIMEOUT_MS);
-  let res;
-  try{
-    res=await fetch(GENERATION_API_URL,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(body),
-      signal:controller.signal
-    });
-  }catch(error){
-    throw new Error('AI server unavailable',{cause:error});
-  }finally{
-    clearTimeout(timer);
-    if(signal) signal.removeEventListener('abort',relay);
-  }
-  if(!res.ok){
-    let apiError=`API ${res.status}`;
-    try{
-      const errorData=await res.json();
-      const message=errorData?.error?.message || errorData?.error || errorData?.message;
-      if(message) apiError=`${message} (API ${res.status})`;
-    }catch(_){
-      // Keep the status-only error when the API did not return JSON.
-    }
-    throw new Error(apiError);
-  }
-
-  let data;
-  try{
-    data=await res.json();
-  }catch(_){
-    throw new Error('AI route returned invalid JSON');
-  }
-  if(!data?.answer) throw new Error('AI route returned an empty response');
-  return JSON.parse(extractJsonObject(data.answer));
-}
-
-function createGenerationToken(){
-  if(globalThis.crypto?.randomUUID) return crypto.randomUUID();
-  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
-}
-
-function buildQuizSpec(seed,generationId){
-  const isYear6Coding=cfg.preset==='year6-coding'
-    || /^Year 6 Computational Thinking\b/i.test(cfg.prompt||'');
+  const question=cleanText(rawQuestion.question);
+  const options=Array.isArray(rawQuestion.options)?rawQuestion.options.map(cleanText).slice(0,4):[];
+  const correctIndex=Number.isInteger(rawQuestion.correctIndex)?rawQuestion.correctIndex:-1;
+  if(!question) throw new Error(`Missing question text at ${colIndex}:${rowIndex}`);
+  if(options.length!==4 || options.some(option=>!option)) throw new Error(`Invalid choices at ${colIndex}:${rowIndex}`);
+  if(new Set(options.map(option=>option.toLowerCase())).size!==4) throw new Error(`Duplicate choices at ${colIndex}:${rowIndex}`);
+  if(correctIndex<0 || correctIndex>3) throw new Error(`Invalid correct answer at ${colIndex}:${rowIndex}`);
   return {
-    topic:cfg.prompt,
-    columns:cfg.numCols,
-    rows:cfg.numRows,
-    difficulty:cfg.difficulty,
-    questionType:cfg.qType,
-    language:cfg.qLang,
-    seed,
-    generationId,
-    audience:isYear6Coding ? 'year6-pre-coding' : undefined
+    question,
+    options,
+    correctIndex,
+    answer:options[correctIndex],
+    difficulty:Number(rawQuestion.difficulty)||2,
+    subtopic:cleanText(rawQuestion.subtopic),
+    type:'multiple',
+    isDrawing:false,
   };
 }
 
-async function planQuiz(spec,signal){
-  const explicit=parseExplicitCategories(cfg.prompt,cfg.numCols);
-  const plan=await requestQuizAction({
-    action:'quiz-plan',
-    quiz:{...spec,explicitCategories:explicit||undefined}
-  },signal);
-  const categories=Array.isArray(plan?.categories) ? plan.categories.map(cleanText) : [];
-  const slots=Array.isArray(plan?.slots) ? plan.slots : [];
-  const expectedSlotIds=[];
-  for(let columnIndex=0;columnIndex<cfg.numCols;columnIndex++){
-    for(let rowIndex=0;rowIndex<cfg.numRows;rowIndex++) expectedSlotIds.push(`${columnIndex}-${rowIndex}`);
-  }
-  if(
-    categories.length!==cfg.numCols ||
-    categories.some(category=>!category) ||
-    new Set(categories.map(normalizeAnswerKey)).size!==categories.length ||
-    slots.length!==expectedSlotIds.length ||
-    slots.some((slot,index)=>slot?.slotId!==expectedSlotIds[index]) ||
-    !Number.isInteger(plan?.batchSize) || plan.batchSize<1 || plan.batchSize>8
-  ){
-    throw new Error('AI returned an invalid board plan');
-  }
-  const kind=typeof plan.kind==='string' && plan.kind ? plan.kind : undefined;
-  return {categories,slots,batchSize:plan.batchSize,kind};
-}
-
-async function generateQuestionBatch(spec,categories,slotIds,excludedQuestions,signal,attempt){
-  const response=await requestQuizAction({
-    action:'quiz-batch',
-    quiz:{
-      ...spec,
-      categories,
-      slotIds,
-      excludedQuestions,
-      attempt
-    }
-  },signal);
-  const questions=Array.isArray(response?.questions)?response.questions:[];
-  const failedSlots=Array.isArray(response?.failedSlots)
-    ? response.failedSlots.map(cleanText).filter(Boolean)
-    : [];
-  if(questions.length+failedSlots.length!==slotIds.length){
-    throw new Error('AI returned an incomplete question batch');
-  }
-  return {questions,repaired:Number(response.repaired)||0,failedSlots};
-}
-
-function validateCompletedGame(game){
-  if(game.categories.length!==cfg.numCols || game.questions.length!==cfg.numCols){
-    throw new Error('Generated game dimensions are invalid');
-  }
-  const prompts=[];
-  let availableCount=0;
-  game.questions.forEach((column,colIndex)=>{
-    if(column.length!==cfg.numRows) throw new Error(`Invalid category size at ${colIndex}`);
-    column.forEach(question=>{
-      if(!question) return;
-      availableCount+=1;
-      const promptKey=normalizeAnswerKey(question.question);
-      if(prompts.includes(promptKey)) throw new Error('Generated quiz contains a repeated question');
-      prompts.push(promptKey);
-      if(question.options.length){
-        const optionKeys=question.options.map(normalizeAnswerKey);
-        if(new Set(optionKeys).size!==4) throw new Error('Generated quiz contains duplicate choices');
-        if(question.correctIndex<0 || question.correctIndex>3){
-          throw new Error('Generated quiz contains an invalid correct answer');
-        }
-      }
-    });
-  });
-  if(!availableCount) throw new Error('Generated quiz has no usable questions');
-  return game;
-}
-
-function sanitizeGameData(rawGame,{rebalance=true}={}){
+// The builder freezes a complete board into jamboo_config. The game never
+// fetches questions, so a refresh always replays the exact same session.
+function loadSession(rawSession){
   const expectedCols=cfg.numCols;
   const expectedRows=cfg.numRows;
-  const rawCategories=rawGame?.c ?? rawGame?.categories;
-  const rawQuestions=rawGame?.qs ?? rawGame?.questions;
-
-  if(!rawGame || !Array.isArray(rawCategories) || !Array.isArray(rawQuestions)){
-    throw new Error('Invalid game schema');
+  const categories=Array.isArray(rawSession?.categories)?rawSession.categories.map(cleanText):[];
+  const rawQuestions=rawSession?.questions;
+  if(!categories.length || !Array.isArray(rawQuestions) || rawQuestions.length!==expectedCols){
+    throw new Error('Invalid session board');
   }
-
-  const categories=rawCategories.slice(0,expectedCols).map((category,index)=>{
-    const label=cleanText(category);
-    return label || `Category ${index+1}`;
-  });
-  while(categories.length<expectedCols){
-    categories.push(`Category ${categories.length+1}`);
-  }
-
-  const normalizedColumns=normalizeQuestionColumns(rawQuestions,expectedCols,expectedRows);
-  const questions=normalizedColumns.map((column,colIndex)=>{
-    if(!Array.isArray(column) || column.length<expectedRows){
-      throw new Error(`Unexpected question column size at ${colIndex}`);
+  const questions=rawQuestions.map((column,colIndex)=>{
+    if(!Array.isArray(column) || column.length!==expectedRows){
+      throw new Error(`Invalid session column at ${colIndex}`);
     }
-    return column.slice(0,expectedRows).map((question,rowIndex)=>
-      question ? sanitizeQuestion(question,colIndex,rowIndex) : null
-    );
+    return column.map((question,rowIndex)=>normalizeSessionQuestion(question,colIndex,rowIndex));
   });
-
-  const game={categories,questions};
-  return rebalance ? rebalanceMultipleChoiceAnswers(game) : game;
-}
-
-function gameCacheFingerprint(){
-  return JSON.stringify([
-    GENERATION_PROVIDER,
-    cfg.prompt,cfg.numCols,cfg.numRows,cfg.difficulty,cfg.qType,cfg.qLang
-  ]);
-}
-
-function readCachedGame(){
-  try{
-    const cached=JSON.parse(sessionStorage.getItem(GAME_CACHE_KEY)||'null');
-    if(!cached || cached.fingerprint!==gameCacheFingerprint()) return null;
-    return sanitizeGameData(cached.game,{rebalance:false});
-  }catch(error){
-    console.warn('Ignoring invalid cached game',error);
-    sessionStorage.removeItem(GAME_CACHE_KEY);
-    return null;
-  }
-}
-
-function cacheGame(game){
-  try{
-    sessionStorage.setItem(GAME_CACHE_KEY,JSON.stringify({
-      fingerprint:gameCacheFingerprint(),
-      game
-    }));
-  }catch(error){
-    // Storage may be unavailable in private browsing; gameplay still works.
-    console.warn('Unable to cache generated game',error);
-  }
-}
-
-async function generateGame(){
-  const controller=new AbortController();
-  const seed=createGenerationToken();
-  const generationId=createGenerationToken();
-  const spec=buildQuizSpec(seed,generationId);
-  try{
-    const {categories,slots,batchSize,kind}=await planQuiz(spec,controller.signal);
-    if(kind) spec.kind=kind;
-    const slotById=new Map(slots.map(slot=>[slot.slotId,slot]));
-    const generated=new Map();
-    const generatedPrompts=new Set();
-    const excludedQuestions=[];
-    let firstError=null;
-    let pendingSlots=slots;
-
-    // Generate in batches, a few at a time. Failed or duplicate slots are
-    // retried in a later round and only the remaining gaps are reported as
-    // missing, so one bad question never discards the whole board.
-    for(let round=1;round<=MAX_QUESTION_ROUNDS && pendingSlots.length;round++){
-      const failedSlotIds=[];
-      const batches=[];
-      for(let offset=0;offset<pendingSlots.length;offset+=batchSize){
-        batches.push(pendingSlots.slice(offset,offset+batchSize));
-      }
-      let nextBatchIndex=0;
-      const worker=async()=>{
-        while(nextBatchIndex<batches.length){
-          const batchSlots=batches[nextBatchIndex++];
-          try{
-            const batch=await generateQuestionBatch(
-              spec,
-              categories,
-              batchSlots.map(slot=>slot.slotId),
-              excludedQuestions,
-              controller.signal,
-              round
-            );
-            batch.questions.forEach(question=>{
-              const promptKey=normalizeAnswerKey(question.q ?? question.question);
-              if(!promptKey || generatedPrompts.has(promptKey)){
-                failedSlotIds.push(question.slotId);
-                return;
-              }
-              generatedPrompts.add(promptKey);
-              generated.set(question.slotId,question);
-              excludedQuestions.push(cleanText(question.q ?? question.question));
-            });
-            failedSlotIds.push(...batch.failedSlots);
-          }catch(error){
-            firstError=firstError||error;
-            console.warn('Question batch failed',error);
-            failedSlotIds.push(...batchSlots.map(slot=>slot.slotId));
-          }
-        }
-      };
-      await Promise.all(Array.from({length:Math.min(BATCH_CONCURRENCY,batches.length)},worker));
-      pendingSlots=failedSlotIds.map(slotId=>slotById.get(slotId)).filter(Boolean);
-    }
-
-    if(!generated.size){
-      throw firstError || new Error('No questions could be generated');
-    }
-
-    const draftQuestions=[...generated.values()];
-    const missingSlotIds=slots
-      .map(slot=>slot.slotId)
-      .filter(slotId=>!generated.has(slotId));
-    const finalized=await requestQuizAction({
-      action:'quiz-validate',
-      quiz:{...spec,categories,questions:draftQuestions,missingSlotIds}
-    },controller.signal);
-    if(finalized?.ready!==true || !Array.isArray(finalized.questions)){
-      throw new Error('Quiz did not pass final validation');
-    }
-    const questions=Array.from({length:cfg.numCols},()=>Array(cfg.numRows).fill(null));
-    finalized.questions.forEach(question=>{
-      const slot=slotById.get(question.slotId)||slots.find(candidate=>candidate.slotId===question.slotId);
-      if(!slot) throw new Error(`Unexpected final slot ${question.slotId}`);
-      questions[slot.categoryIndex][slot.rowIndex]=sanitizeQuestion(
-        question,
-        slot.categoryIndex,
-        slot.rowIndex
-      );
-    });
-    const game=validateCompletedGame({categories,questions});
-    return rebalanceMultipleChoiceAnswers(game);
-  }catch(error){
-    controller.abort();
-    throw error;
-  }
-}
-
-function requestGeneratedGame(){
-  if(generationRequest) return generationRequest;
-  generationRequest=generateGame().finally(()=>{generationRequest=null;});
-  return generationRequest;
-}
-
-function renderGenerationSteps(){
-  const G=GT[lang]||GT.en;
-  const title=document.getElementById('generation-console-title');
-  const stepsContainer=document.getElementById('generation-steps');
-  if(title) title.textContent=G.creationPipeline;
-  if(!stepsContainer) return;
-
-  stepsContainer.replaceChildren();
-  G.generationSteps.forEach((label,index)=>{
-    const step=document.createElement('div');
-    step.className='generation-step';
-    step.dataset.step=String(index);
-
-    const node=document.createElement('span');
-    node.className='generation-node';
-    const number=document.createElement('span');
-    number.textContent=String(index+1).padStart(2,'0');
-    node.appendChild(number);
-
-    const text=document.createElement('span');
-    text.className='generation-step-label';
-    text.textContent=label;
-    step.append(node,text);
-    stepsContainer.appendChild(step);
-  });
-}
-
-function setGenerationStep(index){
-  const G=GT[lang]||GT.en;
-  const lastIndex=G.generationSteps.length-1;
-  const nextStep=Math.min(lastIndex,Math.max(0,index));
-  generationProgressStep=nextStep;
-  document.querySelectorAll('.generation-step').forEach((step,stepIndex)=>{
-    step.classList.toggle('is-complete',stepIndex<generationProgressStep);
-    step.classList.toggle('is-active',stepIndex===generationProgressStep);
-  });
-
-  const detail=document.getElementById('generation-detail');
-  const nextDetail=G.generationDetails[generationProgressStep];
-  if(detail && detail.textContent!==nextDetail) detail.textContent=nextDetail;
-}
-
-function renderGenerationProgress(percent){
-  const progress=Math.min(100,Math.max(0,percent));
-  document.querySelector('.loading-shell')?.style.setProperty(
-    '--load-progress',
-    `${progress.toFixed(1)}%`
-  );
-  const roundedProgress=Math.round(progress);
-  const progressLabel=document.getElementById('generation-percent');
-  const progressBar=document.getElementById('generation-progress');
-  if(progressLabel) progressLabel.textContent=`${roundedProgress}%`;
-  if(progressBar) progressBar.setAttribute('aria-valuenow',String(roundedProgress));
-}
-
-function updateGenerationProgress(){
-  if(!generationStartedAt) return;
-  const elapsed=Date.now()-generationStartedAt;
-  const elapsedSeconds=Math.floor(elapsed/1000);
-  const elapsedLabel=document.getElementById('generation-elapsed');
-  if(elapsedLabel){
-    const minutes=String(Math.floor(elapsedSeconds/60)).padStart(2,'0');
-    const seconds=String(elapsedSeconds%60).padStart(2,'0');
-    elapsedLabel.textContent=`${minutes}:${seconds}`;
-  }
-  const simulatedProgress=Math.min(100,(elapsed/GENERATION_SIMULATION_MS)*100);
-  const stepCount=(GT[lang]||GT.en).generationSteps.length;
-  setGenerationStep(Math.min(stepCount-1,Math.floor((simulatedProgress/100)*stepCount)));
-  renderGenerationProgress(simulatedProgress);
-}
-
-function startGenerationProgress(){
-  stopGenerationProgress();
-  generationProgressStep=0;
-  generationStartedAt=Date.now();
-  renderGenerationSteps();
-  setGenerationStep(0);
-  renderGenerationProgress(0);
-  updateGenerationProgress();
-  generationProgressTimer=setInterval(updateGenerationProgress,250);
-}
-
-function stopGenerationProgress(){
-  if(generationProgressTimer){
-    clearInterval(generationProgressTimer);
-    generationProgressTimer=null;
-  }
-}
-
-function completeGenerationProgress(){
-  stopGenerationProgress();
-  setGenerationStep((GT[lang]||GT.en).generationSteps.length-1);
-  renderGenerationProgress(100);
-}
-
-function setActiveLoadingScene(index) {
-  const scenes=['anim-relay','anim-cradle-stage','anim-orbit'];
-  activeLoadingSceneIndex=((index%scenes.length)+scenes.length)%scenes.length;
-  scenes.forEach((id,sceneIndex)=>{
-    const el=document.getElementById(id);
-    if(el) el.classList.toggle('is-active',sceneIndex===activeLoadingSceneIndex);
-  });
-}
-
-function startLoadingSceneCycle() {
-  stopLoadingSceneCycle();
-  setActiveLoadingScene(Math.floor(Math.random()*3));
-  loadingSceneTimer=setInterval(()=>{
-    setActiveLoadingScene(activeLoadingSceneIndex+1);
-  },4200);
-}
-
-function stopLoadingSceneCycle() {
-  if(loadingSceneTimer){
-    clearInterval(loadingSceneTimer);
-    loadingSceneTimer=null;
-  }
+  return {categories:categories.slice(0,expectedCols),questions};
 }
 
 function retryGeneration(){
   window.location.reload();
 }
 
-async function boot() {
-  startLoadingSceneCycle();
+function showSessionError(){
+  const G=GT[lang]||GT.en;
+  document.getElementById('load-text').textContent=G.errorSession;
+  document.getElementById('loading-error-actions').hidden=false;
+  document.getElementById('loading').classList.add('has-error');
+}
 
+async function boot() {
   const raw=localStorage.getItem('jamboo_config');
   if(!raw){
-    stopLoadingSceneCycle();
     alert(GT.en.noConfig);
     window.location.href='index.html';
     return;
   }
-  cfg=JSON.parse(raw);
-  lang=cfg.lang||'en';
-  teams=cfg.teams.map(t=>({...t,score:0}));
+
+  let parsed=null;
+  try{
+    parsed=JSON.parse(raw);
+  }catch(error){
+    console.error('Invalid jamboo_config',error);
+  }
+  if(!parsed || !parsed.session){
+    showSessionError();
+    return;
+  }
+
+  cfg=parsed;
+  lang=GT[cfg.lang]?cfg.lang:'en';
+  teams=(cfg.teams||[]).map(team=>({...team,score:0}));
   applyLabels();
+
   const loadingTopic=document.getElementById('loading-topic');
   const loadingSpec=document.getElementById('loading-spec');
   if(loadingTopic){
-    loadingTopic.textContent=cleanText(cfg.prompt)||'Custom quiz';
-    loadingTopic.title=loadingTopic.textContent;
+    const title=cleanText((cfg.session.categories||[]).join(' · '))||'Jamboo';
+    loadingTopic.textContent=title;
+    loadingTopic.title=title;
   }
   if(loadingSpec){
-    const questionCount=cfg.numCols*cfg.numRows;
-    loadingSpec.textContent=`${cfg.numCols} × ${cfg.numRows} · ${questionCount}`;
+    loadingSpec.textContent=`${cfg.numCols} × ${cfg.numRows} · ${cfg.numCols*cfg.numRows}`;
   }
-  document.getElementById('load-text').textContent=GT[lang].generating;
+  document.getElementById('load-text').textContent=(GT[lang]||GT.en).building;
+  document.querySelector('.loading-shell')?.style.setProperty('--load-progress','100%');
 
-  gameData=readCachedGame();
-  if(!gameData){
-    startGenerationProgress();
-    try {
-      gameData=await requestGeneratedGame();
-      cacheGame(gameData);
-    } catch(e) {
-      console.error(e);
-      stopLoadingSceneCycle();
-      stopGenerationProgress();
-      const offline=String(e?.message||'').includes('AI server unavailable');
-      document.getElementById('load-text').textContent=offline ? GT[lang].aiOffline : GT[lang].errorGen;
-      document.getElementById('loading-error-actions').hidden=false;
-      document.getElementById('loading').classList.add('has-error');
-      return;
-    }
+  const startedAt=Date.now();
+  try{
+    gameData=loadSession(cfg.session);
+  }catch(error){
+    console.error('Invalid game session',error);
+    showSessionError();
+    return;
   }
 
   buildBoard();
   renderScorebar();
-  if(generationStartedAt){
-    completeGenerationProgress();
-    await new Promise(resolve=>setTimeout(resolve,450));
-  }
-  stopLoadingSceneCycle();
-  stopGenerationProgress();
+  const remaining=MIN_LOADING_MS-(Date.now()-startedAt);
+  if(remaining>0) await new Promise(resolve=>setTimeout(resolve,remaining));
   document.getElementById('loading').classList.add('hidden');
   document.getElementById('game-wrap').classList.add('ready');
 }
@@ -2784,7 +1698,6 @@ document.getElementById('q-modal').addEventListener('click',e=>{
 });
 
 /* ══════════ SCORE EDIT ══════════ */
-let scoreEditIdx=null;
 
 function editScore(idx){
   scoreEditIdx=idx;

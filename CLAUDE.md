@@ -1,64 +1,80 @@
 # JamBoo — Developer Notes
 
 ## Stack
-- Pure HTML/CSS/JS — no bundler, no framework, no npm
-- Two pages: `index.html` (setup) + `game.html` (game board)
-- Serverless API: `api/ai.js` plus `api/ai/health.js` (Vercel proxies a private Ollama server through the URL in `OLLAMA_URL`)
+- Pure HTML/CSS/JS — no bundler, no framework, no npm runtime dependencies
+- Two pages: `index.html` (builder) + `game.html` (game board)
+- Curated question repository: `data/questions.js` (content, not app code) loaded by `index.html`
 - Deploy: Vercel + GitHub (`leomelchior21/JamBoo`)
 - Production: `https://jamboo.leomaker.app`
+- Local dev: `npm run dev` (static server on `http://localhost:4173`) — the normal game flow needs no serverless function
+- Tests: `npm test` (Node test runner) and `npm run test:e2e` (Playwright; requires `npm run dev` in another terminal)
 
 ## Architecture Rules
-- **Single-file approach**: all CSS and JS are inline in each HTML file — no external `.css` or `.js` files
+- **Single-file approach**: all app CSS and JS are inline in each HTML file — the only external script is `data/questions.js`, which is pure content
 - **No external JS libraries** (no jQuery, no React, no bundler)
-- **`api/` files become serverless functions** and the Vercel Hobby plan allows only 12 per deployment — every shared module under `api/` must be prefixed with `_` (e.g. `api/_quiz-core.mjs`) so Vercel ignores it. Only real endpoints stay unprefixed: `api/ai.js`, `api/generate.js`, `api/ai/health.js`.
+- **Question data lives in the repository, never in the HTML**: `data/questions.js` defines `globalThis.JAMBOO_QUESTION_REPOSITORY` (works from `file://` and static hosting). The engine index, search, allocation, selection and session building are DOM-free and marked in `index.html` between `/* ═══ ENGINE START ═══ */` and `/* ═══ ENGINE END ═══ */` so `tests/selector.test.mjs` can unit test them
+- **No AI in the normal flow**: create/play/select/validate never call an LLM. The legacy `api/` functions are isolated and optional (future admin/content tooling only)
+- **`api/` files become serverless functions** and the Vercel Hobby plan allows only 12 per deployment — every shared module under `api/` must be prefixed with `_` (e.g. `api/_quiz-core.mjs`) so Vercel ignores it. Only real endpoints stay unprefixed: `api/ai.js`, `api/generate.js`, `api/ai/health.js`
 - **Ollama URL server-side only** — never expose `OLLAMA_URL` in frontend code
-- **localStorage** bridges config from setup → game (`jamboo_config` key)
-- Test setup page by opening `index.html` directly; game page needs `/api/ai` (use Vercel dev)
+- **localStorage** bridges config + frozen session from builder → game (`jamboo_config` key, `session` field); `jamboo_recent_questions` remembers recently played question ids
 
-## Quiz Generation Pipeline (server)
-- `game.html` is authoritative for the board: it sends the exact columns/rows/difficulty/question type and the server plans every slot deterministically (`api/_quiz-core.mjs`). The AI never decides board dimensions, scoring or question types.
-- Actions: `quiz-plan` (topic → categories + slots + voice kind), `quiz-batch` (question batches), `quiz-validate` (final check). Partial boards are never committed: `quiz-validate` fails when any slot is missing.
-- Providers (`api/_ai-provider.mjs`): DeepSeek is the default generator (`api/_deepseek.mjs`, pinned to `deepseek-flash` = DeepSeek-V4.1-Flash, `thinking: {type:"disabled"}`, OpenAI-compatible `/chat/completions`); legacy Flash names are normalized and any other `DEEPSEEK_MODEL` value is ignored and logged. The Ollama integration is preserved as `LocalModelProvider` (`api/_ollama.mjs`) behind `QUIZ_AI_PROVIDER=local`. `ALLOW_LOCAL_AI_FALLBACK=true` is the only way DeepSeek failures may fall back to local.
-- Modules: `api/_quiz-engine.mjs` (orchestration, bounded retries, per-category parallel generation, call budgets), `api/_quiz-topics.mjs` (comma/prose topic parsing, planner prompt, deterministic fallbacks), `api/_quiz-prompts.mjs` (question rules, board contract, variation hints), `api/_quiz-formats.mjs` (JSON schemas; DeepSeek receives the schema as prompt text), `api/_quiz-voice.mjs` (topic flavours), `api/_math-questions.mjs` (deterministic arithmetic), `api/_code-checks.mjs` (deterministic `print()` output checks)
-- All AI output is validated in code: schema/shape, exact slot count, duplicates, unstable-fact prompts, answer giveaways, and arithmetic/print answers are recomputed server-side. Multiple choice arrives as `a` + 3 `x` distractors and the server owns the shuffled correct index.
-- Every provider request logs `[ai-usage]` JSON with provider, model, stage, category, retry, tokens and duration; API keys are never logged. Transient provider failures (429/5xx, timeouts, invalid responses) are retried inside the bounded repair rounds; fatal errors (401/402/400) fail fast with a clear 502.
-- Each `/api/ai` request has a whole-request deadline (`QUIZ_AI_TIMEOUT_MS`, default 140s) with a 5s response margin. The engine stops starting new provider rounds when less than one call fits, reports the remaining slots as `failedSlots` on an HTTP 200 batch, and the client retries them in later rounds; a request only 504s when even the deadline cannot be honored. DeepSeek timeouts cover the entire call, including reading the response body.
-- Live smoke test for the default provider only (no Ollama fallback): `npm run test:deepseek` (reads `DEEPSEEK_API_KEY` from env or `.env.local`; options `--topic --columns --rows --lang --difficulty --type`). It runs plan → batches → atomic validate and prints per-question output plus token usage; it does not run as part of `npm test`.
-- Generation speed: server runs independent category groups in parallel; `game.html` runs up to `BATCH_CONCURRENCY` batch requests at once and retries duplicates.
+## Question Repository
+- Hierarchy: CATEGORY → SUBJECT → TOPIC → SUBTOPIC → QUESTIONS (`data/questions.js`)
+- Every question is multiple choice: `id`, `subtopic`, `difficulty` (1 easy / 2 medium / 3 hard), `question`, `choices` (exactly 4, unique), `correctAnswer` (0-3), `tags`
+- Optional fields: `language` (defaults to `defaultLanguage`), `active` (false hides it), `reviewStatus` (`approved` or absent), `variantGroup` (never two of the same group in one game)
+- Seed repository: 25 topics / 508 questions across School (Mathematics, Science, Geography, History, Languages) and General (Entertainment, Technology, World), including Celebrities, Coding Languages, TV & Series, Geopolitics, Sports and Mythology
+- Adding content: append questions to a topic; keep ids stable and choices unique. `tests/selector.test.mjs` validates the whole repository
+
+## Quiz Builder (index.html)
+- Flow: TEAMS → BOARD → TOPICS (cards with column allocation) → DIFFICULTY → CREATE JAMBOO
+- Board columns are content slots; `sum(topic.columns) === board.columns` is required to create
+- Topic cards: column stepper, reorder arrows, change topic, remove. `+ ADD TOPIC` stays available while under 8 topics; adding while the board is full redistributes columns evenly
+- Impossible allocations are prevented: the `+` control is disabled at `maxColumnsForTopic = floor(available / rows)` and restored allocations are clamped with a clear message
+- Custom picker (`#picker-overlay`): hierarchy navigation, back, search over repository metadata (names in 3 languages, aliases, tags, subtopics), Esc/arrow-key support
+- Live board preview shows the column titles (`TOPIC I`, `TOPIC II`, …) with the topic accent colour
+- Engine: `distributeColumns`, `maxColumnsForTopic`, `difficultyTargets`, `selectQuestions`, `planColumns`, `validateConfiguration`, `buildSession`
+- Selection: shuffle first, then per-row difficulty target (progressive for `mixed`), nearest-difficulty fallback, subtopic round-robin, variant-group avoidance, recent-question penalty, Fisher-Yates shuffle of choices per game (repository records are never mutated)
+- `buildSession` freezes `{categories, columnTopics, questions[cols][rows], questionIds}` into `jamboo_config.session`; the whole board exists before the first render
+
+## Game (game.html)
+- `boot()` reads `jamboo_config`, validates the frozen session and renders the board — no network calls, no generation screen
+- Loading shell is brief (logo + "Building your Jamboo…" + progress bar, ~450ms minimum) and only appears while the board is built
+- Gameplay is unchanged: board, question modal, MC feedback, timers, team picker, scoring, redo, winner screen, confetti, zoom
+- The modal still contains the legacy open/drawing UI, but the repository only produces multiple-choice questions, so those branches are dormant
+
+## Legacy AI tooling (isolated, optional)
+- `api/ai.js` + `api/ai/health.js` still expose the DeepSeek/Ollama quiz pipeline for future offline/admin use (drafting banks, classification). Nothing in the normal game flow imports or calls them
+- DeepSeek remains the default provider (`api/_deepseek.mjs`, pinned to `deepseek-flash`); the Ollama integration is preserved as `LocalModelProvider` (`api/_ollama.mjs`) behind `QUIZ_AI_PROVIDER=local`
+- `ALLOW_LOCAL_AI_FALLBACK=true` is the only way DeepSeek failures may fall back to local
+- Provider modules: `api/_quiz-engine.mjs`, `_quiz-topics.mjs`, `_quiz-prompts.mjs`, `_quiz-formats.mjs`, `_quiz-voice.mjs`, `_math-questions.mjs`, `_code-checks.mjs`
+- Live smoke test for the provider only: `npm run test:deepseek` (reads `DEEPSEEK_API_KEY`; not part of `npm test`)
 
 ## Design System
 - Fonts: `Press Start 2P` (pixel labels/headers), `Fredoka One` + `Nunito` (game UI)
 - Core palette: `--bg:#07071A`, `--b1:#6600FF`, `--b2:#AA00FF`, `--cyan:#00FFFF`, `--pink:#FF00FF`, `--yellow:#FFD700`
 - Retro pixel aesthetic: hard `box-shadow: Npx Npx 0 #000`, pixel borders, LED/CRT effects, `image-rendering:pixelated`
-- Use `steps()` for pixel-art UI animations; use `linear` or `ease-in`/`ease-out` for physically realistic motion (pendulums, spinning vortex, etc.)
+- Use `steps()` for pixel-art UI animations; use `linear` or `ease-in`/`ease-out` for physically realistic motion
 
 ## i18n
 - All user-facing strings live in `T` (index.html) and `GT` (game.html) objects
 - Languages: `en`, `pt`, `es`
-- Always add all 3 translations when adding new UI strings
+- Always add all 3 translations when adding new UI strings. Repository names/aliases are localized in `data/questions.js` (`name:{en,pt,es}`); question text is currently English-only
 
 ## Game Flow
-1. User configures game on `index.html`, clicks Start
-2. Config saved to `localStorage` as `jamboo_config`
+1. User builds a Jamboo on `index.html` (teams, board size, topics + columns, difficulty)
+2. `CREATE JAMBOO` validates the configuration, selects questions and stores `jamboo_config` (with the frozen `session`) in localStorage
 3. Redirects to `game.html`
-4. `game.html` reads config and POSTs to `/api/ai`; the Vercel Function generates content through the configured provider (DeepSeek by default, Ollama via `QUIZ_AI_PROVIDER=local`)
-5. When all cells answered or teacher clicks End, a 3-second mystery countdown screen appears (`#mystery-screen`), then the winner screen is revealed with confetti
+4. `game.html` reads the session and renders the board immediately
+5. When all cells are answered or the teacher clicks End, a 3-second mystery countdown appears, then the winner screen with confetti
 
 ## Same Teams, New Game
-- Pressing "Same Teams, New Game" on the winner screen sets `_keepTeams: true` in `jamboo_config` and redirects to `index.html`
-- `init()` in `index.html` detects `_keepTeams`, restores all previous settings (team names, grid size, difficulty, question type, language, topic prompt), then clears the flag
+- "Same Teams, New Game" sets `_keepTeams: true` and redirects to `index.html`
+- `restoreConfig()` restores teams, board size, difficulty, language and selected topics (with their column allocation), then clears the flag; creating again builds a fresh question sample
 
 ## Scorebar
-- Each team is rendered as a `.score-chip` (horizontal pill): team name in Nunito Bold (team color) + `(score)` in Press Start 2P
+- Each team is a `.score-chip` (horizontal pill): team name in Nunito Bold (team color) + `(score)` in Press Start 2P
 - Chips split left/right of the centered logo; IDs `sc-{i}` (chip) and `sv-{i}` (score span) are used by `applyScore()` and `confirmScoreEdit()`
-- Score gain triggers: `💥 +N` burst (fixed, spawned at chip position) + `.bounce-anim` on chip
-- Score loss triggers: `💢 -N` slam burst + `.shake-anim` on chip
-
-## Loading Screen
-- Three animations selected randomly at the start of `boot()`: Rube Goldberg machine (`anim-rgb`), Newton's Cradle (`anim-cradle`), Vortex (`anim-vortex`)
-- Only one is shown at a time (`display:block`/`display:none`); the other two default to `display:none` in HTML
-- Newton's Cradle physics: `linear` overall with per-keyframe `ease-in` (swinging down) and `ease-out` (swinging up); symmetric 25/50/75% cycle
-- Vortex: `linear` rotation (not `steps()`) for smooth hypnotic spin; alternating `reverse` on even rings
+- Score gain triggers: `💥 +N` burst + `.bounce-anim`; score loss triggers: `💢 -N` slam burst + `.shake-anim`
 
 ## Adding Features
 1. Add CSS to the `<style>` block at top of the relevant file
@@ -66,3 +82,4 @@
 3. Add JS to the `<script>` block at the bottom
 4. If adding new UI text, add to all 3 language objects (`en`, `pt`, `es`)
 5. Keep the retro pixel aesthetic consistent — no rounded corners, hard shadows, neon glows
+6. Run `npm test` and `npm run test:e2e` before pushing

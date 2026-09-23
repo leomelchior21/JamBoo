@@ -2,7 +2,9 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "dev": "node scripts/serve.mjs",
     "test": "node --test tests/*.test.mjs",
+    "test:e2e": "node scripts/e2e-check.mjs",
     "test:deepseek": "node scripts/deepseek-smoke.mjs"
   }
 }
