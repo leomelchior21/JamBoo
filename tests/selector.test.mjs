@@ -31,11 +31,15 @@ const idsOf = session => session.questionIds;
 const questionsOf = session => session.questions.flat();
 
 test('repository is valid curated content', () => {
-  assert.ok(repository.topics.length >= 8, 'expected at least 8 seed topics');
-  assert.ok(repository.topics.every(entry => entry.questions.length >= 20), 'every seed topic has 20+ questions');
+  const topics = repository.topics.filter(entry => !entry.isSubtopic);
+  const subtopics = repository.topics.filter(entry => entry.isSubtopic);
+  assert.equal(topics.length, 25, 'expected 25 seed topics');
+  assert.ok(topics.every(entry => entry.questions.length >= 20), 'every seed topic has 20+ questions');
+  assert.ok(subtopics.length >= 80, 'every topic exposes specific subtopic units');
+  assert.ok(subtopics.every(entry => entry.questions.length >= 5), 'every subtopic has a usable pool');
 
   const seenIds = new Set();
-  for (const entry of repository.topics) {
+  for (const entry of topics) {
     const subtopicIds = new Set(entry.subtopics.map(subtopic => subtopic.id));
     for (const question of entry.questions) {
       assert.ok(question.id && !seenIds.has(question.id), `duplicate question id ${question.id}`);
@@ -47,14 +51,78 @@ test('repository is valid curated content', () => {
       assert.ok(subtopicIds.has(question.subtopic), `${question.id} references an unknown subtopic`);
     }
   }
+  assert.ok(seenIds.size >= 800, 'expected a large curated repository');
+
+  // The engine must not silently drop curated questions (e.g. operator
+  // answers such as =, ==, === or !=).
+  const eligible = repository.topics
+    .filter(entry => !entry.isSubtopic)
+    .reduce((sum, entry) => sum + entry.questions.length, 0);
+  assert.equal(eligible, seenIds.size, 'every curated question must stay selectable');
 });
 
-test('search matches topic metadata without AI', () => {
-  assert.deepEqual(engine.searchTopics(repository, 'fraction').map(entry => entry.id), ['fractions']);
-  assert.deepEqual(engine.searchTopics(repository, 'frações').map(entry => entry.id), ['fractions']);
-  assert.deepEqual(engine.searchTopics(repository, 'solar system').map(entry => entry.id), ['solar-system']);
-  assert.deepEqual(engine.searchTopics(repository, 'video games').map(entry => entry.id), ['video-games']);
+test('operator answers survive the eligibility check', () => {
+  const operatorQuestions = [
+    'GEN-CODE-024', 'GEN-CODE-038', 'GEN-CODE-075', 'GEN-CODE-078', 'GEN-CODE-062', 'GEN-CODE-009',
+  ];
+  for (const id of operatorQuestions) {
+    const question = repository.topics
+      .flatMap(entry => entry.questions)
+      .find(candidate => candidate.id === id);
+    assert.ok(question, `${id} must stay in the repository`);
+  }
+  const python = repository.byId['coding-languages::python'];
+  const swift = repository.byId['coding-languages::swift'];
+  const csharp = repository.byId['coding-languages::csharp'];
+  const javascript = repository.byId['coding-languages::javascript'];
+  assert.equal(python.questions.length, 20);
+  assert.equal(swift.questions.length, 20);
+  assert.equal(csharp.questions.length, 20);
+  assert.equal(javascript.questions.length, 20);
+});
+
+test('search matches topic and subtopic metadata without AI', () => {
+  assert.equal(engine.searchTopics(repository, 'fraction')[0].id, 'fractions');
+  assert.equal(engine.searchTopics(repository, 'frações')[0].id, 'fractions');
+  assert.equal(engine.searchTopics(repository, 'solar system')[0].id, 'solar-system');
+  assert.equal(engine.searchTopics(repository, 'video games')[0].id, 'video-games');
+  assert.ok(engine.searchTopics(repository, 'minecraft').some(entry => entry.id === 'video-games::minecraft'));
+  assert.ok(engine.searchTopics(repository, 'taylor swift').some(entry => entry.id === 'celebrities::pop-stars'));
+  assert.ok(engine.searchTopics(repository, 'pokemon').some(entry => entry.id === 'video-games::pokemon'));
+  assert.ok(engine.searchTopics(repository, 'samba').some(entry => entry.id === 'music::brazil-world'));
   assert.deepEqual(engine.searchTopics(repository, 'zzzz'), []);
+});
+
+test('subtopics are selectable quiz units with their own pool', () => {
+  const minecraft = repository.byId['video-games::minecraft'];
+  assert.ok(minecraft?.isSubtopic, 'minecraft must be a selectable subtopic');
+  assert.equal(minecraft.questions.length, 8);
+  assert.equal(engine.maxColumnsForTopic(minecraft, 5), 1);
+
+  const session = engine.buildSession({
+    repository,
+    topics: [{ topicId: 'video-games::minecraft', columns: 1 }],
+    board: { columns: 1, rows: 5 },
+    difficulty: 'mixed',
+    seed: 'subtopic-check',
+  });
+  assert.deepEqual(session.categories, ['Minecraft']);
+  assert.deepEqual(session.columnTopics, ['video-games::minecraft']);
+  const sourceIds = new Set(minecraft.questions.map(question => question.id));
+  session.questions[0].forEach(question => assert.ok(sourceIds.has(question.id), `${question.id} is not a Minecraft question`));
+
+  const popStars = repository.byId['celebrities::pop-stars'];
+  assert.ok(popStars.questions.some(question => question.question.includes('Taylor Swift')));
+
+  const subtopicSession = engine.buildSession({
+    repository,
+    topics: [{ topicId: 'celebrities::pop-stars', columns: 2 }],
+    board: { columns: 2, rows: 4 },
+    difficulty: 'mixed',
+    seed: 'subtopic-check-2',
+  });
+  assert.deepEqual(subtopicSession.categories, ['Taylor Swift & Pop Stars I', 'Taylor Swift & Pop Stars II']);
+  assert.equal(new Set(subtopicSession.questionIds).size, 8);
 });
 
 test('column distribution stays even and complete', () => {
@@ -137,23 +205,23 @@ test('TEST D/E — validation blocks unassigned and over-assigned boards', () =>
 });
 
 test('TEST F — a narrow topic reports its real limit and never duplicates', () => {
-  const narrow = topic('area-perimeter');
-  assert.equal(narrow.questions.length, 20);
-  assert.equal(engine.maxColumnsForTopic(narrow, 6), 3);
+  const narrow = topic('video-games::minecraft');
+  assert.equal(narrow.questions.length, 8);
+  assert.equal(engine.maxColumnsForTopic(narrow, 6), 1);
 
   const validation = engine.validateConfiguration({
     repository,
-    topics: [{ topicId: 'area-perimeter', columns: 4 }],
+    topics: [{ topicId: 'video-games::minecraft', columns: 4 }],
     board: { columns: 4, rows: 6 },
   });
   assert.equal(validation.ok, false);
   const issue = validation.issues.find(candidate => candidate.type === 'insufficient');
-  assert.equal(issue.available, 20);
+  assert.equal(issue.available, 8);
   assert.equal(issue.required, 24);
 
   assert.throws(() => engine.buildSession({
     repository,
-    topics: [{ topicId: 'area-perimeter', columns: 4 }],
+    topics: [{ topicId: 'video-games::minecraft', columns: 4 }],
     board: { columns: 4, rows: 6 },
     seed: 'test-f',
   }));

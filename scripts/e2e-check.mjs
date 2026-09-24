@@ -38,6 +38,18 @@ async function addTopic(category, subject, topic) {
   await page.waitForTimeout(150);
 }
 
+async function addSubtopic(subject, topic, subtopic) {
+  await page.click('#add-topic-btn');
+  await page.waitForSelector('.picker-item');
+  await page.click(`.picker-item:has-text("${subject}")`);
+  await page.waitForTimeout(120);
+  const row = page.locator('.picker-row').filter({ has: page.locator(`.picker-item:has-text("${topic}")`) }).first();
+  await row.locator('.picker-drill').click();
+  await page.waitForTimeout(180);
+  await page.click(`.picker-item:has-text("${subtopic}")`);
+  await page.waitForTimeout(200);
+}
+
 /* ─────────── TEST A: 4x5, Fractions x2 + Solar System x2 ─────────── */
 await fresh();
 await setBoard(4, 5);
@@ -108,23 +120,23 @@ check('E: reducing one topic frees a column', meterE2.includes('3 / 4'), meterE2
 /* ─────────── TEST F: not enough questions ─────────── */
 await fresh();
 await setBoard(4, 6);
-await addTopic('School', 'Mathematics', 'Area & Perimeter');
+await addSubtopic('Entertainment', 'Video Games', 'Minecraft');
 const createF = await page.isEnabled('#gen-btn');
 const meterF = (await page.textContent('#columns-meter')).replace(/\s+/g, ' ').trim();
 const plusF = await page.isEnabled('.topic-card .col-stepper .step-btn.sm:last-of-type');
-check('F: impossible allocation is clamped and CREATE stays off', !createF && !plusF && meterF.includes('3 / 4'), meterF);
+check('F: narrow subtopic is clamped and CREATE stays off', !createF && !plusF && meterF.includes('1 / 4'), meterF);
 await page.evaluate(() => {
   localStorage.setItem('jamboo_config', JSON.stringify({
     _keepTeams: true, numTeams: 2, numCols: 4, numRows: 6, difficulty: 'mixed', lang: 'en',
     teams: [{ name: 'A' }, { name: 'B' }],
-    topics: [{ topicId: 'area-perimeter', columns: 4 }],
+    topics: [{ topicId: 'video-games::minecraft', columns: 4 }],
   }));
 });
 await page.reload({ waitUntil: 'load' });
 await page.waitForSelector('.topic-card');
 const statusF = (await page.textContent('#build-status')).trim();
 const createF2 = await page.isEnabled('#gen-btn');
-check('F: oversized restored allocation explains the limit', !createF2 && statusF.includes('20'), statusF);
+check('F: oversized restored allocation explains the limit', !createF2 && statusF.includes('8'), statusF);
 
 /* ─────────── TEST C: four different topics ─────────── */
 await fresh();
@@ -173,6 +185,14 @@ await page.fill('#picker-search', 'solar');
 await page.waitForTimeout(200);
 const results2 = await page.$$eval('.picker-item .pi-name', nodes => nodes.map(node => node.textContent));
 check('Search finds Solar System', results2.includes('Solar System'), results2.join(','));
+await page.fill('#picker-search', 'taylor swift');
+await page.waitForTimeout(250);
+const results3 = await page.$$eval('.picker-item .pi-name', nodes => nodes.map(node => node.textContent));
+check('Search finds the Taylor Swift subtopic', results3.some(name => name.includes('Taylor Swift')), results3.join(','));
+await page.fill('#picker-search', 'minecraft');
+await page.waitForTimeout(250);
+const results4 = await page.$$eval('.picker-item .pi-name', nodes => nodes.map(node => node.textContent));
+check('Search finds the Minecraft subtopic', results4.includes('Minecraft'), results4.join(','));
 await page.keyboard.press('Escape');
 const pickerClosed = await page.isHidden('#picker-overlay');
 check('Escape closes the picker', pickerClosed);
@@ -200,6 +220,26 @@ await page.waitForTimeout(200);
 const meterK = (await page.textContent('#columns-meter')).replace(/\s+/g, ' ').trim();
 const createK = await page.isEnabled('#gen-btn');
 check('K: removing a topic frees its columns', !createK && meterK.includes('2 / 4'), meterK);
+
+/* ─────────── TEST L: subtopic-specific quizzes ─────────── */
+await fresh();
+await setBoard(4, 4);
+await addSubtopic('Entertainment', 'Video Games', 'Minecraft');
+await addSubtopic('Entertainment', 'Celebrities', 'Taylor Swift & Pop Stars');
+const subtopicPaths = await page.$$eval('.topic-path', nodes => nodes.map(node => node.textContent));
+check('L: subtopic cards show their parent topic', JSON.stringify(subtopicPaths) === JSON.stringify(['Video Games', 'Celebrities']), subtopicPaths.join(' | '));
+const subtopicMeter = (await page.textContent('#columns-meter')).replace(/\s+/g, ' ').trim();
+check('L: two subtopics split the board', subtopicMeter.includes('4 / 4'), subtopicMeter);
+await page.click('#gen-btn');
+await page.waitForURL('**/game.html', { timeout: 10000 });
+await page.waitForSelector('#game-wrap.ready', { timeout: 10000 });
+const sessionL = await page.evaluate(() => JSON.parse(localStorage.getItem('jamboo_config')).session);
+check('L: subtopic board labels', JSON.stringify(sessionL.categories) === JSON.stringify(['Minecraft I', 'Minecraft II', 'Taylor Swift & Pop Stars I', 'Taylor Swift & Pop Stars II']), sessionL.categories.join(' | '));
+const minecraftColumns = sessionL.questions[0].concat(sessionL.questions[1]);
+const popColumns = sessionL.questions[2].concat(sessionL.questions[3]);
+check('L: Minecraft columns only use Minecraft questions', minecraftColumns.every(question => question.subtopic === 'minecraft'));
+check('L: pop-star columns only use pop-star questions', popColumns.every(question => question.subtopic === 'pop-stars'));
+check('L: no repeated question across subtopic columns', new Set(sessionL.questionIds).size === 16);
 
 /* ─────────── Same teams, new game round trip ─────────── */
 await fresh();

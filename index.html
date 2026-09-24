@@ -661,13 +661,21 @@ body.picker-open{overflow:hidden;}
 .picker-body{flex:1;overflow-y:auto;padding:10px 14px 16px;overscroll-behavior:contain;}
 .picker-section{margin:16px 0 8px;font-family:var(--fb);font-weight:900;font-size:13px;letter-spacing:2.4px;color:rgba(255,255,255,.55);text-transform:uppercase;}
 .picker-section:first-child{margin-top:2px;}
+.picker-row{display:flex;gap:8px;margin-bottom:8px;}
 .picker-item{
   display:flex;align-items:center;justify-content:space-between;gap:12px;
-  width:100%;min-height:68px;padding:12px 16px;margin-bottom:8px;
+  width:100%;min-height:68px;padding:12px 16px;flex:1;min-width:0;
   background:rgba(8,8,28,.85);border:2px solid rgba(102,0,255,.3);
   color:#fff;font-family:var(--fb);text-align:left;cursor:pointer;
   transition:border-color .12s,background .12s,transform .12s;
 }
+.picker-drill{
+  flex:none;width:64px;
+  background:rgba(8,8,28,.85);border:2px solid rgba(102,0,255,.3);
+  color:var(--cyan);font-size:30px;line-height:1;cursor:pointer;
+  transition:border-color .12s,background .12s,transform .12s;
+}
+.picker-drill:hover,.picker-drill:focus-visible{border-color:var(--cyan);background:rgba(0,255,255,.08);transform:translateX(3px);}
 .picker-item:hover,.picker-item:focus-visible{border-color:var(--cyan);background:rgba(0,255,255,.07);transform:translateX(3px);}
 .picker-item .pi-text{min-width:0;}
 .picker-item .pi-name{display:block;font-family:var(--fd);font-size:24px;font-weight:400;letter-spacing:.3px;line-height:1.15;overflow-wrap:anywhere;}
@@ -850,6 +858,12 @@ const JamBooEngine=(function(){
     return clean(name[lang])||clean(name.en)||clean(Object.values(name)[0]);
   }
 
+  // Choice keys keep punctuation so operator answers (=, ==, ===, !=) stay
+  // distinct; they only collapse case and repeated whitespace.
+  function choiceKey(value){
+    return clean(value).toLowerCase().replace(/\s+/g,' ');
+  }
+
   function isEligibleQuestion(question){
     if(!question||typeof question!=='object') return false;
     if(question.active===false) return false;
@@ -857,14 +871,14 @@ const JamBooEngine=(function(){
     if(!clean(question.question)) return false;
     if(!Array.isArray(question.choices)||question.choices.length!==4) return false;
     if(!question.choices.every(choice=>clean(choice))) return false;
-    if(new Set(question.choices.map(normalizeText)).size!==4) return false;
+    if(new Set(question.choices.map(choiceKey)).size!==4) return false;
     const correct=Number(question.correctAnswer);
     if(!Number.isInteger(correct)||correct<0||correct>3) return false;
     return true;
   }
 
   function buildRepository(rawRepository,lang='en'){
-    const repo={categories:[],topics:[],byId:{}};
+    const repo={categories:[],topics:[],byId:{},subtopicsByTopic:{}};
     const categories=Array.isArray(rawRepository?.categories)?rawRepository.categories:[];
     const defaultLanguage=clean(rawRepository?.defaultLanguage)||'en';
     categories.forEach(rawCategory=>{
@@ -873,7 +887,11 @@ const JamBooEngine=(function(){
         const subject={id:clean(rawSubject.id),name:rawSubject.name,topics:[]};
         (Array.isArray(rawSubject.topics)?rawSubject.topics:[]).forEach(rawTopic=>{
           const subtopics=(Array.isArray(rawTopic.subtopics)?rawTopic.subtopics:[])
-            .map(subtopic=>({id:clean(subtopic.id),name:subtopic.name}));
+            .map(subtopic=>({
+              id:clean(subtopic.id),
+              name:subtopic.name,
+              aliases:(Array.isArray(subtopic.aliases)?subtopic.aliases:[]).map(clean).filter(Boolean),
+            }));
           const questions=(Array.isArray(rawTopic.questions)?rawTopic.questions:[])
             .filter(isEligibleQuestion)
             .map(question=>({
@@ -910,6 +928,39 @@ const JamBooEngine=(function(){
           subject.topics.push(entry);
           repo.topics.push(entry);
           repo.byId[entry.id]=entry;
+
+          // Subtopics are selectable quiz units too (e.g. "Minecraft",
+          // "Taylor Swift & Pop Stars"): each one indexes only its own pool.
+          subtopics.forEach(subtopic=>{
+            const subtopicQuestions=entry.questions.filter(question=>question.subtopic===subtopic.id);
+            if(!subtopicQuestions.length) return;
+            const subEntry={
+              id:`${entry.id}::${subtopic.id}`,
+              name:subtopic.name,
+              aliases:subtopic.aliases,
+              tags:entry.tags,
+              subtopics:[],
+              questions:subtopicQuestions,
+              categoryId:category.id,
+              categoryName:category.name,
+              subjectId:subject.id,
+              subjectName:subject.name,
+              parentId:entry.id,
+              parentName:entry.name,
+              isSubtopic:true,
+            };
+            subEntry.searchText=normalizeText([
+              ...Object.values(subEntry.name||{}),
+              ...Object.values(category.name||{}),
+              ...Object.values(subject.name||{}),
+              ...Object.values(entry.name||{}),
+              ...subEntry.aliases,
+              ...subEntry.tags,
+            ].join(' '));
+            repo.topics.push(subEntry);
+            repo.byId[subEntry.id]=subEntry;
+            (repo.subtopicsByTopic[entry.id]=repo.subtopicsByTopic[entry.id]||[]).push(subEntry);
+          });
         });
         category.subjects.push(subject);
       });
@@ -1088,6 +1139,7 @@ const JamBooEngine=(function(){
     createRng,
     localizeName,
     isEligibleQuestion,
+    choiceKey,
     buildRepository,
     searchTopics,
     maxColumnsForTopic,
@@ -1131,6 +1183,7 @@ const T={
     resultsWord:'RESULTS',
     pickerTitle:'Choose a topic',
     searchPH:'Search topics...',
+    subtopicsWord:'Subtopics',
     previewEmpty:'No columns yet',
     back:'Back',
     teamDefaults:['Team 1','Team 2','Team 3','Team 4','Team 5','Team 6','Team 7','Team 8'],
@@ -1164,6 +1217,7 @@ const T={
     resultsWord:'RESULTADOS',
     pickerTitle:'Escolha um tópico',
     searchPH:'Buscar tópicos...',
+    subtopicsWord:'Subtópicos',
     previewEmpty:'Nenhuma coluna ainda',
     back:'Voltar',
     teamDefaults:['Time 1','Time 2','Time 3','Time 4','Time 5','Time 6','Time 7','Time 8'],
@@ -1197,6 +1251,7 @@ const T={
     resultsWord:'RESULTADOS',
     pickerTitle:'Elige un tema',
     searchPH:'Buscar temas...',
+    subtopicsWord:'Subtemas',
     previewEmpty:'Aún no hay columnas',
     back:'Volver',
     teamDefaults:['Equipo 1','Equipo 2','Equipo 3','Equipo 4','Equipo 5','Equipo 6','Equipo 7','Equipo 8'],
@@ -1229,10 +1284,16 @@ function formatText(template,values){
 }
 function topicName(topic){ return JamBooEngine.localizeName(topic.name,lang)||topic.id; }
 function topicPath(topic){
-  return [
+  const parts=[
     JamBooEngine.localizeName(topic.categoryName,lang),
     JamBooEngine.localizeName(topic.subjectName,lang),
-  ].filter(Boolean).join(' / ');
+  ];
+  if(topic.isSubtopic) parts.push(JamBooEngine.localizeName(topic.parentName,lang));
+  return parts.filter(Boolean).join(' / ');
+}
+function topicCardPath(topic){
+  if(topic.isSubtopic) return JamBooEngine.localizeName(topic.parentName,lang);
+  return topicPath(topic);
 }
 function accentForTopic(topicId){
   const index=selectedTopics.findIndex(entry=>entry.topicId===topicId);
@@ -1475,8 +1536,8 @@ function renderTopics(){
 
     const path=document.createElement('div');
     path.className='topic-path';
-    path.textContent=topicPath(topic);
-    path.title=path.textContent;
+    path.textContent=topicCardPath(topic);
+    path.title=topicPath(topic);
 
     const name=document.createElement('div');
     name.className='topic-name';
@@ -1698,7 +1759,9 @@ function createGame(){
 }
 
 /* ══════════ TOPIC PICKER ══════════ */
-function pickerItem({name,path,arrow,onSelect}){
+function pickerItem({name,path,arrow,onSelect,onDrill,drillLabel}){
+  const row=document.createElement('div');
+  row.className='picker-row';
   const button=document.createElement('button');
   button.type='button';
   button.className='picker-item';
@@ -1722,7 +1785,18 @@ function pickerItem({name,path,arrow,onSelect}){
     button.appendChild(arrowNode);
   }
   button.onclick=onSelect;
-  return button;
+  row.appendChild(button);
+  if(onDrill){
+    const drill=document.createElement('button');
+    drill.type='button';
+    drill.className='picker-drill';
+    drill.textContent='›';
+    drill.title=drillLabel||'';
+    drill.setAttribute('aria-label',drillLabel||'');
+    drill.onclick=onDrill;
+    row.appendChild(drill);
+  }
+  return row;
 }
 function openPicker(targetIndex){
   if(!repository.topics.length) return;
@@ -1818,15 +1892,31 @@ function renderPicker(){
     return;
   }
 
+  if(pickerState.path.length>=3){
+    const topic=repository.byId[pickerState.path[2]];
+    title.textContent=topic?topicName(topic):dictionary.pickerTitle;
+    (repository.subtopicsByTopic[pickerState.path[2]]||[]).forEach(subtopic=>{
+      body.appendChild(pickerItem({
+        name:topicName(subtopic),
+        path:`${subtopic.questions.length} ${dictionary.questions}`,
+        onSelect:()=>selectTopic(subtopic.id),
+      }));
+    });
+    return;
+  }
+
   const [categoryId,subjectId]=pickerState.path;
   const category=repository.categories.find(entry=>entry.id===categoryId);
   const subject=category?.subjects.find(entry=>entry.id===subjectId);
   title.textContent=JamBooEngine.localizeName(subject?.name,lang)||dictionary.pickerTitle;
   (subject?.topics||[]).forEach(topic=>{
+    const subtopics=repository.subtopicsByTopic[topic.id]||[];
     body.appendChild(pickerItem({
       name:topicName(topic),
       path:`${topic.questions.length} ${dictionary.questions}`,
       onSelect:()=>selectTopic(topic.id),
+      onDrill:subtopics.length?()=>{pickerState.path=[categoryId,subjectId,topic.id];renderPicker();}:null,
+      drillLabel:subtopics.length?`${dictionary.subtopicsWord}: ${topicName(topic)}`:'',
     }));
   });
 }

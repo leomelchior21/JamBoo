@@ -20,10 +20,12 @@
 
 ## Question Repository
 - Hierarchy: CATEGORY → SUBJECT → TOPIC → SUBTOPIC → QUESTIONS (`data/questions.js`)
+- **Topics AND subtopics are selectable quiz units**: the engine indexes each subtopic as `<topicId>::<subtopicId>` with its own question pool, so a teacher can build a whole-topic board or a specific one (e.g. `video-games::minecraft`, `celebrities::pop-stars`)
 - Every question is multiple choice: `id`, `subtopic`, `difficulty` (1 easy / 2 medium / 3 hard), `question`, `choices` (exactly 4, unique), `correctAnswer` (0-3), `tags`
 - Optional fields: `language` (defaults to `defaultLanguage`), `active` (false hides it), `reviewStatus` (`approved` or absent), `variantGroup` (never two of the same group in one game)
-- Seed repository: 25 topics / 508 questions across School (Mathematics, Science, Geography, History, Languages) and General (Entertainment, Technology, World), including Celebrities, Coding Languages, TV & Series, Geopolitics, Sports and Mythology
-- Adding content: append questions to a topic; keep ids stable and choices unique. `tests/selector.test.mjs` validates the whole repository
+- Seed repository: 25 topics / 98 subtopics / 849 questions across School (Mathematics, Science, Geography, History, Languages) and General (Entertainment, Technology, World), including Minecraft, Pokémon, Taylor Swift & Pop Stars, Anime & K-Drama, Football Stars, Coding Languages and Geopolitics
+- Coding Languages keeps Python, Swift, C# and JavaScript at the same pool size (20 each) and mixes concept questions with code-reading ones: predict the output, name the operator, find the missing token and debug a broken line (`\n` in question text starts a code line; `.q-text` uses `white-space:pre-wrap` so snippets keep their breaks)
+- Adding content: append questions to a topic and give each a specific subtopic; keep ids stable and choices unique. `tests/selector.test.mjs` validates the whole repository, including that no curated question is silently dropped by the eligibility check
 
 ## Quiz Builder (index.html)
 - Flow: TEAMS → BOARD → TOPICS (cards with column allocation) → DIFFICULTY → CREATE JAMBOO
