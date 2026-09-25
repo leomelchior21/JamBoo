@@ -32,7 +32,7 @@
 - Board columns are content slots; `sum(topic.columns) === board.columns` is required to create
 - Topic cards: column stepper, reorder arrows, change topic, remove. `+ ADD TOPIC` stays available while under 8 topics; adding while the board is full redistributes columns evenly
 - Impossible allocations are prevented: the `+` control is disabled at `maxColumnsForTopic = floor(available / rows)` and restored allocations are clamped with a clear message
-- Custom picker (`#picker-overlay`): hierarchy navigation, back, search over repository metadata (names in 3 languages, aliases, tags, subtopics), Esc/arrow-key support
+- Custom picker (`#picker-overlay`): Finder-style Miller columns (subjects → topics → subtopics; the School/General categories stay in the data but the picker flattens all subjects into one column) in a wide panel that grows one column at a time; clicking a container opens the next column, and a subtopic column always starts with a highlighted "Whole topic" row; search over repository metadata (names in 3 languages, aliases, tags, subtopics), Esc closes, Esc/←/→ walk the columns
 - Live board preview shows the column titles (`TOPIC I`, `TOPIC II`, …) with the topic accent colour
 - Engine: `distributeColumns`, `maxColumnsForTopic`, `difficultyTargets`, `selectQuestions`, `planColumns`, `validateConfiguration`, `buildSession`
 - Selection: shuffle first, then per-row difficulty target (progressive for `mixed`), nearest-difficulty fallback, subtopic round-robin, variant-group avoidance, recent-question penalty, Fisher-Yates shuffle of choices per game (repository records are never mutated)

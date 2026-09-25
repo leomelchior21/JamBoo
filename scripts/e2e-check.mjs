@@ -29,32 +29,33 @@ async function setBoard(columns, rows) {
   await page.click(`.led-cell[data-c="${columns - 1}"][data-r="${rows - 1}"]`);
 }
 
-async function addTopic(category, subject, topic) {
+async function addTopic(subject, topic) {
   await page.click('#add-topic-btn');
-  await page.waitForSelector('.picker-item');
-  await page.click(`.picker-item:has-text("${subject}")`);
+  await page.waitForSelector('.miller-item');
+  await page.click(`.miller-item:has-text("${subject}")`);
   await page.waitForTimeout(120);
-  await page.click(`.picker-item:has-text("${topic}")`);
+  await page.click(`.miller-item:has-text("${topic}")`);
+  await page.waitForTimeout(150);
+  await page.click('.miller-all');
   await page.waitForTimeout(150);
 }
 
 async function addSubtopic(subject, topic, subtopic) {
   await page.click('#add-topic-btn');
-  await page.waitForSelector('.picker-item');
-  await page.click(`.picker-item:has-text("${subject}")`);
+  await page.waitForSelector('.miller-item');
+  await page.click(`.miller-item:has-text("${subject}")`);
   await page.waitForTimeout(120);
-  const row = page.locator('.picker-row').filter({ has: page.locator(`.picker-item:has-text("${topic}")`) }).first();
-  await row.locator('.picker-drill').click();
+  await page.click(`.miller-item:has-text("${topic}")`);
   await page.waitForTimeout(180);
-  await page.click(`.picker-item:has-text("${subtopic}")`);
+  await page.click(`.miller-item:has-text("${subtopic}")`);
   await page.waitForTimeout(200);
 }
 
 /* ─────────── TEST A: 4x5, Fractions x2 + Solar System x2 ─────────── */
 await fresh();
 await setBoard(4, 5);
-await addTopic('School', 'Mathematics', 'Fractions');
-await addTopic('School', 'Science', 'Solar System');
+await addTopic('Mathematics', 'Fractions');
+await addTopic('Science', 'Solar System');
 const meter = (await page.textContent('#columns-meter')).replace(/\s+/g, ' ').trim();
 check('A: meter reads 4 / 4 assigned', meter.includes('4 / 4'), meter);
 const previewHeads = await page.$$eval('.bp-head', nodes => nodes.map(node => node.textContent));
@@ -94,7 +95,7 @@ await page.screenshot({ path: `${SHOT}/game-board.png` , fullPage: true });
 /* ─────────── TEST D: 3/4 assigned blocks creation ─────────── */
 await fresh();
 await setBoard(4, 5);
-await addTopic('School', 'Mathematics', 'Fractions');
+await addTopic('Mathematics', 'Fractions');
 await page.click('.topic-card .col-stepper .step-btn.sm:first-of-type');
 const meterD = (await page.textContent('#columns-meter')).replace(/\s+/g, ' ').trim();
 const statusD = (await page.textContent('#build-status')).trim();
@@ -108,7 +109,7 @@ const plusDisabled = await page.isEnabled('.topic-card .col-stepper .step-btn.sm
 check('E: + disabled while the board is full', plusDisabled === false);
 const addVisible = await page.isVisible('#add-topic-btn');
 check('E: + ADD TOPIC stays available for more topics', addVisible);
-await addTopic('School', 'Science', 'Solar System');
+await addTopic('Science', 'Solar System');
 const meterE = (await page.textContent('#columns-meter')).replace(/\s+/g, ' ').trim();
 const colsE = await page.$$eval('.col-count', nodes => nodes.map(node => node.textContent));
 check('E: adding a topic redistributes 2/2', meterE.includes('4 / 4') && JSON.stringify(colsE) === JSON.stringify(['2', '2']), `${meterE} :: ${colsE.join(',')}`);
@@ -141,10 +142,10 @@ check('F: oversized restored allocation explains the limit', !createF2 && status
 /* ─────────── TEST C: four different topics ─────────── */
 await fresh();
 await setBoard(4, 5);
-await addTopic('School', 'Mathematics', 'Fractions');
-await addTopic('School', 'Mathematics', 'Area & Perimeter');
-await addTopic('School', 'Science', 'Cells');
-await addTopic('General', 'Entertainment', 'Video Games');
+await addTopic('Mathematics', 'Fractions');
+await addTopic('Mathematics', 'Area & Perimeter');
+await addTopic('Science', 'Cells');
+await addTopic('Entertainment', 'Video Games');
 await page.click('#gen-btn');
 await page.waitForURL('**/game.html', { timeout: 10000 });
 await page.waitForSelector('#game-wrap.ready', { timeout: 10000 });
@@ -158,13 +159,15 @@ for (const viewport of [{ width: 768, height: 1024, name: 'iPad portrait' }, { w
   await fresh();
   await setBoard(4, 5);
   await page.click('#add-topic-btn');
-  await page.waitForSelector('.picker-item');
+  await page.waitForSelector('.miller-item');
   const overflowPicker = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   const panelBox = await page.locator('.picker-panel').boundingBox();
   check(`I:${viewport.name} picker fits viewport`, overflowPicker <= 1 && panelBox.width <= viewport.width + 1, `overflow=${overflowPicker}px panel=${Math.round(panelBox.width)}px`);
-  await page.click('.picker-item:has-text("Mathematics")');
+  await page.click('.miller-item:has-text("Mathematics")');
   await page.waitForTimeout(120);
-  await page.click('.picker-item:has-text("Fractions")');
+  await page.click('.miller-item:has-text("Fractions")');
+  await page.waitForTimeout(150);
+  await page.click('.miller-all');
   await page.waitForTimeout(150);
   const overflowBuilder = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   check(`I:${viewport.name} builder has no horizontal overflow`, overflowBuilder <= 1, `overflow=${overflowBuilder}px`);
@@ -200,17 +203,19 @@ check('Escape closes the picker', pickerClosed);
 /* ─────────── TEST K: reorder, change and remove topics ─────────── */
 await fresh();
 await setBoard(4, 5);
-await addTopic('School', 'Mathematics', 'Fractions');
-await addTopic('School', 'Science', 'Solar System');
+await addTopic('Mathematics', 'Fractions');
+await addTopic('Science', 'Solar System');
 await page.click('.topic-card:nth-child(2) .topic-actions .mini-btn:nth-child(1)');
 await page.waitForTimeout(150);
 const reordered = await page.$$eval('.bp-head', nodes => nodes.map(node => node.textContent));
 check('K: move left reorders board columns', JSON.stringify(reordered) === JSON.stringify(['Solar System I', 'Solar System II', 'Fractions I', 'Fractions II']), reordered.join(' | '));
 await page.click('.topic-card:nth-child(1) .topic-actions .mini-btn:nth-child(3)');
-await page.waitForSelector('.picker-item');
-await page.click('.picker-item:has-text("Science")');
+await page.waitForSelector('.miller-item');
+await page.click('.miller-item:has-text("Science")');
 await page.waitForTimeout(120);
-await page.click('.picker-item:has-text("Cells")');
+await page.click('.miller-item:has-text("Cells")');
+await page.waitForTimeout(150);
+await page.click('.miller-all');
 await page.waitForTimeout(200);
 const changed = await page.textContent('.topic-card:nth-child(1) .topic-name');
 const changedCols = await page.textContent('.topic-card:nth-child(1) .col-count');
@@ -244,7 +249,7 @@ check('L: no repeated question across subtopic columns', new Set(sessionL.questi
 /* ─────────── Same teams, new game round trip ─────────── */
 await fresh();
 await setBoard(4, 5);
-await addTopic('School', 'Mathematics', 'Fractions');
+await addTopic('Mathematics', 'Fractions');
 await page.click('#gen-btn');
 await page.waitForURL('**/game.html', { timeout: 10000 });
 await page.waitForSelector('#game-wrap.ready', { timeout: 10000 });
