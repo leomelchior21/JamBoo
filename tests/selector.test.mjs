@@ -81,6 +81,43 @@ test('operator answers survive the eligibility check', () => {
   assert.equal(javascript.questions.length, 20);
 });
 
+test('printing, variables and operators are selectable subtopics with 40 questions each', () => {
+  const languages = ['python', 'swift', 'csharp'];
+  const families = ['printing', 'variables', 'operators'];
+  for (const language of languages) {
+    for (const family of families) {
+      const id = `coding-languages::${language}-${family}`;
+      const unit = repository.byId[id];
+      assert.ok(unit?.isSubtopic, `${id} must be a selectable subtopic`);
+      assert.equal(unit.questions.length, 40, `${id} must keep 40 questions`);
+      assert.equal(engine.maxColumnsForTopic(unit, 5), 8);
+    }
+  }
+
+  assert.ok(engine.searchTopics(repository, 'python printing').some(entry => entry.id === 'coding-languages::python-printing'));
+  assert.ok(engine.searchTopics(repository, 'impressao swift').some(entry => entry.id === 'coding-languages::swift-printing'));
+
+  const session = engine.buildSession({
+    repository,
+    topics: [
+      { topicId: 'coding-languages::python-printing', columns: 1 },
+      { topicId: 'coding-languages::swift-variables', columns: 1 },
+      { topicId: 'coding-languages::csharp-operators', columns: 1 },
+    ],
+    board: { columns: 3, rows: 5 },
+    difficulty: 'mixed',
+    seed: 'coding-subtopics',
+  });
+  assert.deepEqual(session.categories, ['Python \u00b7 Printing', 'Swift \u00b7 Variables', 'C# \u00b7 Operators']);
+  assert.equal(session.questionIds.length, 15);
+  assert.equal(new Set(session.questionIds).size, 15);
+  session.questions.forEach((column, index) => {
+    const sourceIds = new Set(repository.byId[session.columnTopics[index]].questions.map(question => question.id));
+    column.forEach(question => assert.ok(sourceIds.has(question.id), `${question.id} is outside ${session.columnTopics[index]}`));
+    assert.deepEqual(column.map(question => question.difficulty), [1, 1, 2, 2, 3]);
+  });
+});
+
 test('search matches topic and subtopic metadata without AI', () => {
   assert.equal(engine.searchTopics(repository, 'fraction')[0].id, 'fractions');
   assert.equal(engine.searchTopics(repository, 'frações')[0].id, 'fractions');
