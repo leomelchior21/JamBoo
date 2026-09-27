@@ -33,7 +33,7 @@ const questionsOf = session => session.questions.flat();
 test('repository is valid curated content', () => {
   const topics = repository.topics.filter(entry => !entry.isSubtopic);
   const subtopics = repository.topics.filter(entry => entry.isSubtopic);
-  assert.equal(topics.length, 25, 'expected 25 seed topics');
+  assert.equal(topics.length, 28, 'expected 28 seed topics');
   assert.ok(topics.every(entry => entry.questions.length >= 20), 'every seed topic has 20+ questions');
   assert.ok(subtopics.length >= 80, 'every topic exposes specific subtopic units');
   assert.ok(subtopics.every(entry => entry.questions.length >= 5), 'every subtopic has a usable pool');
@@ -160,6 +160,49 @@ test('subtopics are selectable quiz units with their own pool', () => {
   });
   assert.deepEqual(subtopicSession.categories, ['Taylor Swift & Pop Stars I', 'Taylor Swift & Pop Stars II']);
   assert.equal(new Set(subtopicSession.questionIds).size, 8);
+});
+
+test('Sports subject exposes soccer, Formula 1 and basketball pools', () => {
+  const sportsSubject = repository.categories
+    .flatMap(category => category.subjects)
+    .find(subject => subject.id === 'sports');
+  assert.ok(sportsSubject, 'sports must be a separate subject');
+  assert.deepEqual(sportsSubject.topics.map(entry => entry.id), ['soccer', 'formula-1', 'basketball']);
+
+  const soccer = repository.byId.soccer;
+  assert.equal(soccer.questions.length, 120);
+  assert.deepEqual(soccer.subtopics.map(subtopic => subtopic.id), ['soccer-europe', 'soccer-brazil', 'soccer-world-cup']);
+  for (const family of ['soccer-europe', 'soccer-brazil', 'soccer-world-cup']) {
+    const unit = repository.byId[`soccer::${family}`];
+    assert.ok(unit?.isSubtopic, `${family} must be a selectable subtopic`);
+    assert.equal(unit.questions.length, 40, `${family} must keep 40 questions`);
+    assert.equal(engine.maxColumnsForTopic(unit, 5), 8);
+  }
+
+  assert.equal(repository.byId['formula-1'].questions.length, 40);
+  assert.equal(repository.byId['basketball'].questions.length, 40);
+  assert.ok(engine.searchTopics(repository, 'copa do mundo').some(entry => entry.id === 'soccer::soccer-world-cup'));
+  assert.ok(engine.searchTopics(repository, 'formula 1').some(entry => entry.id === 'formula-1'));
+  assert.ok(engine.searchTopics(repository, 'nba').some(entry => entry.id === 'basketball'));
+
+  const session = engine.buildSession({
+    repository,
+    topics: [
+      { topicId: 'soccer::soccer-world-cup', columns: 1 },
+      { topicId: 'formula-1', columns: 1 },
+      { topicId: 'basketball', columns: 1 },
+    ],
+    board: { columns: 3, rows: 5 },
+    difficulty: 'mixed',
+    seed: 'sports-check',
+  });
+  assert.deepEqual(session.categories, ['World Cup', 'Formula 1', 'Basketball']);
+  assert.equal(new Set(session.questionIds).size, 15);
+  session.questions.forEach((column, index) => {
+    const sourceIds = new Set(repository.byId[session.columnTopics[index]].questions.map(question => question.id));
+    column.forEach(question => assert.ok(sourceIds.has(question.id), `${question.id} is outside ${session.columnTopics[index]}`));
+    assert.deepEqual(column.map(question => question.difficulty), [1, 1, 2, 2, 3]);
+  });
 });
 
 test('column distribution stays even and complete', () => {
