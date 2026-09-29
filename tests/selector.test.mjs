@@ -33,7 +33,7 @@ const questionsOf = session => session.questions.flat();
 test('repository is valid curated content', () => {
   const topics = repository.topics.filter(entry => !entry.isSubtopic);
   const subtopics = repository.topics.filter(entry => entry.isSubtopic);
-  assert.equal(topics.length, 28, 'expected 28 seed topics');
+  assert.equal(topics.length, 36, 'expected 36 seed topics');
   assert.ok(topics.every(entry => entry.questions.length >= 20), 'every seed topic has 20+ questions');
   assert.ok(subtopics.length >= 80, 'every topic exposes specific subtopic units');
   assert.ok(subtopics.every(entry => entry.questions.length >= 5), 'every subtopic has a usable pool');
@@ -167,7 +167,7 @@ test('Sports subject exposes soccer, Formula 1 and basketball pools', () => {
     .flatMap(category => category.subjects)
     .find(subject => subject.id === 'sports');
   assert.ok(sportsSubject, 'sports must be a separate subject');
-  assert.deepEqual(sportsSubject.topics.map(entry => entry.id), ['soccer', 'formula-1', 'basketball']);
+  assert.deepEqual(sportsSubject.topics.map(entry => entry.id), ['soccer', 'formula-1', 'basketball', 'sailing', 'volleyball', 'swimming', 'athletics', 'martial-arts', 'golf', 'cycling', 'surf-skate']);
 
   const soccer = repository.byId.soccer;
   assert.equal(soccer.questions.length, 120);
@@ -205,6 +205,49 @@ test('Sports subject exposes soccer, Formula 1 and basketball pools', () => {
   });
 });
 
+test('new Sports topics keep 60 questions at 20 easy, 20 medium and 20 hard', () => {
+  const topics = ['sailing', 'volleyball', 'swimming', 'athletics', 'martial-arts', 'golf', 'cycling', 'surf-skate'];
+  for (const topicId of topics) {
+    const entry = repository.byId[topicId];
+    assert.ok(entry, `${topicId} must exist in the Sports subject`);
+    assert.equal(entry.questions.length, 60, `${topicId} must keep 60 questions`);
+    for (const difficulty of [1, 2, 3]) {
+      assert.equal(entry.questions.filter(question => question.difficulty === difficulty).length, 20, `${topicId} needs 20 difficulty-${difficulty} questions`);
+    }
+    assert.equal(entry.subtopics.length, 3, `${topicId} must expose three subtopics`);
+    for (const subtopic of entry.subtopics) {
+      const unit = repository.byId[`${topicId}::${subtopic.id}`];
+      assert.ok(unit?.isSubtopic, `${topicId}::${subtopic.id} must be selectable`);
+      assert.equal(unit.questions.length, 20);
+      assert.equal(engine.maxColumnsForTopic(unit, 4), 5);
+    }
+  }
+
+  assert.ok(engine.searchTopics(repository, 'regatta').some(entry => entry.id === 'sailing::sailing-racing'));
+  assert.ok(engine.searchTopics(repository, 'muay thai').some(entry => entry.id === 'martial-arts::martial-arts-styles'));
+  assert.ok(engine.searchTopics(repository, 'tour de france').some(entry => entry.id === 'cycling'));
+  assert.ok(engine.searchTopics(repository, 'pipeline').some(entry => entry.id === 'surf-skate::surfing-basics'));
+
+  const session = engine.buildSession({
+    repository,
+    topics: [
+      { topicId: 'sailing', columns: 1 },
+      { topicId: 'swimming', columns: 1 },
+      { topicId: 'golf', columns: 1 },
+    ],
+    board: { columns: 3, rows: 5 },
+    difficulty: 'mixed',
+    seed: 'new-sports-check',
+  });
+  assert.deepEqual(session.categories, ['Sailing', 'Swimming', 'Golf']);
+  assert.equal(new Set(session.questionIds).size, 15);
+  session.questions.forEach((column, index) => {
+    const sourceIds = new Set(repository.byId[session.columnTopics[index]].questions.map(question => question.id));
+    column.forEach(question => assert.ok(sourceIds.has(question.id), `${question.id} is outside ${session.columnTopics[index]}`));
+    assert.deepEqual(column.map(question => question.difficulty), [1, 1, 2, 2, 3]);
+  });
+});
+
 test('Video Games subtopics expose 48-question banks with medium and hard additions', () => {
   const subtopics = ['minecraft', 'nintendo', 'pokemon', 'retro-consoles', 'esports'];
   for (const subtopic of subtopics) {
@@ -217,6 +260,15 @@ test('Video Games subtopics expose 48-question banks with medium and hard additi
     assert.equal(added.length, 40, `${subtopic} must keep the 40 added questions`);
     assert.ok(added.every(question => question.difficulty === 2 || question.difficulty === 3), `${subtopic} additions must be medium or hard`);
   }
+
+  const roblox = repository.byId['video-games::roblox'];
+  assert.ok(roblox?.isSubtopic, 'roblox must be a selectable subtopic');
+  assert.equal(roblox.questions.length, 60, 'roblox must keep 60 questions');
+  assert.equal(engine.maxColumnsForTopic(roblox, 5), 12);
+  for (const difficulty of [1, 2, 3]) {
+    assert.equal(roblox.questions.filter(question => question.difficulty === difficulty).length, 20, `roblox needs 20 difficulty-${difficulty} questions`);
+  }
+  assert.ok(engine.searchTopics(repository, 'robux').some(entry => entry.id === 'video-games::roblox'));
 
   const session = engine.buildSession({
     repository,
