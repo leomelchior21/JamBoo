@@ -121,7 +121,7 @@ check('E: reducing one topic frees a column', meterE2.includes('3 / 4'), meterE2
 /* ─────────── TEST F: not enough questions ─────────── */
 await fresh();
 await setBoard(4, 6);
-await addSubtopic('Entertainment', 'Video Games', 'Minecraft');
+await addSubtopic('Entertainment', 'Celebrities', 'Taylor Swift & Pop Stars');
 const createF = await page.isEnabled('#gen-btn');
 const meterF = (await page.textContent('#columns-meter')).replace(/\s+/g, ' ').trim();
 const plusF = await page.isEnabled('.topic-card .col-stepper .step-btn.sm:last-of-type');
@@ -130,7 +130,7 @@ await page.evaluate(() => {
   localStorage.setItem('jamboo_config', JSON.stringify({
     _keepTeams: true, numTeams: 2, numCols: 4, numRows: 6, difficulty: 'mixed', lang: 'en',
     teams: [{ name: 'A' }, { name: 'B' }],
-    topics: [{ topicId: 'video-games::minecraft', columns: 4 }],
+    topics: [{ topicId: 'celebrities::pop-stars', columns: 4 }],
   }));
 });
 await page.reload({ waitUntil: 'load' });

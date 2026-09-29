@@ -133,8 +133,8 @@ test('search matches topic and subtopic metadata without AI', () => {
 test('subtopics are selectable quiz units with their own pool', () => {
   const minecraft = repository.byId['video-games::minecraft'];
   assert.ok(minecraft?.isSubtopic, 'minecraft must be a selectable subtopic');
-  assert.equal(minecraft.questions.length, 8);
-  assert.equal(engine.maxColumnsForTopic(minecraft, 5), 1);
+  assert.equal(minecraft.questions.length, 48);
+  assert.equal(engine.maxColumnsForTopic(minecraft, 5), 9);
 
   const session = engine.buildSession({
     repository,
@@ -202,6 +202,42 @@ test('Sports subject exposes soccer, Formula 1 and basketball pools', () => {
     const sourceIds = new Set(repository.byId[session.columnTopics[index]].questions.map(question => question.id));
     column.forEach(question => assert.ok(sourceIds.has(question.id), `${question.id} is outside ${session.columnTopics[index]}`));
     assert.deepEqual(column.map(question => question.difficulty), [1, 1, 2, 2, 3]);
+  });
+});
+
+test('Video Games subtopics expose 48-question banks with medium and hard additions', () => {
+  const subtopics = ['minecraft', 'nintendo', 'pokemon', 'retro-consoles', 'esports'];
+  for (const subtopic of subtopics) {
+    const unit = repository.byId[`video-games::${subtopic}`];
+    assert.ok(unit?.isSubtopic, `${subtopic} must be a selectable subtopic`);
+    assert.equal(unit.questions.length, 48, `${subtopic} must keep 48 questions`);
+    assert.equal(engine.maxColumnsForTopic(unit, 5), 9);
+
+    const added = unit.questions.filter(question => Number(question.id.slice(-3)) >= 41);
+    assert.equal(added.length, 40, `${subtopic} must keep the 40 added questions`);
+    assert.ok(added.every(question => question.difficulty === 2 || question.difficulty === 3), `${subtopic} additions must be medium or hard`);
+  }
+
+  const session = engine.buildSession({
+    repository,
+    topics: [
+      { topicId: 'video-games::minecraft', columns: 1 },
+      { topicId: 'video-games::pokemon', columns: 1 },
+      { topicId: 'video-games::esports', columns: 1 },
+    ],
+    board: { columns: 3, rows: 5 },
+    difficulty: 'medium',
+    seed: 'video-games-banks',
+  });
+  assert.deepEqual(session.categories, ['Minecraft', 'Pokémon', 'Esports & Gaming Culture']);
+  assert.equal(session.questionIds.length, 15);
+  assert.equal(new Set(session.questionIds).size, 15);
+  session.questions.forEach((column, index) => {
+    const sourceIds = new Set(repository.byId[session.columnTopics[index]].questions.map(question => question.id));
+    column.forEach(question => {
+      assert.ok(sourceIds.has(question.id), `${question.id} is outside ${session.columnTopics[index]}`);
+      assert.equal(question.difficulty, 2);
+    });
   });
 });
 
@@ -286,23 +322,23 @@ test('TEST D/E — validation blocks unassigned and over-assigned boards', () =>
 
 test('TEST F — a narrow topic reports its real limit and never duplicates', () => {
   const narrow = topic('video-games::minecraft');
-  assert.equal(narrow.questions.length, 8);
-  assert.equal(engine.maxColumnsForTopic(narrow, 6), 1);
+  assert.equal(narrow.questions.length, 48);
+  assert.equal(engine.maxColumnsForTopic(narrow, 6), 8);
 
   const validation = engine.validateConfiguration({
     repository,
-    topics: [{ topicId: 'video-games::minecraft', columns: 4 }],
-    board: { columns: 4, rows: 6 },
+    topics: [{ topicId: 'video-games::minecraft', columns: 9 }],
+    board: { columns: 9, rows: 6 },
   });
   assert.equal(validation.ok, false);
   const issue = validation.issues.find(candidate => candidate.type === 'insufficient');
-  assert.equal(issue.available, 8);
-  assert.equal(issue.required, 24);
+  assert.equal(issue.available, 48);
+  assert.equal(issue.required, 54);
 
   assert.throws(() => engine.buildSession({
     repository,
-    topics: [{ topicId: 'video-games::minecraft', columns: 4 }],
-    board: { columns: 4, rows: 6 },
+    topics: [{ topicId: 'video-games::minecraft', columns: 9 }],
+    board: { columns: 9, rows: 6 },
     seed: 'test-f',
   }));
 });
