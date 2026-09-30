@@ -33,7 +33,7 @@ const questionsOf = session => session.questions.flat();
 test('repository is valid curated content', () => {
   const topics = repository.topics.filter(entry => !entry.isSubtopic);
   const subtopics = repository.topics.filter(entry => entry.isSubtopic);
-  assert.equal(topics.length, 36, 'expected 36 seed topics');
+  assert.equal(topics.length, 56, 'expected 56 seed topics');
   assert.ok(topics.every(entry => entry.questions.length >= 20), 'every seed topic has 20+ questions');
   assert.ok(subtopics.length >= 80, 'every topic exposes specific subtopic units');
   assert.ok(subtopics.every(entry => entry.questions.length >= 5), 'every subtopic has a usable pool');
@@ -133,8 +133,8 @@ test('search matches topic and subtopic metadata without AI', () => {
 test('subtopics are selectable quiz units with their own pool', () => {
   const minecraft = repository.byId['video-games::minecraft'];
   assert.ok(minecraft?.isSubtopic, 'minecraft must be a selectable subtopic');
-  assert.equal(minecraft.questions.length, 48);
-  assert.equal(engine.maxColumnsForTopic(minecraft, 5), 9);
+  assert.equal(minecraft.questions.length, 88);
+  assert.equal(engine.maxColumnsForTopic(minecraft, 5), 17);
 
   const session = engine.buildSession({
     repository,
@@ -248,26 +248,26 @@ test('new Sports topics keep 60 questions at 20 easy, 20 medium and 20 hard', ()
   });
 });
 
-test('Video Games subtopics expose 48-question banks with medium and hard additions', () => {
+test('Video Games subtopics expose their expanded question banks', () => {
   const subtopics = ['minecraft', 'nintendo', 'pokemon', 'retro-consoles', 'esports'];
   for (const subtopic of subtopics) {
     const unit = repository.byId[`video-games::${subtopic}`];
     assert.ok(unit?.isSubtopic, `${subtopic} must be a selectable subtopic`);
-    assert.equal(unit.questions.length, 48, `${subtopic} must keep 48 questions`);
-    assert.equal(engine.maxColumnsForTopic(unit, 5), 9);
+    assert.equal(unit.questions.length, 88, `${subtopic} must keep 88 questions`);
+    assert.equal(engine.maxColumnsForTopic(unit, 5), 17);
 
     const added = unit.questions.filter(question => Number(question.id.slice(-3)) >= 41);
-    assert.equal(added.length, 40, `${subtopic} must keep the 40 added questions`);
+    assert.equal(added.length, 80, `${subtopic} must keep the 80 added questions`);
     assert.ok(added.every(question => question.difficulty === 2 || question.difficulty === 3), `${subtopic} additions must be medium or hard`);
   }
 
   const roblox = repository.byId['video-games::roblox'];
   assert.ok(roblox?.isSubtopic, 'roblox must be a selectable subtopic');
-  assert.equal(roblox.questions.length, 60, 'roblox must keep 60 questions');
-  assert.equal(engine.maxColumnsForTopic(roblox, 5), 12);
-  for (const difficulty of [1, 2, 3]) {
-    assert.equal(roblox.questions.filter(question => question.difficulty === difficulty).length, 20, `roblox needs 20 difficulty-${difficulty} questions`);
-  }
+  assert.equal(roblox.questions.length, 100, 'roblox must keep 100 questions');
+  assert.equal(engine.maxColumnsForTopic(roblox, 5), 20);
+  assert.equal(roblox.questions.filter(question => question.difficulty === 1).length, 20, 'roblox keeps 20 easy questions');
+  assert.equal(roblox.questions.filter(question => question.difficulty === 2).length, 40, 'roblox keeps 40 medium questions');
+  assert.equal(roblox.questions.filter(question => question.difficulty === 3).length, 40, 'roblox keeps 40 hard questions');
   assert.ok(engine.searchTopics(repository, 'robux').some(entry => entry.id === 'video-games::roblox'));
 
   const session = engine.buildSession({
@@ -290,6 +290,45 @@ test('Video Games subtopics expose 48-question banks with medium and hard additi
       assert.ok(sourceIds.has(question.id), `${question.id} is outside ${session.columnTopics[index]}`);
       assert.equal(question.difficulty, 2);
     });
+  });
+});
+
+test('new school and game topics keep 20 questions with two subtopic units', () => {
+  const topics = ['geometry', 'algebra', 'personal-finance', 'animals-nature', 'earth-environment', 'dinosaurs-prehistory', 'portuguese', 'spanish', 'literature', 'art', 'ai-robotics', 'chess-board-games', 'anime-manga', 'comics-superheroes', 'folklore-brazil', 'fortnite', 'league-of-legends', 'sonic', 'party-social-games', 'soccer-games'];
+  for (const topicId of topics) {
+    const entry = repository.byId[topicId];
+    assert.ok(entry, `${topicId} must exist`);
+    assert.equal(entry.questions.length, 20, `${topicId} must keep 20 questions`);
+    assert.equal(entry.subtopics.length, 2, `${topicId} must expose two subtopics`);
+    for (const subtopic of entry.subtopics) {
+      const unit = repository.byId[`${topicId}::${subtopic.id}`];
+      assert.ok(unit?.isSubtopic, `${topicId}::${subtopic.id} must be selectable`);
+      assert.equal(unit.questions.length, 10, `${topicId}::${subtopic.id} must keep 10 questions`);
+    }
+  }
+
+  assert.ok(engine.searchTopics(repository, 'saci').some(entry => entry.id === 'folklore-brazil::folklore-characters'));
+  assert.ok(engine.searchTopics(repository, 'victory royale').some(entry => entry.id === 'fortnite'));
+  assert.ok(engine.searchTopics(repository, 'summoners rift').some(entry => entry.id === 'league-of-legends'));
+  assert.ok(engine.searchTopics(repository, 'xadrez').some(entry => entry.id === 'chess-board-games'));
+
+  const session = engine.buildSession({
+    repository,
+    topics: [
+      { topicId: 'geometry', columns: 1 },
+      { topicId: 'fortnite', columns: 1 },
+      { topicId: 'soccer-games', columns: 1 },
+    ],
+    board: { columns: 3, rows: 5 },
+    difficulty: 'mixed',
+    seed: 'new-topics-check',
+  });
+  assert.deepEqual(session.categories, ['Geometry & Shapes', 'Fortnite', 'Soccer Games']);
+  assert.equal(new Set(session.questionIds).size, 15);
+  session.questions.forEach((column, index) => {
+    const sourceIds = new Set(repository.byId[session.columnTopics[index]].questions.map(question => question.id));
+    column.forEach(question => assert.ok(sourceIds.has(question.id), `${question.id} is outside ${session.columnTopics[index]}`));
+    assert.deepEqual(column.map(question => question.difficulty), [1, 1, 2, 2, 3]);
   });
 });
 
@@ -373,24 +412,24 @@ test('TEST D/E — validation blocks unassigned and over-assigned boards', () =>
 });
 
 test('TEST F — a narrow topic reports its real limit and never duplicates', () => {
-  const narrow = topic('video-games::minecraft');
-  assert.equal(narrow.questions.length, 48);
-  assert.equal(engine.maxColumnsForTopic(narrow, 6), 8);
+  const narrow = topic('geometry');
+  assert.equal(narrow.questions.length, 20);
+  assert.equal(engine.maxColumnsForTopic(narrow, 6), 3);
 
   const validation = engine.validateConfiguration({
     repository,
-    topics: [{ topicId: 'video-games::minecraft', columns: 9 }],
-    board: { columns: 9, rows: 6 },
+    topics: [{ topicId: 'geometry', columns: 4 }],
+    board: { columns: 4, rows: 6 },
   });
   assert.equal(validation.ok, false);
   const issue = validation.issues.find(candidate => candidate.type === 'insufficient');
-  assert.equal(issue.available, 48);
-  assert.equal(issue.required, 54);
+  assert.equal(issue.available, 20);
+  assert.equal(issue.required, 24);
 
   assert.throws(() => engine.buildSession({
     repository,
-    topics: [{ topicId: 'video-games::minecraft', columns: 9 }],
-    board: { columns: 9, rows: 6 },
+    topics: [{ topicId: 'geometry', columns: 4 }],
+    board: { columns: 4, rows: 6 },
     seed: 'test-f',
   }));
 });
