@@ -75,13 +75,13 @@ test('operator answers survive the eligibility check', () => {
   const swift = repository.byId['coding-languages::swift'];
   const csharp = repository.byId['coding-languages::csharp'];
   const javascript = repository.byId['coding-languages::javascript'];
-  assert.equal(python.questions.length, 20);
-  assert.equal(swift.questions.length, 20);
-  assert.equal(csharp.questions.length, 20);
-  assert.equal(javascript.questions.length, 20);
+  assert.equal(python.questions.length, 40);
+  assert.equal(swift.questions.length, 40);
+  assert.equal(csharp.questions.length, 40);
+  assert.equal(javascript.questions.length, 40);
 });
 
-test('printing, variables and operators are selectable subtopics with 40 questions each', () => {
+test('printing, variables and operators are selectable subtopics with 80 questions each', () => {
   const languages = ['python', 'swift', 'csharp'];
   const families = ['printing', 'variables', 'operators'];
   for (const language of languages) {
@@ -89,8 +89,8 @@ test('printing, variables and operators are selectable subtopics with 40 questio
       const id = `coding-languages::${language}-${family}`;
       const unit = repository.byId[id];
       assert.ok(unit?.isSubtopic, `${id} must be a selectable subtopic`);
-      assert.equal(unit.questions.length, 40, `${id} must keep 40 questions`);
-      assert.equal(engine.maxColumnsForTopic(unit, 5), 8);
+      assert.equal(unit.questions.length, 80, `${id} must keep 80 questions`);
+      assert.equal(engine.maxColumnsForTopic(unit, 5), 16);
     }
   }
 
