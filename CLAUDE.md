@@ -30,6 +30,7 @@
 - Coding Languages keeps Python, Swift, C# and JavaScript at the same pool size (40 general questions each) and mixes concept questions with code-reading ones: predict the output, name the operator, find the missing token and debug a broken line (`\n` in question text starts a code line; `.q-text` uses `white-space:pre-wrap` so snippets keep their breaks)
 - Python, Swift and C# each add three focused subtopic banks — `python-printing`, `python-variables`, `python-operators` (and the `swift-*` / `csharp-*` equivalents) — with 80 questions each. They are code-first (read the snippet, predict/fix the result), language-specific (`print` vs `Console.WriteLine`, `let/var` vs `int/const`, `\(x)` vs `$"{x}"`, `//` vs `Int` division) and tagged with `variantGroup` families so near-identical variants never share a game
 - Adding content: append questions to a topic and give each a specific subtopic; keep ids stable and choices unique. `tests/selector.test.mjs` validates the whole repository, including that no curated question is silently dropped by the eligibility check
+- Questions must not give their answer away: the prompt avoids naming the correct choice (characters, titles, teams, items, places), and comparison questions do not list the answer among the alternatives
 
 ## Quiz Builder (index.html)
 - Flow: TEAMS → BOARD → TOPICS (cards with column allocation) → DIFFICULTY → CREATE JAMBOO
